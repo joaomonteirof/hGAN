@@ -1,6 +1,6 @@
 # Hyper Volume Generative Adversarial Network - hGAN
 
-Replication of [Stabilizing GAN Training with Multiple Random Projections](https://arxiv.org/abs/1705.07831) and extension including training with multi-objrctive training via hyper volume maximization
+Replication of [Stabilizing GAN Training with Multiple Random Projections](https://arxiv.org/abs/1705.07831) and extension including training with multi-objective training via hyper volume maximization
 
 ## To run
 
@@ -45,3 +45,5 @@ optional arguments:
 
 - Scheduler for the nadir point
 - Test script
+
+Collaborators: Isabela Albuquerque, Breandan Considine

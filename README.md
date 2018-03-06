@@ -44,6 +44,5 @@ optional arguments:
 ## To do
 
 - Scheduler for the nadir point
-- Test script
 
 Collaborators: Isabela Albuquerque, Breandan Considine

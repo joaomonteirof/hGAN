@@ -54,7 +54,7 @@ def plot_learningcurves(history, *keys):
 if __name__ == '__main__':
 
 	# Testing settings
-	parser = argparse.ArgumentParser(description='Testing online transfer learning for emotion recognition tasks')
+	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Checkpoint/model path')
 	parser.add_argument('--data-path', type=str, default='./data/', metavar='Path', help='Path to data .hdf')
 	parser.add_argument('--n-tests', type=int, default=4, metavar='N', help='number of samples to  (default: 64)')

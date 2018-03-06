@@ -6,11 +6,11 @@ Replication of [Stabilizing GAN Training with Multiple Random Projections](https
 
 Download the [cropped and aligned version of CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and unzip it
 
-'''
+```
 python train.py --ndiscrimiators 12
-'''
+```
 
-'''
+```
 optional arguments:
   -h, --help            show this help message and exit
   --batch-size N        input batch size for training (default: 64)
@@ -33,7 +33,7 @@ optional arguments:
   --nadir nadir         Nadir point for the case of hypervolume maximization
                         (default: 1.1)
   --no-cuda             Disables GPU use
-'''
+```
 
 ## Tested with
 

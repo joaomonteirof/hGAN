@@ -11,7 +11,7 @@ import torch.utils.data
 import model
 
 # Training settings
-parser = argparse.ArgumentParser(description='Online transfer learning for emotion recognition tasks')
+parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
 parser.add_argument('--lr', type=float, default=0.0002, metavar='LR', help='learning rate (default: 0.0002)')
@@ -23,9 +23,9 @@ parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path',
 parser.add_argument('--data-path', type=str, default='./celebA', metavar='Path', help='Path to data')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
-parser.add_argument('--save-every', type=int, default=5, metavar='N', help='how many epochs to wait before logging training status. Default is 5')
+parser.add_argument('--save-every', type=int, default=3, metavar='N', help='how many epochs to wait before logging training status. Default is 3')
 parser.add_argument('--hyper-mode', action='store_true', default=False, help='enables training with hypervolume maximization')
-parser.add_argument('--nadir', type=float, default=1.1, metavar='nadir', help='Nadir point for the case of hypervolume maximization (default: 1.1)')
+parser.add_argument('--nadir-factor', type=float, default=50.0, metavar='nadir', help='Factor of the max disc loss to initialize nadir point (default: 50.0)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -34,7 +34,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-transform = transforms.Compose([transforms.Resize((64, 64)), transforms.RandomHorizontalFlip(), transforms.RandomGrayscale(0.2), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+transform = transforms.Compose([transforms.Resize((64, 64)), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 celebA_data = datasets.ImageFolder(args.data_path, transform = transform)
 
@@ -56,7 +56,7 @@ for i in range(args.ndiscriminators):
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
 if args.hyper_mode:
-	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir=args.nadir, cuda=args.cuda)
+	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_factor=args.nadir_factor, cuda=args.cuda)
 else:
 	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 

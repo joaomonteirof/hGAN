@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 class TrainLoop(object):
 
-	def __init__(self, generator, disc_list, optimizer, train_loader, checkpoint_path=None, checkpoint_epoch=None, nadir=None, cuda=True):
+	def __init__(self, generator, disc_list, optimizer, train_loader, checkpoint_path=None, checkpoint_epoch=None, nadir_factor=None, cuda=True):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -26,18 +26,26 @@ class TrainLoop(object):
 		self.disc_list = disc_list
 		self.optimizer = optimizer
 		self.train_loader = train_loader
-		self.history = {'gen_loss': [], 'disc_loss': []}
+		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': []}
 		self.total_iters = 0
 		self.cur_epoch = 0
 
-		if nadir:
-			self.nadir = nadir
-			self.hyper_mode = True
-		else:
-			self.hyper_mode = False
-
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
+
+			if nadir_factor:
+				self.hyper_mode = True
+			else:
+				self.hyper_mode = False
+				self.nadir = 0.0
+
+		else:
+			if nadir_factor:
+				self.define_nadir_point(nadir_factor)
+				self.hyper_mode = True
+			else:
+				self.hyper_mode = False
+				self.nadir = 0.0
 
 	def train(self, n_epochs=1, save_every=1):
 
@@ -52,6 +60,8 @@ class TrainLoop(object):
 				gen_loss+=new_gen_loss
 				disc_loss+=new_disc_loss
 				self.total_iters += 1
+				self.history['gen_loss_minibatch'].append(new_gen_loss)
+				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
 			self.history['gen_loss'].append(gen_loss/(t+1))
 			self.history['disc_loss'].append(disc_loss/(t+1))
@@ -139,6 +149,7 @@ class TrainLoop(object):
 		'optimizer_state': self.optimizer.state_dict(),
 		'history': self.history,
 		'total_iters': self.total_iters,
+		'nadir_point': self.nadir,
 		'cur_epoch': self.cur_epoch}
 		torch.save(ckpt, self.save_epoch_fmt_gen.format(self.cur_epoch))
 
@@ -162,7 +173,7 @@ class TrainLoop(object):
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']
 			self.cur_epoch = ckpt['cur_epoch']
-
+			self.nadir = ckpt['nadir']
 
 			for i, disc in enumerate(self.disc_list):
 				ckpt = torch.load(self.save_epoch_fmt_disc.format(i+1, epoch))
@@ -184,3 +195,23 @@ class TrainLoop(object):
 				print('params NANs!!!!!')
 			if np.any(np.isnan(params.grad.data.cpu().numpy())):
 				print('grads NANs!!!!!!')
+
+	def define_nadir_point(self, factor):
+		disc_outs = []
+
+		z_ = torch.randn(20, 100).view(-1, 100, 1, 1)
+		y_real_ = torch.ones(z_.size(0))
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+
+		z_ = Variable(z_)
+		y_real_ = Variable(y_real_)
+		out = self.model.forward(z_)
+
+		for disc in self.disc_list:
+			d_out = disc.forward(out).squeeze()
+			disc_outs.append( F.binary_cross_entropy(d_out, y_real_).data[0] )
+
+		self.nadir = float(np.max(disc_outs)*factor)

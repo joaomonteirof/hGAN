@@ -14,10 +14,10 @@ python train.py --ndiscriminators 12
 optional arguments:
   -h, --help            show this help message and exit
   --batch-size N        input batch size for training (default: 64)
-  --epochs N            number of epochs to train (default: 500)
+  --epochs N            number of epochs to train (default: 50)
   --lr LR               learning rate (default: 0.0002)
   --beta1 lambda        Adam beta param (default: 0.5)
-  --beta2 lambda        Adam beta param (default: 0.99)
+  --beta2 lambda        Adam beta param (default: 0.999)
   --ndiscriminators NDISCRIMINATORS
                         Number of discriminators. Default=8
   --checkpoint-epoch N  epoch to load for checkpointing. If None, training
@@ -28,10 +28,10 @@ optional arguments:
   --workers WORKERS     number of data loading workers
   --seed S              random seed (default: 1)
   --save-every N        how many epochs to wait before logging training
-                        status. Default is 1
+                        status. Default is 5
   --hyper-mode          enables training with hypervolume maximization
-  --nadir nadir         Nadir point for the case of hypervolume maximization
-                        (default: 1.1)
+  --nadir-factor nadir  Factor of the max disc loss to initialize nadir point
+                        (default: 50.0)
   --no-cuda             Disables GPU use
 ```
 

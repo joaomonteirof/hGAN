@@ -79,9 +79,6 @@ class TrainLoop(object):
 
 		## Train each D
 
-		self.model.eval()
-		self.optimizer.zero_grad()
-
 		x, _ = batch
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
 		y_real_ = torch.ones(x.size(0))

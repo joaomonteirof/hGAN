@@ -13,7 +13,7 @@ import model
 # Training settings
 parser = argparse.ArgumentParser(description='Online transfer learning for emotion recognition tasks')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=500, metavar='N', help='number of epochs to train (default: 500)')
+parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
 parser.add_argument('--lr', type=float, default=0.0002, metavar='LR', help='learning rate (default: 0.0002)')
 parser.add_argument('--beta1', type=float, default=0.5, metavar='lambda', help='Adam beta param (default: 0.5)')
 parser.add_argument('--beta2', type=float, default=0.999, metavar='lambda', help='Adam beta param (default: 0.999)')

@@ -7,7 +7,7 @@ Replication of [Stabilizing GAN Training with Multiple Random Projections](https
 Download the [cropped and aligned version of CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and unzip it
 
 ```
-python train.py --ndiscrimiators 12
+python train.py --ndiscriminators 12
 ```
 
 ```

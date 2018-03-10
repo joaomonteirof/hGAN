@@ -35,13 +35,15 @@ class TrainLoop(object):
 
 			if nadir_factor:
 				self.hyper_mode = True
+				self.nadir_factor = nadir_factor
 			else:
 				self.hyper_mode = False
 				self.nadir = 0.0
 
 		else:
 			if nadir_factor:
-				self.define_nadir_point(nadir_factor)
+				#self.define_nadir_point(nadir_factor)
+				self.nadir_factor = nadir_factor
 				self.hyper_mode = True
 			else:
 				self.hyper_mode = False
@@ -124,13 +126,22 @@ class TrainLoop(object):
 		loss_G = 0
 
 		if self.hyper_mode:
+
+			losses_list_float = []
+			losses_list_var = []
+
 			for disc in self.disc_list:
-				d_out = disc.forward(out).squeeze()
-				loss_G -= torch.log( self.nadir - F.binary_cross_entropy(d_out, y_real_) + 1e-7)
+				losses_list_var.append( F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_) )
+				losses_list_float.append( losses_list_var[-1].data[0] )
+
+			self.update_nadir_point(losses_list_float)
+
+			for loss in self.losses_list_var:
+				loss_G -= torch.log( self.nadir - loss )
+
 		else:
 			for disc in self.disc_list:
-				d_out = disc.forward(out).squeeze()
-				loss_G += F.binary_cross_entropy(d_out, y_real_)
+				loss_G += F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_)
 
 		self.optimizer.zero_grad()
 		loss_G.backward()
@@ -193,7 +204,7 @@ class TrainLoop(object):
 			if np.any(np.isnan(params.grad.data.cpu().numpy())):
 				print('grads NANs!!!!!!')
 
-	def define_nadir_point(self, factor):
+	def define_nadir_point(self):
 		disc_outs = []
 
 		z_ = torch.randn(20, 100).view(-1, 100, 1, 1)
@@ -211,4 +222,7 @@ class TrainLoop(object):
 			d_out = disc.forward(out).squeeze()
 			disc_outs.append( F.binary_cross_entropy(d_out, y_real_).data[0] )
 
-		self.nadir = float(np.max(disc_outs)*factor)
+		self.nadir = float(np.max(disc_outs)*self.nadir_factor)
+
+	def update_nadir_point(self, losses_list):
+		self.nadir = float(np.max(losses_list)*self.nadir_factor)

@@ -136,7 +136,7 @@ class TrainLoop(object):
 
 			self.update_nadir_point(losses_list_float)
 
-			for loss in self.losses_list_var:
+			for loss in losses_list_var:
 				loss_G -= torch.log( self.nadir - loss )
 
 		else:

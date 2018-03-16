@@ -25,7 +25,7 @@ parser.add_argument('--workers', type=int, help='number of data loading workers'
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
 parser.add_argument('--save-every', type=int, default=3, metavar='N', help='how many epochs to wait before logging training status. Default is 3')
 parser.add_argument('--hyper-mode', action='store_true', default=False, help='enables training with hypervolume maximization')
-parser.add_argument('--nadir-factor', type=float, default=50.0, metavar='nadir', help='Factor of the max disc loss to initialize nadir point (default: 50.0)')
+parser.add_argument('--nadir-slack', type=float, default=1.0, metavar='nadir', help='maximum distance to a nadir point component (default: 1.0)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -56,7 +56,7 @@ for i in range(args.ndiscriminators):
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
 if args.hyper_mode:
-	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_factor=args.nadir_factor, cuda=args.cuda)
+	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_slack=args.nadir_slack, cuda=args.cuda)
 else:
 	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 

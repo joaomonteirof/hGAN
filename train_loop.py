@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 class TrainLoop(object):
 
-	def __init__(self, generator, disc_list, optimizer, train_loader, checkpoint_path=None, checkpoint_epoch=None, nadir_factor=None, cuda=True):
+	def __init__(self, generator, disc_list, optimizer, train_loader, checkpoint_path=None, checkpoint_epoch=None, nadir_slack=None, cuda=True):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -33,17 +33,17 @@ class TrainLoop(object):
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
 
-			if nadir_factor:
+			if nadir_slack:
 				self.hyper_mode = True
-				self.nadir_factor = nadir_factor
+				self.nadir_slack = nadir_slack
 			else:
 				self.hyper_mode = False
 				self.nadir = 0.0
 
 		else:
-			if nadir_factor:
-				#self.define_nadir_point(nadir_factor)
-				self.nadir_factor = nadir_factor
+			if nadir_slack:
+				#self.define_nadir_point(nadir_slack)
+				self.nadir_slack = nadir_slack
 				self.hyper_mode = True
 			else:
 				self.hyper_mode = False
@@ -222,7 +222,7 @@ class TrainLoop(object):
 			d_out = disc.forward(out).squeeze()
 			disc_outs.append( F.binary_cross_entropy(d_out, y_real_).data[0] )
 
-		self.nadir = float(np.max(disc_outs)*self.nadir_factor)
+		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 
 	def update_nadir_point(self, losses_list):
-		self.nadir = float(np.max(losses_list)*self.nadir_factor)
+		self.nadir = float(np.max(losses_list) + self.nadir_slack)

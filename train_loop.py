@@ -181,7 +181,7 @@ class TrainLoop(object):
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']
 			self.cur_epoch = ckpt['cur_epoch']
-			self.nadir = ckpt['nadir']
+			self.nadir = ckpt['nadir_point']
 
 			for i, disc in enumerate(self.disc_list):
 				ckpt = torch.load(self.save_epoch_fmt_disc.format(i+1, epoch))

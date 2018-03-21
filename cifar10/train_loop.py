@@ -177,12 +177,14 @@ class TrainLoop(object):
 
 		x_gen = self.model.forward(z_)
 
-		logits = self.fid_model.forward(x_gen).cpu().numpy()
+		logits = self.fid_model.forward(x_gen.cpu()).data.numpy()
 
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)
 
 		fid = ((self.m - m)**2).sum() + np.matrix.trace(C + self.C - 2*sla.sqrtm( np.matmul(C, self.C) ))
+
+		self.fid_model = self.fid_model.cpu()
 
 		return fid
 
@@ -192,7 +194,6 @@ class TrainLoop(object):
 		print('Checkpointing...')
 		ckpt = {'model_state': self.model.state_dict(),
 		'optimizer_state': self.optimizer.state_dict(),
-		'fid_model_state': self.fid_model.state_dict(),
 		'history': self.history,
 		'total_iters': self.total_iters,
 		'nadir_point': self.nadir,
@@ -212,9 +213,8 @@ class TrainLoop(object):
 		if os.path.isfile(ckpt):
 
 			ckpt = torch.load(ckpt)
-			# Load models states
+			# Load model state
 			self.model.load_state_dict(ckpt['model_state'])
-			self.fid_model.load_state_dict(ckpt['fid_model_state'])
 			# Load optimizer state
 			self.optimizer.load_state_dict(ckpt['optimizer_state'])
 			# Load history

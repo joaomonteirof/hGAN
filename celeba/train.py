@@ -61,5 +61,6 @@ else:
 	trainer = TrainLoop(generator, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode is: {}'.format(args.cuda))
+print('Hyper Mode is: {}'.format(args.hyper_mode))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

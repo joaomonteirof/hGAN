@@ -42,6 +42,7 @@ class Bottleneck(nn.Module):
 
 	def __init__(self, in_planes, planes, stride=1):
 		super(Bottleneck, self).__init__()
+
 		self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(planes)
 		self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -70,6 +71,8 @@ class ResNet(nn.Module):
 		self.in_planes = 64
 		self.soft = soft
 
+		self.downsample = nn.MaxPool2d(2)
+
 		self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
 		self.bn1 = nn.BatchNorm2d(64)
 		self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
@@ -87,6 +90,9 @@ class ResNet(nn.Module):
 		return nn.Sequential(*layers)
 
 	def forward(self, x):
+
+		x = self.downsample(x)
+
 		out = F.relu(self.bn1(self.conv1(x)))
 		out = self.layer1(out)
 		out = self.layer2(out)

@@ -13,11 +13,8 @@ import model as model_
 import numpy as np
 import os
 
-
 def denorm(unorm):
-
 	norm = (unorm + 1) / 2
-
 	return norm.clamp(0, 1)
 
 def test_model(model, n_tests, cuda_mode):

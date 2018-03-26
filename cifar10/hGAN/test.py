@@ -32,7 +32,6 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 	batch_size -- batch size for feeding into Inception v3
 	splits -- number of splits
 	"""
-	N = len(imgs)
 
 	assert batch_size > 0
 	assert N > batch_size
@@ -54,22 +53,24 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 
 		z_ = torch.randn(N_s, 100).view(-1, 100, 1, 1)
 
-		if self.cuda_mode:
+		if cuda:
 			z_ = z_.cuda()
 
 		z_ = Variable(z_)
 
-		x = self.model.forward(z_)
+		x = model.forward(z_)
 
 		if resize:
 			x = up(x)
 		x = inception_model(x)
-		return F.softmax(x).data.cpu().numpy()
+		return F.softmax(x, dim=1).data.cpu().numpy()
+
+	indexes = strided_app(np.arange(N), batch_size, batch_size)
+
+	N = indexes[-1][-1]+1
 
 	# Get predictions
 	preds = np.zeros((N, 1000))
-
-	indexes = strided_app(np.arange(N), batch_size, batch_size)
 
 	for i, idx in enumerate(indexes, 0):
 
@@ -204,4 +205,4 @@ if __name__ == '__main__':
 	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)
 
 	if args.inception:
-		print( inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=1) )
+		print( inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10) )

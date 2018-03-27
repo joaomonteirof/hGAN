@@ -13,6 +13,7 @@ import os
 import resnet
 import pickle
 import numpy as np
+import PIL.Image as Image
 
 def save_testdata_statistics(model, data_loader, cuda_mode):
 
@@ -64,7 +65,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-transform = transforms.Compose([transforms.Resize((64, 64)), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
@@ -86,7 +87,7 @@ if not os.path.isfile('../test_data_statistics.p'):
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, fid_model, disc, optimizer, train_loader, lambda_grad=args.lambda_grad, its_disc=args.its-disc, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+trainer = TrainLoop(generator, fid_model, disc, optimizer, train_loader, lambda_grad=args.lambda_grad, its_disc=args.its_disc, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 

@@ -115,12 +115,11 @@ class TrainLoop(object):
 
 			loss_d = 0
 
+			self.disc.optimizer.zero_grad()
 			d_real = self.disc.forward(x).squeeze().mean()
 			d_fake = self.disc.forward(out_d).squeeze().mean()
-			loss_disc = d_fake - d_real
-			self.disc.optimizer.zero_grad()
+			loss_disc = d_fake - d_real + self.calc_gradient_penalty(x, out_d)
 			loss_disc.backward()
-			self.calc_gradient_penalty(x, out_d)
 			self.disc.optimizer.step()
 
 		## Train G
@@ -166,8 +165,8 @@ class TrainLoop(object):
 		return fid
 
 	def calc_gradient_penalty(self, real_data, fake_data):
-		alpha = torch.rand(real_data.size(0), 1)
-		alpha = alpha.expand(real_data.size())
+		shape = [real_data.size(0)] + [1] * (real_data.dim() - 1)
+		alpha = torch.rand(shape)
 
 		if self.cuda_mode:
 			alpha = alpha.cuda()
@@ -183,7 +182,7 @@ class TrainLoop(object):
 
 		gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates, grad_outputs=grad_outs, create_graph=True)[0].view(interpolates.size(0),-1)
 
-		gradient_penalty = ((gradients.norm(p2, dim=1) - 1) ** 2).mean() * self.lambda_grad
+		gradient_penalty = ((gradients.norm(p=2, dim=1) - 1) ** 2).mean() * self.lambda_grad
 
 		return gradient_penalty
 

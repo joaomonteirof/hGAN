@@ -9,6 +9,7 @@ import torchvision.models as models
 import torchvision.datasets as datasets
 import torch.utils.data
 import model
+import PIL.Image as Image
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
@@ -34,7 +35,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-transform = transforms.Compose([transforms.Resize((64, 64)), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 celebA_data = datasets.ImageFolder(args.data_path, transform = transform)
 

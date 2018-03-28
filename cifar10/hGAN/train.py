@@ -26,7 +26,7 @@ def save_testdata_statistics(model, data_loader, cuda_mode):
 		out = model.forward(x).data.cpu().numpy()
 
 		try:
-			np.concatenate([logits, out], 0)
+			logits = np.concatenate([logits, out], 0)
 		except NameError:
 			logits = out
 

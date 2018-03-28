@@ -25,7 +25,6 @@ parser.add_argument('--ndiscriminators', type=int, default=8, help='Number of di
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
 parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path', help='Path for checkpointing')
 parser.add_argument('--data-path', type=str, default='./data', metavar='Path', help='Path to data')
-parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
 parser.add_argument('--save-every', type=int, default=5, metavar='N', help='how many epochs to wait before logging training status. Default is 5')
@@ -35,28 +34,19 @@ parser.add_argument('--no-cuda', action='store_true', default=False, help='Disab
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
-if args.fid_model_path is None:
-	print('The path for a pretrained classifier is expected to calculate FID-c. Use --fid-model-path to specify the path')
-	exit(1)
-
 torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
 transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-trainset = datasets.LSUN(root=args.data_path, classes=['bedroom_train'], transform=transform)
+trainset = datasets.LSUN(db_path=args.data_path, classes=['bedroom_train'], transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
 generator = model.Generator(100, [1024, 512, 256, 128], 3).train()
 
 if args.cuda:
 	generator = generator.cuda()
-
-if not os.path.isfile('../test_data_statistics.p'):
-	testset = datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
-	test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
-	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
 
 disc_list = []
 

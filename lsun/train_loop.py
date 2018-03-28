@@ -73,7 +73,7 @@ class TrainLoop(object):
 
 			self.cur_epoch += 1
 
-			elif self.cur_epoch % save_every == 0:
+			if self.cur_epoch % save_every == 0:
 				self.checkpointing()
 
 		# saving final models

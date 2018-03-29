@@ -153,7 +153,7 @@ def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 
 	if not os.path.exists(save_dir):
 		os.mkdir(save_dir)
-	save_fn = save_dir + 'Cifar10_DCGAN_'+ cp_name + '.png'
+	save_fn = save_dir + 'Cifar10_hGAN_'+ cp_name + '.png'
 	plt.savefig(save_fn)
 
 	plt.close()

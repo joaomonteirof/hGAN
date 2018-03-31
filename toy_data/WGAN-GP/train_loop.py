@@ -143,8 +143,6 @@ class TrainLoop(object):
 
 		return loss_G.data[0], loss_disc.data[0]
 
-		return loss_G.data[0], loss_disc.data[0]
-
 
 	def valid(self):
 

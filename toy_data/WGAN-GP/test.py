@@ -13,7 +13,7 @@ from torch.autograd import Variable
 import model as model_
 
 
-def plot_ellipse(semimaj=1, semimin=1, phi=0, x_cent=0, y_cent=0, theta_num=1e3, ax=None, plot_kwargs=None, cov=None, mass_level=0.68):
+def plot_ellipse(semimaj=1, semimin=1, phi=0, x_cent=0, y_cent=0, theta_num=1000, ax=None, plot_kwargs=None, cov=None, mass_level=0.68):
 	# Get Ellipse Properties from cov matrix
 	eig_vec, eig_val, u = np.linalg.svd(cov)
 	# Make sure 0th eigenvector has positive x-coordinate

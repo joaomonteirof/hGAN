@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 
 # Toy data model
 class Generator_toy(torch.nn.Module):

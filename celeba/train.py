@@ -1,15 +1,15 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision
-import torchvision.transforms as transforms
-from train_loop import TrainLoop
-import torch.optim as optim
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torch.utils.data
-import model
+
 import PIL.Image as Image
+import torch.optim as optim
+import torch.utils.data
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+
+import model
+from train_loop import TrainLoop
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')

@@ -1,21 +1,22 @@
 from __future__ import print_function
+
 import argparse
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
+import torch.utils.data
+import torchvision.transforms as transforms
+from numpy.lib.stride_tricks import as_strided
+from scipy.stats import entropy
 from torch import nn
 from torch.autograd import Variable
 from torch.nn import functional as F
-import torch.utils.data
-import torchvision
-import torchvision.transforms as transforms
 from torchvision.models.inception import inception_v3
-from PIL import ImageFilter
-import matplotlib.pyplot as plt
-import model as model_
-import numpy as np
-from scipy.stats import entropy
-import os
 
-from numpy.lib.stride_tricks import as_strided
+import model as model_
+
 
 def strided_app(a, L, S):
 	nrows = ( (len(a)-L) // S ) + 1

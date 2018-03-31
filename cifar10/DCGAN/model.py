@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 
 class Generator(torch.nn.Module):
 	def __init__(self, input_dim, num_filters, output_dim):

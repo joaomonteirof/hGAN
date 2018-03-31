@@ -1,20 +1,17 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision
-import torchvision.transforms as transforms
-from train_loop import TrainLoop
-import torch.optim as optim
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torch.utils.data
-import model
-import numpy as np
-
-from ToyData import ToyData
-
 import os
 import pickle
+
+import numpy as np
+import torch.optim as optim
+import torch.utils.data
+
+import model
+from ToyData import ToyData
+from train_loop import TrainLoop
+
 
 def save_data_statistics(data_loader, data_statistics_name):
 

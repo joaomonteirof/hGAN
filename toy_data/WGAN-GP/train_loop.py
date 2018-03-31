@@ -1,14 +1,12 @@
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
+import os
+import pickle
 
 import numpy as np
-
-import os
-from tqdm import tqdm
 import scipy.linalg as sla
+import torch
+from torch.autograd import Variable
+from tqdm import tqdm
 
-import pickle
 
 class TrainLoop(object):
 

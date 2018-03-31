@@ -1,18 +1,16 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-import torch.utils.data
-from torch.autograd import Variable
-import torchvision
-from PIL import ImageFilter
-import matplotlib.pyplot as plt
-import model as model_
-import numpy as np
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+import torch.utils.data
 from scipy.stats import chi2
+from torch.autograd import Variable
+
+import model as model_
 
 
 def plot_ellipse(semimaj=1, semimin=1, phi=0, x_cent=0, y_cent=0, theta_num=1e3, ax=None, plot_kwargs=None, cov=None, mass_level=0.68):

@@ -1,7 +1,8 @@
-import torch
-import numpy as np
 import random
-from torch.utils.data import Dataset, DataLoader
+
+import numpy as np
+import torch
+from torch.utils.data import Dataset
 
 
 class ToyData(Dataset):

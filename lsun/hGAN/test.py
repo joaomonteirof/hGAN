@@ -4,6 +4,7 @@ import argparse
 import os
 
 import matplotlib.pyplot as plt
+import model as model_
 import numpy as np
 import torch
 import torch.utils.data
@@ -15,13 +16,12 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 from torchvision.models.inception import inception_v3
 
-import model as model_
-
 
 def strided_app(a, L, S):
-	nrows = ( (len(a)-L) // S ) + 1
+	nrows = ((len(a) - L) // S) + 1
 	n = a.strides[0]
-	return as_strided(a, shape=(nrows, L), strides=(S*n,n))
+	return as_strided(a, shape=(nrows, L), strides=(S * n, n))
+
 
 def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, splits=1):
 	"""
@@ -68,22 +68,21 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 
 	indexes = strided_app(np.arange(N), batch_size, batch_size)
 
-	N = indexes[-1][-1]+1
+	N = indexes[-1][-1] + 1
 
 	# Get predictions
 	preds = np.zeros((N, 1000))
 
 	for i, idx in enumerate(indexes, 0):
-
 		batch_size_i = idx.shape[0]
 
-		preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batch_size_i)
+		preds[i * batch_size:i * batch_size + batch_size_i] = get_pred(batch_size_i)
 
 	# Now compute the mean kl-div
 	split_scores = []
 
 	for k in range(splits):
-		part = preds[k * (N // splits): (k+1) * (N // splits), :]
+		part = preds[k * (N // splits): (k + 1) * (N // splits), :]
 		py = np.mean(part, axis=0)
 		scores = []
 		for i in range(part.shape[0]):
@@ -95,13 +94,12 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 
 
 def denorm(unorm):
-
 	norm = (unorm + 1) / 2
 
 	return norm.clamp(0, 1)
 
-def test_model(model, n_tests, cuda_mode):
 
+def test_model(model, n_tests, cuda_mode):
 	model.eval()
 
 	to_pil = transforms.ToPILImage()
@@ -118,12 +116,13 @@ def test_model(model, n_tests, cuda_mode):
 	for i in range(out.size(0)):
 		sample = denorm(out[i].data)
 		sample = to_pil(sample.cpu())
-		sample.save('sample_{}.png'.format(i+1))
+		sample.save('sample_{}.png'.format(i + 1))
+
 
 def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 	generator.eval()
 
-	n_tests = fig_size[0]*fig_size[1]
+	n_tests = fig_size[0] * fig_size[1]
 
 	noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
@@ -154,17 +153,18 @@ def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 
 	if not os.path.exists(save_dir):
 		os.mkdir(save_dir)
-	save_fn = save_dir + 'Cifar10_DCGAN_'+ cp_name + '.png'
+	save_fn = save_dir + 'Cifar10_DCGAN_' + cp_name + '.png'
 	plt.savefig(save_fn)
 
 	plt.close()
 
-def plot_learningcurves(history, *keys):
 
+def plot_learningcurves(history, *keys):
 	for key in keys:
 		plt.plot(history[key])
-	
+
 	plt.show()
+
 
 if __name__ == '__main__':
 
@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
 	model = model_.Generator(100, [1024, 512, 256, 128], 3)
 
-	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
+	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])
 
 	if args.cuda:
@@ -195,7 +195,6 @@ if __name__ == '__main__':
 	history = ckpt['history']
 
 	if not args.no_plots:
-
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')
 		plot_learningcurves(history, 'gen_loss_minibatch')
@@ -206,4 +205,4 @@ if __name__ == '__main__':
 	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)
 
 	if args.inception:
-		print( inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10) )
+		print(inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10))

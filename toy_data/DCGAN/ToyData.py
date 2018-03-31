@@ -7,29 +7,28 @@ from torch.utils.data import Dataset
 
 class ToyData(Dataset):
 
-	def __init__(self, dataset = '8gaussians', length = 100000):
+	def __init__(self, dataset='8gaussians', length=100000):
 
 		self.length = length
-		self.dataset = dataset	
+		self.dataset = dataset
 
 	def __len__(self):
-		
+
 		return self.length
 
 	def __getitem__(self, idx):
-			
-		if self.dataset == '8gaussians':
 
+		if self.dataset == '8gaussians':
 			scale = 2.
 			centers = [
-			(1, 0),
-			(-1, 0),
-			(0, 1),
-			(0, -1),
-			(1. / np.sqrt(2), 1. / np.sqrt(2)),
-			(1. / np.sqrt(2), -1. / np.sqrt(2)),
-			(-1. / np.sqrt(2), 1. / np.sqrt(2)),
-			(-1. / np.sqrt(2), -1. / np.sqrt(2))
+				(1, 0),
+				(-1, 0),
+				(0, 1),
+				(0, -1),
+				(1. / np.sqrt(2), 1. / np.sqrt(2)),
+				(1. / np.sqrt(2), -1. / np.sqrt(2)),
+				(-1. / np.sqrt(2), 1. / np.sqrt(2)),
+				(-1. / np.sqrt(2), -1. / np.sqrt(2))
 			]
 
 			centers = [(scale * x, scale * y) for x, y in centers]
@@ -42,9 +41,8 @@ class ToyData(Dataset):
 			sample /= 1.414
 
 		if self.dataset == '25gaussians':
-
 			range_ = np.arange(-2, 3)
-			centers = np.transpose(np.meshgrid(range_, range_, indexing = 'ij'), (1, 2, 0)).reshape(-1, 2)
+			centers = np.transpose(np.meshgrid(range_, range_, indexing='ij'), (1, 2, 0)).reshape(-1, 2)
 
 			center = random.choice(centers)
 
@@ -54,7 +52,6 @@ class ToyData(Dataset):
 
 			sample /= 2.828
 
-				
 		sample = {'data': torch.from_numpy(sample).float()}
 
 		return sample

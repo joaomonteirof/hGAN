@@ -5,20 +5,18 @@ import os
 import pickle
 
 import PIL.Image as Image
+import model
 import numpy as np
+import resnet
 import torch
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-
-import model
-import resnet
 from train_loop import TrainLoop
 
 
 def save_testdata_statistics(model, data_loader, cuda_mode):
-
 	for batch in data_loader:
 
 		x, y = batch
@@ -35,9 +33,10 @@ def save_testdata_statistics(model, data_loader, cuda_mode):
 	m = logits.mean(0)
 	C = np.cov(logits, rowvar=False)
 
-	pfile = open('../test_data_statistics.p',"wb")
-	pickle.dump({'m':m, 'C':C}, pfile)
+	pfile = open('../test_data_statistics.p', "wb")
+	pickle.dump({'m': m, 'C': C}, pfile)
 	pfile.close()
+
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
@@ -73,7 +72,7 @@ train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
 generator = model.Generator(100, [1024, 512, 256, 128], 3).train()
 disc = model.Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2), batch_norm=True).train()
 fid_model = resnet.ResNet18().eval()
-mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
+mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])
 
 if args.cuda:

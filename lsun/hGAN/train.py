@@ -3,12 +3,11 @@ from __future__ import print_function
 import argparse
 
 import PIL.Image as Image
+import model
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-
-import model
 from train_loop import TrainLoop
 
 # Training settings

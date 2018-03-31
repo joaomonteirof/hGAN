@@ -4,17 +4,15 @@ import argparse
 import os
 import pickle
 
+import model
 import numpy as np
 import torch.optim as optim
 import torch.utils.data
-
-import model
 from ToyData import ToyData
 from train_loop import TrainLoop
 
 
 def save_data_statistics(data_loader, data_statistics_name):
-
 	for batch in data_loader:
 
 		x = batch['data'].cpu().numpy()
@@ -25,11 +23,12 @@ def save_data_statistics(data_loader, data_statistics_name):
 			samples = x
 
 	m = samples.mean(0)
-	C = np.cov(samples, rowvar = False)	
+	C = np.cov(samples, rowvar=False)
 
-	pfile = open(data_statistics_name,"wb")
+	pfile = open(data_statistics_name, "wb")
 	pickle.dump({'m': m, 'C': C}, pfile)
 	pfile.close()
+
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
@@ -46,7 +45,7 @@ parser.add_argument('--workers', type=int, help='number of data loading workers'
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
 parser.add_argument('--save-every', type=int, default=1, metavar='N', help='how many epochs to wait before logging training status. Default is 3')
 parser.add_argument('--toy-dataset', choices=['8gaussians', '25gaussians'], default='8gaussians')
-parser.add_argument('--toy-length', type=int, metavar = 'N', help='Toy dataset length', default=100000)
+parser.add_argument('--toy-length', type=int, metavar='N', help='Toy dataset length', default=100000)
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -55,23 +54,21 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-
 toy_data = ToyData(args.toy_dataset, args.toy_length)
-train_loader = torch.utils.data.DataLoader(toy_data, batch_size = args.batch_size, num_workers = args.workers)
+train_loader = torch.utils.data.DataLoader(toy_data, batch_size=args.batch_size, num_workers=args.workers)
 
-data_statistics_name = '../data_statistics' + args.toy_dataset + '.p' 
+data_statistics_name = '../data_statistics' + args.toy_dataset + '.p'
 if not os.path.isfile(data_statistics_name):
 	save_data_statistics(train_loader, data_statistics_name)
 
 # hidden_size = 512
 generator = model.Generator_toy(512).train()
 
-
 disc = model.Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, disc, optimizer, data_statistics_name, train_loader = train_loader, lambda_grad=args.lambda_grad, its_disc=args.its_disc, checkpoint_path = args.checkpoint_path, checkpoint_epoch = args.checkpoint_epoch, cuda = args.cuda)
+trainer = TrainLoop(generator, disc, optimizer, data_statistics_name, train_loader=train_loader, lambda_grad=args.lambda_grad, its_disc=args.its_disc, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 

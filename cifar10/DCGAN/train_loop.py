@@ -32,7 +32,7 @@ class TrainLoop(object):
 		self.total_iters = 0
 		self.cur_epoch = 0
 
-		pfile = open('../test_data_statistics.p','rb')
+		pfile = open('../test_data_statistics.p', 'rb')
 		statistics = pickle.load(pfile)
 		pfile.close()
 
@@ -46,28 +46,28 @@ class TrainLoop(object):
 	def train(self, n_epochs=1, save_every=1):
 
 		try:
-			best_fid = np.min( self.history['FID-c'] )
+			best_fid = np.min(self.history['FID-c'])
 		except ValueError:
 			best_fid = np.inf
 
 		while self.cur_epoch < n_epochs:
-			print('Epoch {}/{}'.format(self.cur_epoch+1, n_epochs))
-			#self.scheduler.step()
+			print('Epoch {}/{}'.format(self.cur_epoch + 1, n_epochs))
+			# self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))
-			gen_loss=0.0
-			disc_loss=0.0
+			gen_loss = 0.0
+			disc_loss = 0.0
 			for t, batch in train_iter:
 				new_gen_loss, new_disc_loss = self.train_step(batch)
-				gen_loss+=new_gen_loss
-				disc_loss+=new_disc_loss
+				gen_loss += new_gen_loss
+				disc_loss += new_disc_loss
 				self.total_iters += 1
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
 			fid_c = self.valid()
 
-			self.history['gen_loss'].append(gen_loss/(t+1))
-			self.history['disc_loss'].append(disc_loss/(t+1))
+			self.history['gen_loss'].append(gen_loss / (t + 1))
+			self.history['disc_loss'].append(disc_loss / (t + 1))
 			self.history['FID-c'].append(fid_c)
 
 			self.cur_epoch += 1
@@ -149,7 +149,7 @@ class TrainLoop(object):
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)
 
-		fid = ((self.m - m)**2).sum() + np.matrix.trace(C + self.C - 2*sla.sqrtm( np.matmul(C, self.C) ))
+		fid = ((self.m - m) ** 2).sum() + np.matrix.trace(C + self.C - 2 * sla.sqrtm(np.matmul(C, self.C)))
 
 		self.fid_model = self.fid_model.cpu()
 
@@ -160,15 +160,15 @@ class TrainLoop(object):
 		# Checkpointing
 		print('Checkpointing...')
 		ckpt = {'model_state': self.model.state_dict(),
-		'optimizer_state': self.optimizer.state_dict(),
-		'history': self.history,
-		'total_iters': self.total_iters,
-		'fixed_noise': self.fixed_noise,
-		'cur_epoch': self.cur_epoch}
+				'optimizer_state': self.optimizer.state_dict(),
+				'history': self.history,
+				'total_iters': self.total_iters,
+				'fixed_noise': self.fixed_noise,
+				'cur_epoch': self.cur_epoch}
 		torch.save(ckpt, self.save_epoch_fmt_gen.format(self.cur_epoch))
 
 		ckpt = {'model_state': self.disc.state_dict(),
-		'optimizer_state': self.disc.optimizer.state_dict()}
+				'optimizer_state': self.disc.optimizer.state_dict()}
 		torch.save(ckpt, self.save_epoch_fmt_disc.format(self.cur_epoch))
 
 	def load_checkpoint(self, epoch):
@@ -197,7 +197,7 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm+=params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).data[0]
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):

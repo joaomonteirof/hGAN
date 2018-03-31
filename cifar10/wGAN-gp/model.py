@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 
 class Generator(torch.nn.Module):
 	def __init__(self, input_dim, num_filters, output_dim):
@@ -14,7 +13,7 @@ class Generator(torch.nn.Module):
 			if i == 0:
 				deconv = nn.ConvTranspose2d(input_dim, num_filters[i], kernel_size=4, stride=1, padding=0)
 			else:
-				deconv = nn.ConvTranspose2d(num_filters[i-1], num_filters[i], kernel_size=4, stride=2, padding=1)
+				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
 
 			deconv_name = 'deconv' + str(i + 1)
 			self.hidden_layer.add_module(deconv_name, deconv)
@@ -47,6 +46,7 @@ class Generator(torch.nn.Module):
 		out = self.output_layer(h)
 		return out
 
+
 # Discriminator model
 class Discriminator(torch.nn.Module):
 	def __init__(self, input_dim, num_filters, output_dim, optimizer, lr, betas, batch_norm=False):
@@ -59,7 +59,7 @@ class Discriminator(torch.nn.Module):
 			if i == 0:
 				conv = nn.Conv2d(input_dim, num_filters[i], kernel_size=4, stride=2, padding=1)
 			else:
-				conv = nn.Conv2d(num_filters[i-1], num_filters[i], kernel_size=4, stride=2, padding=1)
+				conv = nn.Conv2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
 
 			conv_name = 'conv' + str(i + 1)
 			self.hidden_layer.add_module(conv_name, conv)

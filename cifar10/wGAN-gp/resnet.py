@@ -1,16 +1,13 @@
-'''ResNet in PyTorch.
+"""ResNet in PyTorch.
 
 For Pre-activation ResNet, see 'preact_resnet.py'.
 
 Reference:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
 	Deep Residual Learning for Image Recognition. arXiv:1512.03385
-'''
-import torch
+"""
 import torch.nn as nn
 import torch.nn.functional as F
-
-from torch.autograd import Variable
 
 
 class BasicBlock(nn.Module):
@@ -24,10 +21,10 @@ class BasicBlock(nn.Module):
 		self.bn2 = nn.BatchNorm2d(planes)
 
 		self.shortcut = nn.Sequential()
-		if stride != 1 or in_planes != self.expansion*planes:
+		if stride != 1 or in_planes != self.expansion * planes:
 			self.shortcut = nn.Sequential(
-				nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False),
-				nn.BatchNorm2d(self.expansion*planes) )
+				nn.Conv2d(in_planes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
+				nn.BatchNorm2d(self.expansion * planes))
 
 	def forward(self, x):
 		out = F.relu(self.bn1(self.conv1(x)))
@@ -47,14 +44,14 @@ class Bottleneck(nn.Module):
 		self.bn1 = nn.BatchNorm2d(planes)
 		self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
 		self.bn2 = nn.BatchNorm2d(planes)
-		self.conv3 = nn.Conv2d(planes, self.expansion*planes, kernel_size=1, bias=False)
-		self.bn3 = nn.BatchNorm2d(self.expansion*planes)
+		self.conv3 = nn.Conv2d(planes, self.expansion * planes, kernel_size=1, bias=False)
+		self.bn3 = nn.BatchNorm2d(self.expansion * planes)
 
 		self.shortcut = nn.Sequential()
-		if stride != 1 or in_planes != self.expansion*planes:
+		if stride != 1 or in_planes != self.expansion * planes:
 			self.shortcut = nn.Sequential(
-				nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False),
-				nn.BatchNorm2d(self.expansion*planes))
+				nn.Conv2d(in_planes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
+				nn.BatchNorm2d(self.expansion * planes))
 
 	def forward(self, x):
 		out = F.relu(self.bn1(self.conv1(x)))
@@ -79,10 +76,10 @@ class ResNet(nn.Module):
 		self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
 		self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
 		self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-		self.linear = nn.Linear(512*block.expansion, num_classes)
+		self.linear = nn.Linear(512 * block.expansion, num_classes)
 
 	def _make_layer(self, block, planes, num_blocks, stride):
-		strides = [stride] + [1]*(num_blocks-1)
+		strides = [stride] + [1] * (num_blocks - 1)
 		layers = []
 		for stride in strides:
 			layers.append(block(self.in_planes, planes, stride))
@@ -118,17 +115,22 @@ class ResNet(nn.Module):
 		out = self.linear(out)
 		return F.log_softmax(out, dim=1), F.softmax(out, dim=1)
 
+
 def ResNet18(soft=False):
-	return ResNet(BasicBlock, [2,2,2,2], soft=False)
+	return ResNet(BasicBlock, [2, 2, 2, 2], soft=False)
+
 
 def ResNet34(soft=False):
-	return ResNet(BasicBlock, [3,4,6,3], soft=False)
+	return ResNet(BasicBlock, [3, 4, 6, 3], soft=False)
+
 
 def ResNet50(soft=False):
-	return ResNet(Bottleneck, [3,4,6,3], soft=False)
+	return ResNet(Bottleneck, [3, 4, 6, 3], soft=False)
+
 
 def ResNet101(soft=False):
-	return ResNet(Bottleneck, [3,4,23,3], soft=False)
+	return ResNet(Bottleneck, [3, 4, 23, 3], soft=False)
+
 
 def ResNet152(soft=False):
-	return ResNet(Bottleneck, [3,8,36,3], soft=False)
+	return ResNet(Bottleneck, [3, 8, 36, 3], soft=False)

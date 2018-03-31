@@ -48,7 +48,7 @@ def plot_ellipse(semimaj=1, semimin=1, phi=0, x_cent=0, y_cent=0, theta_num=1e3,
 	return data
 
 def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir = './'):
-	
+
 	generator.eval()
 
 
@@ -57,8 +57,8 @@ def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir
 	noise = Variable(noise, volatile = True)
 	samples = generator(noise)
 
-	if (toy_dataset == '8gaussians'):
-		scale = 2.0/1.414 
+	if toy_dataset == '8gaussians':
+		scale = 2.0/1.414
 		centers = [
 		(1, 0),
 		(-1, 0),
@@ -71,10 +71,10 @@ def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir
 		]
 
 		centers = [(scale * x, scale * y) for x, y in centers]
-		centers = np.asarray(centers)	
+		centers = np.asarray(centers)
 		cov_all = np.array([(0.02, 0), (0, 0.02)])
 
-	elif (toy_dataset == '25gaussians'):
+	elif toy_dataset == '25gaussians':
 		range_ = np.arange(-2, 3)
 		centers = np.transpose(np.meshgrid(range_, range_, indexing = 'ij'), (1, 2, 0)).reshape(-1, 2)
 		scale = 1./2.828
@@ -103,7 +103,7 @@ def plot_learningcurves(history, *keys):
 
 	for key in keys:
 		plt.plot(history[key])
-	
+
 	plt.show()
 
 

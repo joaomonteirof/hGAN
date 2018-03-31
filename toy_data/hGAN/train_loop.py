@@ -64,7 +64,7 @@ class TrainLoop(object):
 		except ValueError:
 			best_fd = np.inf
 
-		while (self.cur_epoch < n_epochs):
+		while self.cur_epoch < n_epochs:
 			print('Epoch {}/{}'.format(self.cur_epoch+1, n_epochs))
 			#self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))

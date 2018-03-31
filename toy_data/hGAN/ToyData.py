@@ -17,7 +17,7 @@ class ToyData(Dataset):
 
 	def __getitem__(self, idx):
 			
-		if (self.dataset == '8gaussians'):
+		if self.dataset == '8gaussians':
 
 			scale = 2.
 			centers = [
@@ -40,7 +40,7 @@ class ToyData(Dataset):
 
 			sample /= 1.414
 
-		if (self.dataset == '25gaussians'):
+		if self.dataset == '25gaussians':
 
 			range_ = np.arange(-2, 3)
 			centers = np.transpose(np.meshgrid(range_, range_, indexing = 'ij'), (1, 2, 0)).reshape(-1, 2)

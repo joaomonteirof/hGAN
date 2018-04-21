@@ -30,13 +30,13 @@ class Discriminator_toy(torch.nn.Module):
 		self.projection.weight_g.data.fill_(1)
 
 		self.all_layers = nn.Sequential(
-            nn.Linear(2, hidden_dim),
-            nn.ReLU(True),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(True),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(True),
-            nn.Linear(hidden_dim, 1),
+			nn.Linear(2, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, 1),
 			nn.Sigmoid()
 			)
 

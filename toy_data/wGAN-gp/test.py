@@ -113,7 +113,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Checkpoint/model path')
 	parser.add_argument('--data-path', type=str, default='./data/', metavar='Path', help='Path to data .hdf')
-	parser.add_argument('--n-samples', type=int, default=10000, metavar='N', help='number of samples to  (default: 10000)')
+	parser.add_argument('--n-samples', type=int, default=2500, metavar='N', help='number of samples to  (default: 10000)')
 	parser.add_argument('--toy-dataset', choices=['8gaussians', '25gaussians'], default='8gaussians')
 	parser.add_argument('--no-plots', action='store_true', default=False, help='Disables plot of train/test losses')
 	args = parser.parse_args()

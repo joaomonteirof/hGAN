@@ -160,8 +160,6 @@ class TrainLoop(object):
 
 		fid = ((self.m - m)**2).sum() + np.matrix.trace(C + self.C - 2*sla.sqrtm( np.matmul(C, self.C) ))
 
-		self.fid_model = self.fid_model.cpu()
-
 		return fid
 
 	def calc_gradient_penalty(self, real_data, fake_data):

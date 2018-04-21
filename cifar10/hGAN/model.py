@@ -100,3 +100,104 @@ class Discriminator(torch.nn.Module):
 		h = self.hidden_layer(p_x)
 		out = self.output_layer(h)
 		return out
+
+## vanilla discriminator with kernel size=4
+class Discriminator_vanilla(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_vanilla, self).__init__()
+		self.main = nn.Sequential(
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf) x 32 x 32
+			nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*2) x 16 x 16
+			nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 4),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*4) x 8 x 8
+			nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 8),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*8) x 4 x 4
+			nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+			nn.Sigmoid() )
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		return self.main(x)
+
+## discriminator with kernel size = 8   
+class Discriminator_f8(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_f8, self).__init__()
+		self.main = nn.Sequential(
+				
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 8, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf) x 30 x 30
+			
+			nn.Conv2d(ndf, ndf * 2, 8, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*2) x 13 x 13
+			
+			nn.Conv2d(ndf * 2, ndf * 4, 8, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 4),
+			
+			nn.LeakyReLU(0.2, inplace=True),
+			
+			# state size. (ndf*4) x 4 x 4
+			
+			nn.Conv2d(ndf * 4, 1, 4 , 2, 0, bias=False),
+			nn.Sigmoid() )
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		return self.main(x)
+
+## discriminator with kernel size = 16
+class Discriminator_f16(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_f16, self).__init__()
+		self.main = nn.Sequential(
+				
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 16, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf) x 26 x 26
+			
+			nn.Conv2d(ndf, ndf * 2, 16, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),				
+			# state size. (ndf*2) x 7 x 7
+			
+			nn.Conv2d(ndf*2, 1, 7, 2, 0, bias=False),
+			nn.Sigmoid() )
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		return self.main(x)
+
+## discrminator with 1 layer of kernel size=4, remaining part= dense
+class Discriminator_dense(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_dense, self).__init__()
+		self.main = nn.Sequential(
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True) )
+			# state size. (ndf) x 32 x 32 ) 
+		self.linear=nn.Sequential( nn.Linear(ndf*32*32,1), nn.Sigmoid() )
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		x = self.main(x)
+		return self.linear(x.view(x.size(0), -1))

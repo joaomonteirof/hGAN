@@ -52,8 +52,10 @@ parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', 
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
 parser.add_argument('--save-every', type=int, default=5, metavar='N', help='how many epochs to wait before logging training status. Default is 5')
-parser.add_argument('--hyper-mode', action='store_true', default=False, help='enables training with hypervolume maximization')
-parser.add_argument('--nadir-slack', type=float, default=1.0, metavar='nadir', help='maximum distance to a nadir point component (default: 1.0)')
+parser.add_argument('--train-mode', choices=['vanilla', 'hyper', 'gman', 'loss_delta'], default='vanilla', help='Salect train mode. Default is vanilla (simple average of Ds losses)')
+parser.add_argument('--disc-mode', choices=['RP', 'MD'], default='RP', help='Multiple identical Ds with random projections (RP) or Multiple distinct Ds without projection (MD)')
+parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', help='factor for nadir-point update. Only used in hyper mode (default: 1.5)')
+parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -84,22 +86,30 @@ if not os.path.isfile('../test_data_statistics.p'):
 	test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
 	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
 
-disc_list = []
+if args.disc_mode == 'RP':
+	disc_list = []
+	for i in range(args.ndiscriminators):
+		disc = model.Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+		disc_list.append(disc)
 
-for i in range(args.ndiscriminators):
-	disc = model.Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
-	if args.cuda:
+elif args.disc_mode == 'MD':
+	D1 = model.Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D2 = model.Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D3 = model.Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D4 = model.Discriminator_f8(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D5 = model.Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	disc_list = [D1, D2, D3, D4, D5]
+
+if args.cuda:
+	for disc in disc_list:
 		disc = disc.cuda()
-	disc_list.append(disc)
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-if args.hyper_mode:
-	trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_slack=args.nadir_slack, cuda=args.cuda)
-else:
-	trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+
 
 print('Cuda Mode is: {}'.format(args.cuda))
-print('Hyper Mode is: {}'.format(args.hyper_mode))
+print('Train Mode is: {} - {}'.format(args.train_mode, args.disc_mode))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

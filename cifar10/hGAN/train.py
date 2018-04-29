@@ -52,7 +52,7 @@ parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', 
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
 parser.add_argument('--save-every', type=int, default=5, metavar='N', help='how many epochs to wait before logging training status. Default is 5')
-parser.add_argument('--train-mode', choices=['vanilla', 'hyper', 'gman', 'loss_delta'], default='vanilla', help='Salect train mode. Default is vanilla (simple average of Ds losses)')
+parser.add_argument('--train-mode', choices=['vanilla', 'hyper', 'gman', 'gman_grad', 'loss_delta'], default='vanilla', help='Salect train mode. Default is vanilla (simple average of Ds losses)')
 parser.add_argument('--disc-mode', choices=['RP', 'MD'], default='RP', help='Multiple identical Ds with random projections (RP) or Multiple distinct Ds without projection (MD)')
 parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', help='factor for nadir-point update. Only used in hyper mode (default: 1.5)')
 parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
@@ -111,5 +111,6 @@ trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, na
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {} - {}'.format(args.train_mode, args.disc_mode))
+print('Number of discriminators is: {}'.format(len(disc_list)))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

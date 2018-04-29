@@ -29,7 +29,7 @@ class TrainLoop(object):
 		self.disc_list = disc_list
 		self.optimizer = optimizer
 		self.train_loader = train_loader
-		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': []}
+		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': [], 'steepest_dir_norm': []}
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.alpha = alpha
@@ -70,11 +70,12 @@ class TrainLoop(object):
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
-			fid_c = self.valid()
+			fid_c, st_dir_norm = self.valid()
 
 			self.history['gen_loss'].append(gen_loss/(t+1))
 			self.history['disc_loss'].append(disc_loss/(t+1))
 			self.history['FID-c'].append(fid_c)
+			self.history['steepest_dir_norm'].append(st_dir_norm)
 
 			self.cur_epoch += 1
 
@@ -142,6 +143,7 @@ class TrainLoop(object):
 
 			losses_list_float = []
 			losses_list_var = []
+			prob_list = []
 
 			for disc in self.disc_list:
 				losses_list_var.append( F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_) )
@@ -149,8 +151,15 @@ class TrainLoop(object):
 
 			self.update_nadir_point(losses_list_float)
 
-			for loss in losses_list_var:
+			coefs_sum = 0.0
+
+			for i, loss in enumerate(losses_list_var):
 				loss_G -= torch.log( self.nadir - loss )
+				prob_list.append( 1/(self.nadir - losses_list_float[i]) )
+				coefs_sum += prob_list[-1]
+
+			loss_G /= coefs_sum
+			self.proba = np.asarray(prob_list) / coefs_sum
 
 		elif self.train_mode == 'gman':
 
@@ -162,13 +171,34 @@ class TrainLoop(object):
 				losses_list_float.append( losses_list_var[-1].data[0] )
 
 			losses = Variable(torch.FloatTensor(losses_list_float))
-			weights = torch.nn.functional.softmax(self.alpha*losses, dim=0).data.cpu().numpy()
+			self.proba = torch.nn.functional.softmax(self.alpha*losses, dim=0).data.cpu().numpy()
 
 			acm = 0.0
-			for loss_weight in zip(losses_list_var, weights):
+			for loss_weight in zip(losses_list_var, self.proba):
 				loss_G += loss_weight[0]*float(loss_weight[1])
-				acm += loss_weight[1]
-			loss_G /= acm
+			loss_G
+
+		elif self.train_mode == 'gman_grad':
+
+			grads_list = []
+			losses_list = []
+
+			for disc in self.disc_list:
+				loss = F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_)
+				self.model.zero_grad()
+				loss.backward()
+				grads_list.append( self.get_gen_grads_norm() )
+
+			grads = Variable(torch.FloatTensor(grads_list))
+			self.proba = torch.nn.functional.softmax(self.alpha*grads, dim=0).data.cpu().numpy()
+
+			self.model.zero_grad()
+
+			for disc in self.disc_list:
+				losses_list.append( F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_) )
+
+			for loss_weight in zip(losses_list, self.proba):
+				loss_G += loss_weight[0]*float(loss_weight[1])
 
 		elif self.train_mode == 'loss_delta':
 
@@ -194,6 +224,7 @@ class TrainLoop(object):
 			for disc in self.disc_list:
 				loss_G += F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_)
 			loss_G /= len(self.disc_list)
+			self.proba = np.ones(len(self.disc_list))*1/len(self.disc_list)
 
 		self.optimizer.zero_grad()
 		loss_G.backward()
@@ -230,8 +261,9 @@ class TrainLoop(object):
 		C = np.cov(logits, rowvar=False)
 
 		fid = ((self.m - m)**2).sum() + np.matrix.trace(C + self.C - 2*sla.sqrtm( np.matmul(C, self.C) ))
+		steepest_dir_norm = self.compute_steepest_direction_norm()
 
-		return fid
+		return fid, steepest_dir_norm
 
 	def checkpointing(self):
 
@@ -325,3 +357,51 @@ class TrainLoop(object):
 			self.Q[i]=self.alpha*reward[i]+(1-self.alpha)*self.Q[i]
 
 		self.proba = torch.nn.functional.softmax( Variable(torch.FloatTensor(self.Q)), dim=0 ).data.cpu().numpy()
+
+	def compute_steepest_direction_norm(self):
+		self.model.train()
+
+		z_ = torch.randn(128, 100).view(-1, 100, 1, 1)
+
+		y_real_ = torch.ones(128)
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+
+		z_ = Variable(z_, requires_grad=False)
+		y_real_ = Variable(y_real_)
+
+		grads_list = []
+
+		for disc in self.disc_list:
+			self.model.zero_grad()
+			out = self.model.forward(z_)
+			loss = F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_)
+			loss.backward()
+			grads_list.append( self.get_gen_grads() )
+
+		grad_sum = 0.0
+
+		for weight_grad in zip(self.proba, grads_list):
+			try:
+				grad_sum += float(weight_grad[0])*weight_grad[1]
+			except TypeError:
+				grad_sum = float(weight_grad[0])*weight_grad[1]
+
+		return float(grad_sum.norm(2).data[0])/len(self.disc_list)
+
+	def get_gen_grads(self):
+		grads = None
+		for params in list(self.model.parameters()):
+			try:
+				torch.cat([grads, params.grad.view(-1)], 0)
+			except TypeError:
+				grads = params.grad.view(-1)
+		return grads
+
+	def get_gen_grads_norm(self):
+		norm = 0.0
+		for params in list(self.model.parameters()):
+			norm+=params.grad.norm(2).data[0]
+		return norm

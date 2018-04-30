@@ -184,15 +184,15 @@ class TrainLoop(object):
 			losses_list = []
 
 			for disc in self.disc_list:
-				loss = F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_)
-				self.model.zero_grad()
-				loss.backward()
-				grads_list.append( self.get_gen_grads_norm() )
+				loss = F.binary_cross_entropy( disc.forward(self.model.forward(z_)).squeeze(), y_real_)
+				grads_list.append( self.get_gen_grads_norm(loss) )
 
 			grads = Variable(torch.FloatTensor(grads_list))
 			self.proba = torch.nn.functional.softmax(self.alpha*grads, dim=0).data.cpu().numpy()
 
 			self.model.zero_grad()
+
+			out = self.model.forward(z_)
 
 			for disc in self.disc_list:
 				losses_list.append( F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_) )
@@ -206,6 +206,8 @@ class TrainLoop(object):
 
 			if self.cuda_mode:
 				z_probs = z_probs.cuda()
+
+			z_probs = Variable(z_probs)
 
 			out_probs = self.model.forward(z_probs)
 
@@ -378,8 +380,7 @@ class TrainLoop(object):
 			self.model.zero_grad()
 			out = self.model.forward(z_)
 			loss = F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_)
-			loss.backward()
-			grads_list.append( self.get_gen_grads() )
+			grads_list.append( self.get_gen_grads(loss) )
 
 		grad_sum = 0.0
 
@@ -391,17 +392,22 @@ class TrainLoop(object):
 
 		return float(grad_sum.norm(2).data[0])/len(self.disc_list)
 
-	def get_gen_grads(self):
-		grads = None
-		for params in list(self.model.parameters()):
-			try:
-				torch.cat([grads, params.grad.view(-1)], 0)
-			except TypeError:
-				grads = params.grad.view(-1)
-		return grads
+	def get_gen_grads(self, loss_):
+		grads = torch.autograd.grad(outputs=loss_, inputs= self.model.parameters() )
+		self.model.zero_grad()
+		for params_grads in grads:
 
-	def get_gen_grads_norm(self):
+			try:
+				grads_ = torch.cat([grads_, params_grads.view(-1)], 0)
+			except:
+				grads_ = params_grads.view(-1)	
+
+		return grads_
+
+	def get_gen_grads_norm(self, loss_):
 		norm = 0.0
-		for params in list(self.model.parameters()):
-			norm+=params.grad.norm(2).data[0]
+		self.model.zero_grad()
+		grads = torch.autograd.grad(outputs=loss_, inputs= self.model.parameters() )
+		for params_grads in grads:
+			norm+=params_grads.norm(2).data[0]
 		return norm

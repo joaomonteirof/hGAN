@@ -1,19 +1,20 @@
 from __future__ import print_function
 import argparse
 import torch
-import torchvision
 import torchvision.transforms as transforms
 from train_loop import TrainLoop
 import torch.optim as optim
-import torchvision.models as models
 import torchvision.datasets as datasets
 import torch.utils.data
 import model
 import os
-import resnet
 import pickle
 import numpy as np
 import PIL.Image as Image
+
+from common import resnet
+from common.generator import Generator
+
 
 def save_testdata_statistics(model, data_loader, cuda_mode):
 
@@ -70,7 +71,7 @@ transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.
 trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
-generator = model.Generator(100, [1024, 512, 256, 128], 3).train()
+generator = Generator(100, [1024, 512, 256, 128], 3).train()
 disc = model.Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2), batch_norm=True).train()
 fid_model = resnet.ResNet18().eval()
 mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)

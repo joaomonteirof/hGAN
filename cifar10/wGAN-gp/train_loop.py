@@ -81,7 +81,7 @@ class TrainLoop(object):
 			elif self.cur_epoch % save_every == 0:
 				self.checkpointing()
 
-		# saving final models
+		# saving final common
 		print('Saving final model...')
 		self.checkpointing()
 

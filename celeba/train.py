@@ -12,6 +12,8 @@ import model
 import PIL.Image as Image
 
 # Training settings
+from common.generator import Generator
+
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
@@ -41,7 +43,7 @@ celebA_data = datasets.ImageFolder(args.data_path, transform = transform)
 
 train_loader = torch.utils.data.DataLoader(celebA_data, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
-generator = model.Generator(100, [1024, 512, 256, 128], 3).train()
+generator = Generator(100, [1024, 512, 256, 128], 3).train()
 
 if args.cuda:
 	generator = generator.cuda()

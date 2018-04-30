@@ -80,7 +80,7 @@ class TrainLoop(object):
 				self.checkpointing()
 
 
-		# saving final models
+		# saving final common
 		print('Saving final model...')
 		self.checkpointing()
 

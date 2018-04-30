@@ -11,12 +11,12 @@ import torch.utils.data
 import model
 import numpy as np
 
-from ToyData import ToyData
-
 import os
 import pickle
 
 # Training settings
+from common.toy_data import ToyData
+
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')

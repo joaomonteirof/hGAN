@@ -20,8 +20,8 @@ class TrainLoop(object):
 			if not os.path.isdir(self.checkpoint_path):
 				os.mkdir(self.checkpoint_path)
 
-		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'checkpoint_{}ep.pt')
-		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_checkpoint_{}ep.pt')
+		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_DCGAN_{}ep.pt')
+		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_DCGAN_{}ep.pt')
 		self.cuda_mode = cuda
 		self.model = generator
 		self.fid_model = fid_model

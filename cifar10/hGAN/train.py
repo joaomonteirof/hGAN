@@ -96,7 +96,7 @@ elif args.disc_mode == 'MD':
 	D1 = model.Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 	D2 = model.Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 	D3 = model.Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D4 = model.Discriminator_f8(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D4 = model.Discriminator_f4s3(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train(
 	D5 = model.Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 	disc_list = [D1, D2, D3, D4, D5]
 

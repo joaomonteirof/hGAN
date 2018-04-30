@@ -124,16 +124,46 @@ class Discriminator_f16(nn.Module):
 		self.main = nn.Sequential(
 
 			# input is (nc) x 64 x 64
-			nn.Conv2d(nc, ndf, 16, 2, 1, bias=False),
+			nn.Conv2d(nc, ndf, 16, 1, 1, 2, bias=False),
 			nn.LeakyReLU(0.2, inplace=True),
-			# state size. (ndf) x 26 x 26
+			# state size. (ndf) x 36 x 36
 
-			nn.Conv2d(ndf, ndf * 2, 16, 2, 1, bias=False),
+			nn.Conv2d(ndf, ndf * 2, 16, 1, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*2) x 23 x 23
+
+			nn.Conv2d(ndf * 2, ndf * 4, 16, 1, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*4) x 8 x 8
+
+			nn.Conv2d(ndf * 4, 1, 8, 1, 0, bias=False),
+			nn.Sigmoid())
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		return self.main(x)
+
+## discriminator with kernel size = 4 and stride = 3
+class Discriminator_f4s3(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_f4s3, self).__init__()
+		self.main = nn.Sequential(
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 4, 3, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf) x 21 x 21
+			nn.Conv2d(ndf, ndf * 2, 4, 3, 1, bias=False),
 			nn.BatchNorm2d(ndf * 2),
 			nn.LeakyReLU(0.2, inplace=True),
 			# state size. (ndf*2) x 7 x 7
-
-			nn.Conv2d(ndf * 2, 1, 7, 2, 0, bias=False),
+			nn.Conv2d(ndf * 2, ndf * 4, 4, 3, 1, bias=False),
+			nn.BatchNorm2d(ndf * 4),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*4) x 2 x 2
+			nn.Conv2d(ndf * 4, 1, 4, 3, 1, bias=False),
 			nn.Sigmoid())
 
 		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)

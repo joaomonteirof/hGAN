@@ -1,20 +1,18 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision
+
+import PIL.Image as Image
+import model
+import torch.optim as optim
+import torch.utils.data
+import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from train_loop import TrainLoop
-import torch.optim as optim
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torch.utils.data
-import model
-import os
-import pickle
-import numpy as np
-import PIL.Image as Image
 
 # Training settings
+from common.generator import Generator
+
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
@@ -43,7 +41,7 @@ transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.
 trainset = datasets.LSUN(db_path=args.data_path, classes=['bedroom_train'], transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
-generator = model.Generator(100, [1024, 512, 256, 128], 3).train()
+generator = Generator(100, [1024, 512, 256, 128], 3).train()
 
 if args.cuda:
 	generator = generator.cuda()

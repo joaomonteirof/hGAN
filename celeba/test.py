@@ -1,46 +1,27 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-import torch.utils.data
-from torch.autograd import Variable
-import torchvision
-from PIL import ImageFilter
+import os
+
 import matplotlib.pyplot as plt
 import model as model_
 import numpy as np
-import os
+import torch
+import torch.utils.data
+from torch.autograd import Variable
+
+from common.utils import test_model
+
 
 def denorm(unorm):
 	norm = (unorm + 1) / 2
 	return norm.clamp(0, 1)
 
-def test_model(model, n_tests, cuda_mode):
-
-	model.eval()
-
-	to_pil = transforms.ToPILImage()
-	to_tensor = transforms.ToTensor()
-
-	z_ = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
-
-	if cuda_mode:
-		z_ = z_.cuda()
-
-	z_ = Variable(z_)
-	out = model.forward(z_)
-
-	for i in range(out.size(0)):
-		sample = denorm(out[i].data)
-		sample = to_pil(sample.cpu())
-		sample.save('sample_{}.png'.format(i+1))
 
 def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 	generator.eval()
 
-	n_tests = fig_size[0]*fig_size[1]
+	n_tests = fig_size[0] * fig_size[1]
 
 	noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
@@ -71,16 +52,16 @@ def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 
 	if not os.path.exists(save_dir):
 		os.mkdir(save_dir)
-	save_fn = save_dir + 'CelebA_DCGAN_'+ cp_name + '.png'
+	save_fn = save_dir + 'CelebA_DCGAN_' + cp_name + '.png'
 	plt.savefig(save_fn)
 
 	plt.close()
 
-def plot_learningcurves(history, *keys):
 
+def plot_learningcurves(history, *keys):
 	for key in keys:
 		plt.plot(history[key])
-	
+
 	plt.show()
 
 
@@ -100,7 +81,7 @@ if __name__ == '__main__':
 
 	model = model_.Generator(100, [1024, 512, 256, 128], 3)
 
-	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
+	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])
 
 	if args.cuda:
@@ -111,7 +92,6 @@ if __name__ == '__main__':
 	history = ckpt['history']
 
 	if not args.no_plots:
-
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')
 		plot_learningcurves(history, 'gen_loss_minibatch')

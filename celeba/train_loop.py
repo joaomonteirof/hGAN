@@ -1,10 +1,9 @@
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
+import os
 
 import numpy as np
-
-import os
+import torch
+import torch.nn.functional as F
+from torch.autograd import Variable
 from tqdm import tqdm
 
 
@@ -42,7 +41,7 @@ class TrainLoop(object):
 
 		else:
 			if nadir_slack:
-				#self.define_nadir_point(nadir_slack)
+				# self.define_nadir_point(nadir_slack)
 				self.nadir_slack = nadir_slack
 				self.hyper_mode = True
 			else:
@@ -52,28 +51,28 @@ class TrainLoop(object):
 	def train(self, n_epochs=1, save_every=1):
 
 		while (self.cur_epoch < n_epochs):
-			print('Epoch {}/{}'.format(self.cur_epoch+1, n_epochs))
-			#self.scheduler.step()
+			print('Epoch {}/{}'.format(self.cur_epoch + 1, n_epochs))
+			# self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))
-			gen_loss=0.0
-			disc_loss=0.0
+			gen_loss = 0.0
+			disc_loss = 0.0
 			for t, batch in train_iter:
 				new_gen_loss, new_disc_loss = self.train_step(batch)
-				gen_loss+=new_gen_loss
-				disc_loss+=new_disc_loss
+				gen_loss += new_gen_loss
+				disc_loss += new_disc_loss
 				self.total_iters += 1
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
-			self.history['gen_loss'].append(gen_loss/(t+1))
-			self.history['disc_loss'].append(disc_loss/(t+1))
+			self.history['gen_loss'].append(gen_loss / (t + 1))
+			self.history['disc_loss'].append(disc_loss / (t + 1))
 
 			self.cur_epoch += 1
 
 			if self.cur_epoch % save_every == 0:
 				self.checkpointing()
 
-		# saving final models
+		# saving final common
 		print('Saving final model...')
 		self.checkpointing()
 
@@ -131,13 +130,13 @@ class TrainLoop(object):
 			losses_list_var = []
 
 			for disc in self.disc_list:
-				losses_list_var.append( F.binary_cross_entropy( disc.forward(out).squeeze(), y_real_) )
-				losses_list_float.append( losses_list_var[-1].data[0] )
+				losses_list_var.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
+				losses_list_float.append(losses_list_var[-1].data[0])
 
 			self.update_nadir_point(losses_list_float)
 
 			for loss in losses_list_var:
-				loss_G -= torch.log( self.nadir - loss )
+				loss_G -= torch.log(self.nadir - loss)
 
 		else:
 			for disc in self.disc_list:
@@ -154,17 +153,17 @@ class TrainLoop(object):
 		# Checkpointing
 		print('Checkpointing...')
 		ckpt = {'model_state': self.model.state_dict(),
-		'optimizer_state': self.optimizer.state_dict(),
-		'history': self.history,
-		'total_iters': self.total_iters,
-		'nadir_point': self.nadir,
-		'cur_epoch': self.cur_epoch}
+				'optimizer_state': self.optimizer.state_dict(),
+				'history': self.history,
+				'total_iters': self.total_iters,
+				'nadir_point': self.nadir,
+				'cur_epoch': self.cur_epoch}
 		torch.save(ckpt, self.save_epoch_fmt_gen.format(self.cur_epoch))
 
 		for i, disc in enumerate(self.disc_list):
 			ckpt = {'model_state': disc.state_dict(),
-			'optimizer_state': disc.optimizer.state_dict()}
-			torch.save(ckpt, self.save_epoch_fmt_disc.format(i+1, self.cur_epoch))
+					'optimizer_state': disc.optimizer.state_dict()}
+			torch.save(ckpt, self.save_epoch_fmt_disc.format(i + 1, self.cur_epoch))
 
 	def load_checkpoint(self, epoch):
 
@@ -184,7 +183,7 @@ class TrainLoop(object):
 			self.nadir = ckpt['nadir_point']
 
 			for i, disc in enumerate(self.disc_list):
-				ckpt = torch.load(self.save_epoch_fmt_disc.format(i+1, epoch))
+				ckpt = torch.load(self.save_epoch_fmt_disc.format(i + 1, epoch))
 				disc.load_state_dict(ckpt['model_state'])
 				disc.optimizer.load_state_dict(ckpt['optimizer_state'])
 
@@ -194,7 +193,7 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm+=params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).data[0]
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):
@@ -220,7 +219,7 @@ class TrainLoop(object):
 
 		for disc in self.disc_list:
 			d_out = disc.forward(out).squeeze()
-			disc_outs.append( F.binary_cross_entropy(d_out, y_real_).data[0] )
+			disc_outs.append(F.binary_cross_entropy(d_out, y_real_).data[0])
 
 		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 

@@ -1,14 +1,12 @@
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
+import os
+import pickle
 
 import numpy as np
 import scipy.linalg as sla
-
-import os
+import torch
+from torch.autograd import Variable
 from tqdm import tqdm
 
-import pickle
 
 class TrainLoop(object):
 
@@ -35,7 +33,7 @@ class TrainLoop(object):
 		self.lambda_grad = lambda_grad
 		self.its_disc = its_disc
 
-		pfile = open('../test_data_statistics.p','rb')
+		pfile = open('../test_data_statistics.p', 'rb')
 		statistics = pickle.load(pfile)
 		pfile.close()
 
@@ -49,28 +47,28 @@ class TrainLoop(object):
 	def train(self, n_epochs=1, save_every=1):
 
 		try:
-			best_fid = np.min( self.history['FID-c'] )
+			best_fid = np.min(self.history['FID-c'])
 		except ValueError:
 			best_fid = np.inf
 
 		while (self.cur_epoch < n_epochs):
-			print('Epoch {}/{}'.format(self.cur_epoch+1, n_epochs))
-			#self.scheduler.step()
+			print('Epoch {}/{}'.format(self.cur_epoch + 1, n_epochs))
+			# self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))
-			gen_loss=0.0
-			disc_loss=0.0
+			gen_loss = 0.0
+			disc_loss = 0.0
 			for t, batch in train_iter:
 				new_gen_loss, new_disc_loss = self.train_step(batch)
-				gen_loss+=new_gen_loss
-				disc_loss+=new_disc_loss
+				gen_loss += new_gen_loss
+				disc_loss += new_disc_loss
 				self.total_iters += 1
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
 			fid_c = self.valid()
 
-			self.history['gen_loss'].append(gen_loss/(t+1))
-			self.history['disc_loss'].append(disc_loss/(t+1))
+			self.history['gen_loss'].append(gen_loss / (t + 1))
+			self.history['disc_loss'].append(disc_loss / (t + 1))
 			self.history['FID-c'].append(fid_c)
 
 			self.cur_epoch += 1
@@ -81,7 +79,7 @@ class TrainLoop(object):
 			elif self.cur_epoch % save_every == 0:
 				self.checkpointing()
 
-		# saving final models
+		# saving final common
 		print('Saving final model...')
 		self.checkpointing()
 
@@ -158,7 +156,7 @@ class TrainLoop(object):
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)
 
-		fid = ((self.m - m)**2).sum() + np.matrix.trace(C + self.C - 2*sla.sqrtm( np.matmul(C, self.C) ))
+		fid = ((self.m - m) ** 2).sum() + np.matrix.trace(C + self.C - 2 * sla.sqrtm(np.matmul(C, self.C)))
 
 		return fid
 
@@ -178,7 +176,7 @@ class TrainLoop(object):
 		if self.cuda_mode:
 			grad_outs = grad_outs.cuda()
 
-		gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates, grad_outputs=grad_outs, create_graph=True)[0].view(interpolates.size(0),-1)
+		gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolates, grad_outputs=grad_outs, create_graph=True)[0].view(interpolates.size(0), -1)
 
 		gradient_penalty = ((gradients.norm(p=2, dim=1) - 1) ** 2).mean() * self.lambda_grad
 
@@ -189,15 +187,15 @@ class TrainLoop(object):
 		# Checkpointing
 		print('Checkpointing...')
 		ckpt = {'model_state': self.model.state_dict(),
-		'optimizer_state': self.optimizer.state_dict(),
-		'history': self.history,
-		'total_iters': self.total_iters,
-		'fixed_noise': self.fixed_noise,
-		'cur_epoch': self.cur_epoch}
+				'optimizer_state': self.optimizer.state_dict(),
+				'history': self.history,
+				'total_iters': self.total_iters,
+				'fixed_noise': self.fixed_noise,
+				'cur_epoch': self.cur_epoch}
 		torch.save(ckpt, self.save_epoch_fmt_gen.format(self.cur_epoch))
 
 		ckpt = {'model_state': self.disc.state_dict(),
-		'optimizer_state': self.disc.optimizer.state_dict()}
+				'optimizer_state': self.disc.optimizer.state_dict()}
 		torch.save(ckpt, self.save_epoch_fmt_disc.format(self.cur_epoch))
 
 	def load_checkpoint(self, epoch):
@@ -226,7 +224,7 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm+=params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).data[0]
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):

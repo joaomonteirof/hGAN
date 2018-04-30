@@ -1,22 +1,15 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision
-import torchvision.transforms as transforms
-from train_loop import TrainLoop
-import torch.optim as optim
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torch.utils.data
+
 import model
-import numpy as np
-
-from ToyData import ToyData
-
-import os
-import pickle
+import torch.optim as optim
+import torch.utils.data
+from train_loop import TrainLoop
 
 # Training settings
+from common.toy_data import ToyData
+
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
@@ -32,7 +25,7 @@ parser.add_argument('--save-every', type=int, default=10, metavar='N', help='how
 parser.add_argument('--hyper-mode', action='store_true', default=False, help='enables training with hypervolume maximization')
 parser.add_argument('--nadir-slack', type=float, default=1.0, metavar='nadir', help='maximum distance to a nadir point component (default: 1.0)')
 parser.add_argument('--toy-dataset', choices=['8gaussians', '25gaussians'], default='8gaussians')
-parser.add_argument('--toy-length', type=int, metavar = 'N', help='Toy dataset length', default=100000)
+parser.add_argument('--toy-length', type=int, metavar='N', help='Toy dataset length', default=100000)
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -40,7 +33,7 @@ torch.manual_seed(args.seed)
 disc_list = []
 
 toy_data = ToyData(args.toy_dataset, args.toy_length)
-train_loader = torch.utils.data.DataLoader(toy_data, batch_size = args.batch_size, num_workers = args.workers)
+train_loader = torch.utils.data.DataLoader(toy_data, batch_size=args.batch_size, num_workers=args.workers)
 
 centers = toy_data.get_centers()
 cov = toy_data.get_cov()
@@ -55,9 +48,9 @@ for i in range(args.ndiscriminators):
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
 if args.hyper_mode:
-	trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader = train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_slack=args.nadir_slack)
+	trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_slack=args.nadir_slack)
 
 else:
-	trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader = train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch)
+	trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch)
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

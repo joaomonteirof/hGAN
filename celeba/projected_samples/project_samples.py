@@ -1,14 +1,16 @@
 import argparse
-import torch
-import torchvision
-import torchvision.transforms as transforms
-import PIL.Image as Image
 import glob
 import os
+
+import PIL.Image as Image
+import torch
+import torchvision.transforms as transforms
+
 
 def denorm(unorm):
 	norm = (unorm + 1) / 2
 	return norm.clamp(0, 1)
+
 
 # Training settings
 parser = argparse.ArgumentParser(description='Save projected samples')
@@ -27,11 +29,11 @@ to_pil = transforms.ToPILImage()
 
 for i in range(args.n_projections):
 
-	projection = torch.nn.utils.weight_norm(torch.nn.Conv2d(3, 1, kernel_size=8, stride=2, padding=3, bias=False), name = "weight")
+	projection = torch.nn.utils.weight_norm(torch.nn.Conv2d(3, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
 	projection.weight_g.data.fill_(1)
 
 	for j, img_path in enumerate(input_list):
 		img = Image.open(img_path)
 		img = transform(img).unsqueeze(0)
-		proj_img = to_pil( denorm( projection(torch.autograd.Variable(img)).data[0] ) )
-		proj_img.save(args.out_path+str(j+1)+'_'+str(i+1)+'.png')
+		proj_img = to_pil(denorm(projection(torch.autograd.Variable(img)).data[0]))
+		proj_img.save(args.out_path + str(j + 1) + '_' + str(i + 1) + '.png')

@@ -1,30 +1,18 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-import torch.utils.data
-from torch.autograd import Variable
-import torchvision
-from PIL import ImageFilter
+
 import matplotlib.pyplot as plt
 import model as model_
-import numpy as np
-import os
-from scipy.stats import chi2
+import torch.utils.data
 
 from common.utils import save_samples
 
 
-
-
-
 def plot_learningcurves(history, *keys):
-
 	for key in keys:
 		plt.plot(history[key])
-	
+
 	plt.show()
 
 
@@ -44,20 +32,18 @@ if __name__ == '__main__':
 
 	generator = model_.Generator_toy(512)
 
-	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
+	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	generator.load_state_dict(ckpt['model_state'])
-
 
 	history = ckpt['history']
 
 	if not args.no_plots:
-
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')
-		#plot_learningcurves(history, 'gen_loss_minibatch')
-		#plot_learningcurves(history, 'disc_loss_minibatch')
+		# plot_learningcurves(history, 'gen_loss_minibatch')
+		# plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FD')
-		#plot_learningcurves(history, 'quality_samples')
-		#plot_learningcurves(history, 'quality_modes')
+	# plot_learningcurves(history, 'quality_samples')
+	# plot_learningcurves(history, 'quality_modes')
 
-	save_samples(generator = generator, cp_name = args.cp_path.split('/')[-1].split('.')[0], save_name = args.cp_path.split('/')[-2].split('.')[0], n_samples = args.n_samples, toy_dataset = args.toy_dataset)
+	save_samples(generator=generator, cp_name=args.cp_path.split('/')[-1].split('.')[0], save_name=args.cp_path.split('/')[-2].split('.')[0], n_samples=args.n_samples, toy_dataset=args.toy_dataset)

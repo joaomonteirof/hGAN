@@ -1,34 +1,29 @@
 from __future__ import print_function
+
 import argparse
-import torch
-from torch import nn
-from torch.autograd import Variable
-from torch.nn import functional as F
-import torch.utils.data
-import torchvision
-import torchvision.transforms as transforms
-from torchvision.models.inception import inception_v3
-from PIL import ImageFilter
+import os
+
 import matplotlib.pyplot as plt
 import model as model_
 import numpy as np
-from scipy.stats import entropy
-import os
+import torch
+import torch.utils.data
+from torch.autograd import Variable
 
 from common.metrics import inception_score
 from common.utils import test_model
 
 
 def denorm(unorm):
-
 	norm = (unorm + 1) / 2
 
 	return norm.clamp(0, 1)
 
+
 def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 	generator.eval()
 
-	n_tests = fig_size[0]*fig_size[1]
+	n_tests = fig_size[0] * fig_size[1]
 
 	noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
@@ -59,17 +54,18 @@ def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 
 	if not os.path.exists(save_dir):
 		os.mkdir(save_dir)
-	save_fn = save_dir + 'Cifar10_hGAN_'+ cp_name + '.png'
+	save_fn = save_dir + 'Cifar10_hGAN_' + cp_name + '.png'
 	plt.savefig(save_fn)
 
 	plt.close()
 
-def plot_learningcurves(history, *keys):
 
+def plot_learningcurves(history, *keys):
 	for key in keys:
 		plt.plot(history[key])
-	
+
 	plt.show()
+
 
 if __name__ == '__main__':
 
@@ -89,7 +85,7 @@ if __name__ == '__main__':
 
 	model = model_.Generator(100, [1024, 512, 256, 128], 3)
 
-	ckpt = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
+	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])
 
 	if args.cuda:
@@ -100,7 +96,6 @@ if __name__ == '__main__':
 	history = ckpt['history']
 
 	if not args.no_plots:
-
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')
 		plot_learningcurves(history, 'gen_loss_minibatch')
@@ -111,4 +106,4 @@ if __name__ == '__main__':
 	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)
 
 	if args.inception:
-		print( inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10) )
+		print(inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10))

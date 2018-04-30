@@ -1,18 +1,14 @@
 from __future__ import print_function
+
 import argparse
-import torch
-import torchvision
+
+import PIL.Image as Image
+import model
+import torch.optim as optim
+import torch.utils.data
+import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from train_loop import TrainLoop
-import torch.optim as optim
-import torchvision.models as models
-import torchvision.datasets as datasets
-import torch.utils.data
-import model
-import os
-import pickle
-import numpy as np
-import PIL.Image as Image
 
 # Training settings
 from common.generator import Generator

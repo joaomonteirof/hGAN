@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 
 # Discriminator model
 class Discriminator(torch.nn.Module):
@@ -15,7 +14,7 @@ class Discriminator(torch.nn.Module):
 			if i == 0:
 				conv = nn.Conv2d(input_dim, num_filters[i], kernel_size=4, stride=2, padding=1)
 			else:
-				conv = nn.Conv2d(num_filters[i-1], num_filters[i], kernel_size=4, stride=2, padding=1)
+				conv = nn.Conv2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
 
 			conv_name = 'conv' + str(i + 1)
 			self.hidden_layer.add_module(conv_name, conv)

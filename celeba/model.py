@@ -1,14 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
+
 
 # Discriminator model
 class Discriminator(torch.nn.Module):
 	def __init__(self, input_dim, num_filters, output_dim, optimizer, lr, betas, batch_norm=False):
 		super(Discriminator, self).__init__()
 
-		self.projection = nn.utils.weight_norm(nn.Conv2d(input_dim, 1, kernel_size=8, stride=2, padding=3, bias=False), name = "weight")
+		self.projection = nn.utils.weight_norm(nn.Conv2d(input_dim, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
 		self.projection.weight_g.data.fill_(1)
 
 		# Hidden layers
@@ -18,7 +17,7 @@ class Discriminator(torch.nn.Module):
 			if i == 0:
 				conv = nn.Conv2d(1, num_filters[i], kernel_size=4, stride=2, padding=1)
 			else:
-				conv = nn.Conv2d(num_filters[i-1], num_filters[i], kernel_size=4, stride=2, padding=1)
+				conv = nn.Conv2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
 
 			conv_name = 'conv' + str(i + 1)
 			self.hidden_layer.add_module(conv_name, conv)
@@ -26,7 +25,6 @@ class Discriminator(torch.nn.Module):
 			# Initializer
 			nn.init.normal(conv.weight, mean=0.0, std=0.02)
 			nn.init.constant(conv.bias, 0.0)
-
 
 			# Batch normalization
 			if i != 0 and batch_norm:

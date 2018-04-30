@@ -409,5 +409,5 @@ class TrainLoop(object):
 		self.model.zero_grad()
 		grads = torch.autograd.grad(outputs=loss_, inputs= self.model.parameters() )
 		for params_grads in grads:
-			norm+=params_grads.norm(2).data[0]
-		return norm
+			norm+=params_grads.norm(2).data[0]**2
+		return np.sqrt(norm)

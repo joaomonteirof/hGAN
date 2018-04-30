@@ -18,6 +18,7 @@ import os
 from numpy.lib.stride_tricks import as_strided
 
 from common.metrics import inception_score
+from common.utils import test_model
 
 
 def denorm(unorm):
@@ -26,25 +27,6 @@ def denorm(unorm):
 
 	return norm.clamp(0, 1)
 
-def test_model(model, n_tests, cuda_mode):
-
-	model.eval()
-
-	to_pil = transforms.ToPILImage()
-	to_tensor = transforms.ToTensor()
-
-	z_ = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
-
-	if cuda_mode:
-		z_ = z_.cuda()
-
-	z_ = Variable(z_)
-	out = model.forward(z_)
-
-	for i in range(out.size(0)):
-		sample = denorm(out[i].data)
-		sample = to_pil(sample.cpu())
-		sample.save('sample_{}.png'.format(i+1))
 
 def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 	generator.eval()

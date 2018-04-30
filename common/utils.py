@@ -8,6 +8,7 @@ import torch
 import torch.utils.data
 from scipy.stats import chi2
 from torch.autograd import Variable
+from torchvision.transforms import transforms
 
 
 def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir='./'):
@@ -91,3 +92,29 @@ def plot_ellipse(semimaj=1, semimin=1, phi=0, x_cent=0, y_cent=0, theta_num=1000
     data[1] += y_cent
 
     return data
+
+
+def denorm(unorm):
+    norm = (unorm + 1) / 2
+
+    return norm.clamp(0, 1)
+
+
+def test_model(model, n_tests, cuda_mode):
+    model.eval()
+
+    to_pil = transforms.ToPILImage()
+    to_tensor = transforms.ToTensor()
+
+    z_ = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
+
+    if cuda_mode:
+        z_ = z_.cuda()
+
+    z_ = Variable(z_)
+    out = model.forward(z_)
+
+    for i in range(out.size(0)):
+        sample = denorm(out[i].data)
+        sample = to_pil(sample.cpu())
+        sample.save('sample_{}.png'.format(i + 1))

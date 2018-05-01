@@ -57,6 +57,7 @@ parser.add_argument('--disc-mode', choices=['RP', 'MD'], default='RP', help='Mul
 parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', help='factor for nadir-point update. Only used in hyper mode (default: 1.5)')
 parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
+parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -93,12 +94,14 @@ if args.disc_mode == 'RP':
 		disc_list.append(disc)
 
 elif args.disc_mode == 'MD':
-	D1 = model.Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D2 = model.Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D3 = model.Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D4 = model.Discriminator_f4s3(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train(
-	D5 = model.Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	disc_list = [D1, D2, D3, D4, D5]
+	D1 = model.Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D2 = model.Discriminator_f6(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D3 = model.Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D4 = model.Discriminator_f4s3(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D5 = model.Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D6 = model.Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+
+	disc_list = [D1, D2, D3, D4, D5, D6][:min(args.ndiscriminators, 6)]
 
 if args.cuda:
 	for disc in disc_list:
@@ -106,7 +109,7 @@ if args.cuda:
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
+trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {} - {}'.format(args.train_mode, args.disc_mode))

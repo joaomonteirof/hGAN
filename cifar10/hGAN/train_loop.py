@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 class TrainLoop(object):
 
-	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True):
+	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -20,8 +20,13 @@ class TrainLoop(object):
 			if not os.path.isdir(self.checkpoint_path):
 				os.mkdir(self.checkpoint_path)
 
-		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
-		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
+		if job_id:
+			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep_'+job_id+'.pt')
+			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_'+job_id+'.pt')
+		else:
+			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
+			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
+
 		self.cuda_mode = cuda
 		self.model = generator
 		self.fid_model = fid_model

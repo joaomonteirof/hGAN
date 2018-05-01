@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
 
-def steep_direct(alpha, grad_disc_list = []):
+def steep_direct_cost(alpha, grad_disc_list = []):
 	"""
 	Calculates ||sum_i alpha_i grad_disc_i||^2
 	- alpha: k-dim array with alpha values
@@ -18,7 +18,7 @@ def steep_direct(alpha, grad_disc_list = []):
 	return (np.matmul(np.transpose(v), v))
 
 
-def steep_direc_deriv(alpha, grad_disc_list = []):
+def steep_direc_cost_deriv(alpha, grad_disc_list = []):
 
 	n_disc = len(grad_disc_list)
 	v = 0
@@ -34,20 +34,24 @@ def steep_direc_deriv(alpha, grad_disc_list = []):
 
 	return derivatives
 
-cons = ({'type': 'eq',
-		'fun' : lambda alpha: np.array([alpha[0] + alpha[1] - 1]),
-		'jac' : lambda alpha: np.array([1., 1.])},
-		{'type': 'ineq',
-		'fun' : lambda alpha: np.array([alpha[0]]),
-		'jac' : lambda alpha: np.array([1., 0.])},
-		{'type': 'ineq',
-		'fun' : lambda alpha: np.array([alpha[1]]),
-		'jac' : lambda alpha: np.array([0., 1.])})
+
+def make_constraints(): 
+	cons = ({'type': 'eq',
+			'fun' : lambda alpha: np.array([alpha[0] + alpha[1] - 1]),
+			'jac' : lambda alpha: np.array([1., 1.])},
+			{'type': 'ineq',
+			'fun' : lambda alpha: np.array([alpha[0]]),
+			'jac' : lambda alpha: np.array([1., 0.])},
+			{'type': 'ineq',
+			'fun' : lambda alpha: np.array([alpha[1]]),
+			'jac' : lambda alpha: np.array([0., 1.])})
+
+	return cons
 	
 
 alpha = np.array([1, 2])
 grad_disc_list = [np.ones([10, 1]), np.ones([10, 1])]
 
 
-res = minimize(steep_direct, alpha, args = grad_disc_list, jac = steep_direc_deriv, constraints = cons, method = 'SLSQP', options = {'disp': True})
+res = minimize(steep_direct_cost, alpha, args = grad_disc_list, jac = steep_direc_cost_deriv, constraints = make_constraints(), method = 'SLSQP', options = {'disp': True})
 

@@ -279,7 +279,6 @@ class TrainLoop(object):
 				'optimizer_state': self.optimizer.state_dict(),
 				'history': self.history,
 				'total_iters': self.total_iters,
-				'nadir_point': self.nadir,
 				'fixed_noise': self.fixed_noise,
 				'proba': self.proba,
 				'Q': self.Q,
@@ -306,7 +305,6 @@ class TrainLoop(object):
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']
 			self.cur_epoch = ckpt['cur_epoch']
-			self.nadir = ckpt['nadir_point']
 			self.fixed_noise = ckpt['fixed_noise']
 			self.proba = ckpt['proba']
 			self.Q = ckpt['Q']

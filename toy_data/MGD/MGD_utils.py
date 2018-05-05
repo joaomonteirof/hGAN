@@ -1,57 +1,57 @@
 import numpy as np
 from scipy.optimize import minimize
 
-def steep_direct_cost(alpha, grad_disc_list = []):
+def steep_direct_cost(alpha, grad_disc_matrix = []):
 	"""
 	Calculates ||sum_i alpha_i grad_disc_i||^2
 	- alpha: k-dim array with alpha values
-	- grad_disc_list: list with gradients of all discriminators
-					  grad_disc_list[i] = Nx1-dim vector, where N = number of params	  
+	- grad_disc_matrix: list with gradients of all discriminators
+					  grad_disc_matrix = NxK, where N = number of params	  
 	"""
 
-	n_disc = len(grad_disc_list)
+	n_disc = grad_disc_matrix.shape[1]
 	v = 0
 
 	for k in range(n_disc):
-		v += alpha[k] * grad_disc_list[k]
+		v += alpha[k] * grad_disc_matrix[:, k]
 
-	return (np.matmul(np.transpose(v), v))
+	return (np.inner(v, v))
 
 
-def steep_direc_cost_deriv(alpha, grad_disc_list = []):
-
-	n_disc = len(grad_disc_list)
+def steep_direc_cost_deriv(alpha, grad_disc_matrix = []):
+	
+	n_disc = grad_disc_matrix.shape[1]
 	v = 0
 
 	for k in range(n_disc):
-		v += alpha[k] * grad_disc_list[k]
+		v += alpha[k] * grad_disc_matrix[:, k]
 
-	derivatives = []
+	deriv = 2 * np.matmul(np.transpose(v), grad_disc_matrix)
+
+	return np.ndarray.tolist(deriv)
+
+
+def make_constraints(n_disc):
+
+	cons = [{'type': 'eq', 'fun' : lambda alpha: np.array([np.sum(alpha) - 1]), 'jac' : lambda alpha: np.ones([1, n_disc])}]
 
 	for k in range(n_disc):
-		deriv = 2 * np.matmul(np.transpose(v), grad_disc_list[k])
-		derivatives.append(deriv)
 
-	return derivatives
+		jacobian = np.zeros([1, n_disc])
+		jacobian[0, k] = 1.
 
-
-def make_constraints(): 
-	cons = ({'type': 'eq',
-			'fun' : lambda alpha: np.array([alpha[0] + alpha[1] - 1]),
-			'jac' : lambda alpha: np.array([1., 1.])},
-			{'type': 'ineq',
-			'fun' : lambda alpha: np.array([alpha[0]]),
-			'jac' : lambda alpha: np.array([1., 0.])},
-			{'type': 'ineq',
-			'fun' : lambda alpha: np.array([alpha[1]]),
-			'jac' : lambda alpha: np.array([0., 1.])})
-
+		ineq = {'type': 'ineq', 'fun' : lambda alpha: np.array([alpha[k]]), 'jac' : lambda alpha: jacobian}
+		cons.append(ineq)
+		
 	return cons
 	
 
 alpha = np.array([1, 2])
-grad_disc_list = [np.ones([10, 1]), np.ones([10, 1])]
+grad_disc_matrix = np.ones([10, 2])
 
 
-res = minimize(steep_direct_cost, alpha, args = grad_disc_list, jac = steep_direc_cost_deriv, constraints = make_constraints(), method = 'SLSQP', options = {'disp': True})
+const = make_constraints(2)
+
+
+res = minimize(steep_direct_cost, alpha, args = grad_disc_matrix, jac = steep_direc_cost_deriv, constraints = const, method = 'SLSQP', options = {'disp': True})
 

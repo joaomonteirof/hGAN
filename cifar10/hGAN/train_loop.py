@@ -204,6 +204,29 @@ class TrainLoop(object):
 			for loss_weight in zip(losses_list, self.proba):
 				loss_G += loss_weight[0] * float(loss_weight[1])
 
+		elif self.train_mode == 'mgd':
+
+			grads_list = []
+			losses_list = []
+
+			for disc in self.disc_list:
+				loss = F.binary_cross_entropy(disc.forward(self.model.forward(z_)).squeeze(), y_real_)
+				grads_list.append(self.get_gen_grads(loss).cpu().numpy())
+
+			grads_list = np.asarray(grads_list)
+
+			self.proba = #solve_mgd
+
+			self.model.zero_grad()
+
+			out = self.model.forward(z_)
+
+			for disc in self.disc_list:
+				losses_list.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
+
+			for loss_weight in zip(losses_list, self.proba):
+				loss_G += loss_weight[0] * float(loss_weight[1])
+
 		elif self.train_mode == 'loss_delta':
 
 			z_probs = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)

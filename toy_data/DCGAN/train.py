@@ -8,7 +8,7 @@ import torch.utils.data
 from train_loop import TrainLoop
 
 # Training settings
-from common.toy_data import ToyData
+from toy_data import ToyData
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')

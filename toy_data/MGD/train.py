@@ -8,7 +8,7 @@ import torch.utils.data
 from train_loop import TrainLoop
 
 # Training settings
-from common.toy_data import ToyData
+from toy_data import ToyData
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
@@ -22,10 +22,12 @@ parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path',
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
 parser.add_argument('--save-every', type=int, default=10, metavar='N', help='how many epochs to wait before logging training status. Default is 3')
-parser.add_argument('--hyper-mode', action='store_true', default=False, help='enables training with hypervolume maximization')
-parser.add_argument('--nadir-slack', type=float, default=1.0, metavar='nadir', help='maximum distance to a nadir point component (default: 1.0)')
+parser.add_argument('--train-mode', choices=['vanilla', 'hyper', 'gman', 'gman_grad', 'loss_delta', 'mgd'], default='vanilla', help='Salect train mode. Default is vanilla (simple average of Ds losses)')
+parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', help='factor for nadir-point update. Only used in hyper mode (default: 1.5)')
+parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
 parser.add_argument('--toy-dataset', choices=['8gaussians', '25gaussians'], default='8gaussians')
 parser.add_argument('--toy-length', type=int, metavar='N', help='Toy dataset length', default=100000)
+parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -47,10 +49,9 @@ for i in range(args.ndiscriminators):
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-if args.hyper_mode:
-	trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, nadir_slack=args.nadir_slack)
+trainer = TrainLoop(generator, disc_list, optimizer,args.toy_dataset, centers, cov, train_loader=train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, job_id=args.job_id)
 
-else:
-	trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch)
+print('Train Mode is: {}'.format(args.train_mode))
+print('Number of discriminators is: {}'.format(len(disc_list)))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

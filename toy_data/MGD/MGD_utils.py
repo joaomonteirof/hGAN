@@ -54,3 +54,5 @@ if __name__ == '__main__':
 
 	res = minimize(steep_direct_cost, alpha, args = grad_disc_matrix, jac = steep_direc_cost_deriv, constraints = const, method = 'SLSQP', options = {'disp': True})
 
+	print(res.x)
+

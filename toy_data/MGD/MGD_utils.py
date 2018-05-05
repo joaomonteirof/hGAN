@@ -12,8 +12,7 @@ def steep_direct_cost(alpha, grad_disc_matrix = []):
 	n_disc = grad_disc_matrix.shape[1]
 	v = 0
 
-	for k in range(n_disc):
-		v += alpha[k] * grad_disc_matrix[:, k]
+	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis = 1)
 
 	return (np.inner(v, v))
 
@@ -23,8 +22,7 @@ def steep_direc_cost_deriv(alpha, grad_disc_matrix = []):
 	n_disc = grad_disc_matrix.shape[1]
 	v = 0
 
-	for k in range(n_disc):
-		v += alpha[k] * grad_disc_matrix[:, k]
+	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis = 1)
 
 	deriv = 2 * np.matmul(np.transpose(v), grad_disc_matrix)
 
@@ -46,12 +44,13 @@ def make_constraints(n_disc):
 	return cons
 	
 
-alpha = np.array([1, 2])
-grad_disc_matrix = np.ones([10, 2])
 
+if __name__ == '__main__':
 
-const = make_constraints(2)
+	alpha = np.array([1, 2])
+	grad_disc_matrix = np.ones([10, 2])
 
+	const = make_constraints(2)
 
-res = minimize(steep_direct_cost, alpha, args = grad_disc_matrix, jac = steep_direc_cost_deriv, constraints = const, method = 'SLSQP', options = {'disp': True})
+	res = minimize(steep_direct_cost, alpha, args = grad_disc_matrix, jac = steep_direc_cost_deriv, constraints = const, method = 'SLSQP', options = {'disp': True})
 

@@ -7,7 +7,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from tqdm import tqdm
 from scipy.optimize import minimize
-
 import MGD_utils
 
 
@@ -43,7 +42,6 @@ class TrainLoop(object):
 		self.alpha = alpha
 		self.nadir_slack = nadir_slack
 		self.train_mode = train_mode
-		self.proba = np.ones(len(self.disc_list))
 		self.Q = np.zeros(len(self.disc_list))
 		self.constraints = MGD_utils.make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))

@@ -7,6 +7,8 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from tqdm import tqdm
+from scipy.optimize import minimize
+import MGD_utils
 
 
 class TrainLoop(object):
@@ -39,7 +41,9 @@ class TrainLoop(object):
 		self.alpha = alpha
 		self.nadir_slack = nadir_slack
 		self.train_mode = train_mode
-		self.proba = np.ones(len(self.disc_list))
+		self.constraints = MGD_utils.make_constraints(len(disc_list))
+		self.proba = np.random.rand(len(disc_list))
+		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
 
 		pfile = open('../test_data_statistics.p', 'rb')
@@ -211,11 +215,14 @@ class TrainLoop(object):
 
 			for disc in self.disc_list:
 				loss = F.binary_cross_entropy(disc.forward(self.model.forward(z_)).squeeze(), y_real_)
-				grads_list.append(self.get_gen_grads(loss).cpu().numpy())
+				grads_list.append(self.get_gen_grads(loss).cpu().data.numpy())
 
-			grads_list = np.asarray(grads_list)
+			grads_list = np.asarray(grads_list).T
 
-			self.proba = #solve_mgd
+			# Steepest descent direction calc
+			result = minimize(MGD_utils.steep_direct_cost, self.proba, args = grads_list, jac = MGD_utils.steep_direc_cost_deriv, constraints = self.constraints, method = 'SLSQP', options = {'disp': False})
+
+			self.proba = result.x
 
 			self.model.zero_grad()
 

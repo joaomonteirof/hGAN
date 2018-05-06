@@ -1,15 +1,19 @@
 import os
+import pickle
 
 import numpy as np
+import scipy.linalg as sla
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from tqdm import tqdm
+from scipy.optimize import minimize
+import MGD_utils
 
 
 class TrainLoop(object):
 
-	def __init__(self, generator, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
+	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -27,10 +31,11 @@ class TrainLoop(object):
 
 		self.cuda_mode = cuda
 		self.model = generator
+		self.fid_model = fid_model
 		self.disc_list = disc_list
 		self.optimizer = optimizer
 		self.train_loader = train_loader
-		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': []}
+		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': [], 'steepest_dir_norm': []}
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.alpha = alpha
@@ -38,15 +43,28 @@ class TrainLoop(object):
 		self.train_mode = train_mode
 		self.constraints = MGD_utils.make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
-		self.proba /= np.sum(self.proba) 
+		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
+
+		pfile = open('../test_data_statistics.p', 'rb')
+		statistics = pickle.load(pfile)
+		pfile.close()
+
+		self.m, self.C = statistics['m'], statistics['C']
 
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
+		else:
+			self.fixed_noise = torch.randn(1000, 100).view(-1, 100, 1, 1)
 
 	def train(self, n_epochs=1, save_every=1):
 
-		while self.cur_epoch < n_epochs:
+		try:
+			best_fid = np.min(self.history['FID-c'])
+		except ValueError:
+			best_fid = np.inf
+
+		while (self.cur_epoch < n_epochs):
 			print('Epoch {}/{}'.format(self.cur_epoch + 1, n_epochs))
 			# self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))
@@ -60,15 +78,22 @@ class TrainLoop(object):
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
+			fid_c, st_dir_norm = self.valid()
+
 			self.history['gen_loss'].append(gen_loss / (t + 1))
 			self.history['disc_loss'].append(disc_loss / (t + 1))
+			self.history['FID-c'].append(fid_c)
+			self.history['steepest_dir_norm'].append(st_dir_norm)
 
 			self.cur_epoch += 1
 
-			if self.cur_epoch % save_every == 0:
+			if self.history['FID-c'][-1] < best_fid:
+				best_fid = self.history['FID-c'][-1]
+				self.checkpointing()
+			elif self.cur_epoch % save_every == 0:
 				self.checkpointing()
 
-		# saving final common
+		# saving final models
 		print('Saving final model...')
 		self.checkpointing()
 
@@ -255,6 +280,27 @@ class TrainLoop(object):
 
 		return loss_G.data[0], loss_d
 
+	def valid(self):
+
+		self.model.eval()
+
+		if self.cuda_mode:
+			z_ = self.fixed_noise.cuda()
+
+		z_ = Variable(z_)
+
+		x_gen = self.model.forward(z_)
+
+		logits = self.fid_model.forward(x_gen.cpu()).data.numpy()
+
+		m = logits.mean(0)
+		C = np.cov(logits, rowvar=False)
+
+		fid = ((self.m - m) ** 2).sum() + np.matrix.trace(C + self.C - 2 * sla.sqrtm(np.matmul(C, self.C)))
+		steepest_dir_norm = self.compute_steepest_direction_norm()
+
+		return fid, steepest_dir_norm
+
 	def checkpointing(self):
 
 		# Checkpointing
@@ -263,6 +309,7 @@ class TrainLoop(object):
 				'optimizer_state': self.optimizer.state_dict(),
 				'history': self.history,
 				'total_iters': self.total_iters,
+				'fixed_noise': self.fixed_noise,
 				'proba': self.proba,
 				'Q': self.Q,
 				'cur_epoch': self.cur_epoch}
@@ -288,6 +335,7 @@ class TrainLoop(object):
 			self.history = ckpt['history']
 			self.total_iters = ckpt['total_iters']
 			self.cur_epoch = ckpt['cur_epoch']
+			self.fixed_noise = ckpt['fixed_noise']
 			self.proba = ckpt['proba']
 			self.Q = ckpt['Q']
 
@@ -343,6 +391,50 @@ class TrainLoop(object):
 			self.Q[i] = self.alpha * reward[i] + (1 - self.alpha) * self.Q[i]
 
 		self.proba = torch.nn.functional.softmax(Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
+
+	def compute_steepest_direction_norm(self):
+		self.model.train()
+
+		z_ = torch.randn(128, 100).view(-1, 100, 1, 1)
+
+		y_real_ = torch.ones(128)
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+
+		z_ = Variable(z_, requires_grad=False)
+		y_real_ = Variable(y_real_)
+
+		grads_list = []
+
+		for disc in self.disc_list:
+			self.model.zero_grad()
+			out = self.model.forward(z_)
+			loss = F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_)
+			grads_list.append(self.get_gen_grads(loss))
+
+		grad_sum = 0.0
+
+		for weight_grad in zip(self.proba, grads_list):
+			try:
+				grad_sum += float(weight_grad[0]) * weight_grad[1]
+			except TypeError:
+				grad_sum = float(weight_grad[0]) * weight_grad[1]
+
+		return float(grad_sum.norm(2).data[0]) / len(self.disc_list)
+
+	def get_gen_grads(self, loss_):
+		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
+		self.model.zero_grad()
+		for params_grads in grads:
+
+			try:
+				grads_ = torch.cat([grads_, params_grads.view(-1)], 0)
+			except:
+				grads_ = params_grads.view(-1)
+
+		return grads_
 
 	def get_gen_grads_norm(self, loss_):
 		norm = 0.0

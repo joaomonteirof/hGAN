@@ -46,7 +46,7 @@ class TrainLoop(object):
 		except ValueError:
 			best_fd = np.inf
 
-		while (self.cur_epoch < n_epochs):
+		while self.cur_epoch < n_epochs:
 			print('Epoch {}/{}'.format(self.cur_epoch + 1, n_epochs))
 			# self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))
@@ -164,10 +164,10 @@ class TrainLoop(object):
 
 	def metrics(self, x, centers, cov, slack=3.0):
 
-		if (self.toy_dataset == '8gaussians'):
+		if self.toy_dataset == '8gaussians':
 			distances = self.calculate_dist(1.414 * x, self.centers)
 
-		elif (self.toy_dataset == '25gaussians'):
+		elif self.toy_dataset == '25gaussians':
 			distances = self.calculate_dist(2.828 * x, self.centers)
 
 		closest_center = np.argmin(distances, 1)
@@ -189,10 +189,10 @@ class TrainLoop(object):
 			quality_samples_center = np.sum(center_distances[:, cent] <= slack * np.sqrt(sigma))
 			quality_samples += quality_samples_center
 
-			if (quality_samples_center > 0):
+			if quality_samples_center > 0:
 				quality_modes += 1
 
-			if (center_samples.shape[0] > 3):
+			if center_samples.shape[0] > 3:
 				m = np.mean(center_samples, 0)
 				C = np.cov(center_samples, rowvar=False)
 

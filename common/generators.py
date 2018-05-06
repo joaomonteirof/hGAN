@@ -45,3 +45,23 @@ class Generator(torch.nn.Module):
 		h = self.hidden_layer(x)
 		out = self.output_layer(h)
 		return out
+
+
+# Toy data model
+class Generator_toy(torch.nn.Module):
+	def __init__(self, hidden_dim):
+		super(Generator_toy, self).__init__()
+
+		self.all_layers = nn.Sequential(
+			nn.Linear(2, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, 2)
+		)
+
+	def forward(self, x):
+		out = self.all_layers(x)
+		return out

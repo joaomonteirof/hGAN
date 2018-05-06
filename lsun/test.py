@@ -1,70 +1,22 @@
 from __future__ import print_function
 
-import argparse
 import os
+import sys
 
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 2)))
+print(f'Running from package root directory {sys.path[0]}')
+
+import argparse
+
+from generators import Generator
 import matplotlib.pyplot as plt
-import model as model_
-import numpy as np
-import torch
+
 import torch.utils.data
-from torch.autograd import Variable
 
 from common.metrics import inception_score
-from common.utils import test_model
+from common.utils import test_model, save_samples
 
 
-def denorm(unorm):
-	norm = (unorm + 1) / 2
-
-	return norm.clamp(0, 1)
-
-
-def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
-	generator.eval()
-
-	n_tests = fig_size[0] * fig_size[1]
-
-	noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
-
-	if cuda_mode:
-		noise = noise.cuda()
-
-	noise = Variable(noise, volatile=True)
-	gen_image = generator(noise)
-	gen_image = denorm(gen_image)
-
-	generator.train()
-
-	n_rows = np.sqrt(noise.size()[0]).astype(np.int32)
-	n_cols = np.sqrt(noise.size()[0]).astype(np.int32)
-	fig, axes = plt.subplots(n_rows, n_cols, figsize=fig_size)
-	for ax, img in zip(axes.flatten(), gen_image):
-		ax.axis('off')
-		ax.set_adjustable('box-forced')
-		# Scale to 0-255
-		img = (((img - img.min()) * 255) / (img.max() - img.min())).cpu().data.numpy().transpose(1, 2, 0).astype(np.uint8)
-		# ax.imshow(img.cpu().data.view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
-		ax.imshow(img, cmap=None, aspect='equal')
-	plt.subplots_adjust(wspace=0, hspace=0)
-	title = 'Samples'
-	fig.text(0.5, 0.04, title, ha='center')
-
-	# save figure
-
-	if not os.path.exists(save_dir):
-		os.mkdir(save_dir)
-	save_fn = save_dir + 'Cifar10_DCGAN_' + cp_name + '.png'
-	plt.savefig(save_fn)
-
-	plt.close()
-
-
-def plot_learningcurves(history, *keys):
-	for key in keys:
-		plt.plot(history[key])
-
-	plt.show()
 
 
 if __name__ == '__main__':
@@ -83,7 +35,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	model = model_.Generator(100, [1024, 512, 256, 128], 3)
+	model = Generator(100, [1024, 512, 256, 128], 3)
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])
@@ -103,7 +55,7 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'FID-c')
 
 	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
-	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)
+	save_samples(prefix='LSUN_hGAN', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)
 
 	if args.inception:
 		print(inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10))

@@ -2,13 +2,14 @@ from __future__ import print_function
 
 import argparse
 
-import model
 import torch.optim as optim
 import torch.utils.data
-from train_loop import TrainLoop
 
 # Training settings
+from discriminators import Discriminator_toy
+from generators import Generator_toy
 from toy_data import ToyData
+from train_loop import TrainLoop
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
@@ -36,9 +37,9 @@ centers = toy_data.get_centers()
 cov = toy_data.get_cov()
 
 # hidden_size = 512
-generator = model.Generator_toy(512).train()
+generator = Generator_toy(512).train()
 
-disc = model.Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+disc = Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 

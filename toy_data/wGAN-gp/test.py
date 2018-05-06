@@ -1,13 +1,16 @@
 from __future__ import print_function
 
+import os
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
+
 import argparse
-
 import matplotlib.pyplot as plt
-import model as model_
 import torch.utils.data
-
 from common.utils import save_samples
-
+from generators import Generator_toy
 
 def plot_learningcurves(history, *keys):
 	for key in keys:
@@ -30,7 +33,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	generator = model_.Generator_toy(512)
+	generator = Generator_toy(512)
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	generator.load_state_dict(ckpt['model_state'])
@@ -44,4 +47,4 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FD')
 
-	save_samples(generator=generator, cp_name=args.cp_path.split('/')[-1].split('.')[0], save_name=args.cp_path.split('/')[-2].split('.')[0], n_samples=args.n_samples, toy_dataset=args.toy_dataset)
+	save_samples(prefix='CIFAR10_wGAN_GP', generator=generator, cp_name=args.cp_path.split('/')[-1].split('.')[0], save_name=args.cp_path.split('/')[-2].split('.')[0], n_samples=args.n_samples, toy_dataset=args.toy_dataset)

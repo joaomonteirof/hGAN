@@ -12,7 +12,7 @@ class ToyData(Dataset):
 		self.length = length
 		self.dataset = dataset
 
-		if (self.dataset == '8gaussians'):
+		if self.dataset == '8gaussians':
 			scale = 2.
 			centers = [
 				(1, 0),
@@ -27,7 +27,7 @@ class ToyData(Dataset):
 
 			centers = [(scale * x, scale * y) for x, y in centers]
 
-		elif (self.dataset == '25gaussians'):
+		elif self.dataset == '25gaussians':
 			range_ = np.arange(-2, 3)
 			centers = 2 * np.transpose(np.meshgrid(range_, range_, indexing='ij'), (1, 2, 0)).reshape(-1, 2)
 
@@ -39,7 +39,7 @@ class ToyData(Dataset):
 
 	def __getitem__(self, idx):
 
-		if (self.dataset == '8gaussians'):
+		if self.dataset == '8gaussians':
 			sample = np.random.randn(2) * .02
 			center = random.choice(self.centers)
 			sample[0] += center[0]
@@ -47,7 +47,7 @@ class ToyData(Dataset):
 
 			sample /= 1.414
 
-		if (self.dataset == '25gaussians'):
+		if self.dataset == '25gaussians':
 			center = random.choice(self.centers)
 
 			sample = np.random.randn(2) * 0.05
@@ -64,9 +64,9 @@ class ToyData(Dataset):
 		return self.centers
 
 	def get_cov(self):
-		if (self.dataset == '8gaussians'):
+		if self.dataset == '8gaussians':
 			cov = (0.02 ** 2) * np.eye(2)
 
-		elif (self.dataset == '25gaussians'):
+		elif self.dataset == '25gaussians':
 			cov = (0.05 ** 2) * np.eye(2)
 		return cov

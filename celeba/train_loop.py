@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import scipy.linalg as sla
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -45,7 +44,7 @@ class TrainLoop(object):
 
 	def train(self, n_epochs=1, save_every=1):
 
-		while (self.cur_epoch < n_epochs):
+		while self.cur_epoch < n_epochs:
 			print('Epoch {}/{}'.format(self.cur_epoch + 1, n_epochs))
 			# self.scheduler.step()
 			train_iter = tqdm(enumerate(self.train_loader))

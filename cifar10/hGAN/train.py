@@ -1,41 +1,23 @@
 from __future__ import print_function
 
-import argparse
 import os
-import pickle
+import sys
 
-import PIL.Image as Image
-import model
-import numpy as np
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
+
 import resnet
-import torch
+from discriminators import *
+from utils import save_testdata_statistics
+import argparse
+import PIL.Image as Image
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+from common.generators import Generator
+
 from train_loop import TrainLoop
-
-def save_testdata_statistics(model, data_loader, cuda_mode):
-	for batch in data_loader:
-
-		x, y = batch
-
-		x = torch.autograd.Variable(x)
-
-		out = model.forward(x).data.cpu().numpy()
-
-		try:
-			logits = np.concatenate([logits, out], 0)
-		except NameError:
-			logits = out
-
-	m = logits.mean(0)
-	C = np.cov(logits, rowvar=False)
-
-	pfile = open('../test_data_statistics.p', "wb")
-	pickle.dump({'m': m, 'C': C}, pfile)
-	pfile.close()
-
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
@@ -74,7 +56,7 @@ transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.
 trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
-generator = model.Generator(100, [1024, 512, 256, 128], 3).train()
+generator = Generator(100, [1024, 512, 256, 128], 3).train()
 fid_model = resnet.ResNet18().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])
@@ -90,16 +72,16 @@ if not os.path.isfile('../test_data_statistics.p'):
 if args.disc_mode == 'RP':
 	disc_list = []
 	for i in range(args.ndiscriminators):
-		disc = model.Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+		disc = Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 		disc_list.append(disc)
 
 elif args.disc_mode == 'MD':
-	D1 = model.Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D2 = model.Discriminator_f6(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D3 = model.Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D4 = model.Discriminator_f4s3(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D5 = model.Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D6 = model.Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D1 = Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D2 = Discriminator_f6(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D3 = Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D4 = Discriminator_f4s3(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D5 = Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D6 = Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 
 	disc_list = [D1, D2, D3, D4, D5, D6][:min(args.ndiscriminators, 6)]
 

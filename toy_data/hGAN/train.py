@@ -1,14 +1,19 @@
 from __future__ import print_function
 
-import argparse
+import os
+import sys
 
-import model
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
+
+import argparse
+from discriminators import Discriminator_toy
+from generators import Generator_toy
 import torch.optim as optim
 import torch.utils.data
 from train_loop import TrainLoop
-
 # Training settings
-from toy_data import ToyData
+from common.toy_data import ToyData
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
@@ -41,15 +46,15 @@ centers = toy_data.get_centers()
 cov = toy_data.get_cov()
 
 # hidden_size = 512
-generator = model.Generator_toy(512).train()
+generator = Generator_toy(512).train()
 
 for i in range(args.ndiscriminators):
-	disc = model.Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+	disc = Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, disc_list, optimizer,args.toy_dataset, centers, cov, train_loader=train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, job_id=args.job_id)
+trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, job_id=args.job_id)
 
 print('Train Mode is: {}'.format(args.train_mode))
 print('Number of discriminators is: {}'.format(len(disc_list)))

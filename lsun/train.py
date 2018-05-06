@@ -1,9 +1,15 @@
 from __future__ import print_function
 
+import os
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 2)))
+print(f'Running from package root directory {sys.path[0]}')
+
 import argparse
 
+from discriminators import Discriminator
 import PIL.Image as Image
-import model
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
@@ -11,7 +17,7 @@ import torchvision.transforms as transforms
 from train_loop import TrainLoop
 
 # Training settings
-from common.generator import Generator
+from common.generators import Generator
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
@@ -49,7 +55,7 @@ if args.cuda:
 disc_list = []
 
 for i in range(args.ndiscriminators):
-	disc = model.Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+	disc = Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 	if args.cuda:
 		disc = disc.cuda()
 	disc_list.append(disc)

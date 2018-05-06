@@ -1,49 +1,6 @@
 import torch
 import torch.nn as nn
 
-class Generator(torch.nn.Module):
-	def __init__(self, input_dim, num_filters, output_dim):
-		super(Generator, self).__init__()
-
-		# Hidden layers
-		self.hidden_layer = torch.nn.Sequential()
-		for i in range(len(num_filters)):
-			# Deconvolutional layer
-			if i == 0:
-				deconv = nn.ConvTranspose2d(input_dim, num_filters[i], kernel_size=4, stride=1, padding=0)
-			else:
-				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
-
-			deconv_name = 'deconv' + str(i + 1)
-			self.hidden_layer.add_module(deconv_name, deconv)
-
-			# Initializer
-			nn.init.normal(deconv.weight, mean=0.0, std=0.02)
-			nn.init.constant(deconv.bias, 0.0)
-
-			# Batch normalization
-			bn_name = 'bn' + str(i + 1)
-			self.hidden_layer.add_module(bn_name, torch.nn.BatchNorm2d(num_filters[i]))
-
-			# Activation
-			act_name = 'act' + str(i + 1)
-			self.hidden_layer.add_module(act_name, torch.nn.ReLU())
-
-		# Output layer
-		self.output_layer = torch.nn.Sequential()
-		# Deconvolutional layer
-		out = torch.nn.ConvTranspose2d(num_filters[i], output_dim, kernel_size=4, stride=2, padding=1)
-		self.output_layer.add_module('out', out)
-		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
-		# Activation
-		self.output_layer.add_module('act', torch.nn.Tanh())
-
-	def forward(self, x):
-		h = self.hidden_layer(x)
-		out = self.output_layer(h)
-		return out
 
 # Discriminator model
 class Discriminator(torch.nn.Module):
@@ -127,6 +84,7 @@ class Discriminator_vanilla(nn.Module):
 	def forward(self, x):
 		return self.main(x)
 
+
 class Discriminator_f6(nn.Module):
 	def __init__(self, ndf, nc, optimizer, lr, betas):
 		super(Discriminator_f6, self).__init__()
@@ -135,25 +93,24 @@ class Discriminator_f6(nn.Module):
 			nn.Conv2d(nc, ndf, 6, 2, 1, bias=False),
 			nn.LeakyReLU(0.2, inplace=True),
 			# state size. (ndf) x 31 x 31
-			
+
 			nn.Conv2d(ndf, ndf * 2, 6, 2, 1, bias=False),
 			nn.BatchNorm2d(ndf * 2),
 			nn.LeakyReLU(0.2, inplace=True),
 			# state size. (ndf*2) x 14 x 14
-			
+
 			nn.Conv2d(ndf * 2, ndf * 4, 6, 2, 1, bias=False),
-			nn.BatchNorm2d(ndf * 4),			
+			nn.BatchNorm2d(ndf * 4),
 			nn.LeakyReLU(0.2, inplace=True),
-			
+
 			## state size. (ndf*4) x 4 x 4
-			nn.Conv2d(ndf * 4, 1, 6 , 2, 0, bias=False),
-			nn.Sigmoid() )
+			nn.Conv2d(ndf * 4, 1, 6, 2, 0, bias=False),
+			nn.Sigmoid())
 
 		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
 
 	def forward(self, x):
 		return self.main(x)
-
 
 ## discriminator with kernel size = 8
 class Discriminator_f8(nn.Module):
@@ -194,21 +151,16 @@ class Discriminator_f16(nn.Module):
 		self.main = nn.Sequential(
 
 			# input is (nc) x 64 x 64
-			nn.Conv2d(nc, ndf, 16, 1, 1, 2, bias=False),
+			nn.Conv2d(nc, ndf, 16, 2, 1, bias=False),
 			nn.LeakyReLU(0.2, inplace=True),
-			# state size. (ndf) x 36 x 36
+			# state size. (ndf) x 26 x 26
 
-			nn.Conv2d(ndf, ndf * 2, 16, 1, 1, bias=False),
+			nn.Conv2d(ndf, ndf * 2, 16, 2, 1, bias=False),
 			nn.BatchNorm2d(ndf * 2),
 			nn.LeakyReLU(0.2, inplace=True),
-			# state size. (ndf*2) x 23 x 23
+			# state size. (ndf*2) x 7 x 7
 
-			nn.Conv2d(ndf * 2, ndf * 4, 16, 1, 0, bias=False),
-			nn.BatchNorm2d(ndf * 4),
-			nn.LeakyReLU(0.2, inplace=True),
-			# state size. (ndf*4) x 8 x 8
-
-			nn.Conv2d(ndf * 4, 1, 8, 1, 0, bias=False),
+			nn.Conv2d(ndf * 2, 1, 7, 2, 0, bias=False),
 			nn.Sigmoid())
 
 		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
@@ -241,7 +193,6 @@ class Discriminator_f4s3(nn.Module):
 	def forward(self, x):
 		return self.main(x)
 
-
 ## discrminator with 1 layer of kernel size=4, remaining part= dense
 class Discriminator_dense(nn.Module):
 	def __init__(self, ndf, nc, optimizer, lr, betas):
@@ -258,3 +209,28 @@ class Discriminator_dense(nn.Module):
 	def forward(self, x):
 		x = self.main(x)
 		return self.linear(x.view(x.size(0), -1))
+
+class Discriminator_toy(torch.nn.Module):
+	def __init__(self, hidden_dim, optimizer, lr, betas):
+		super(Discriminator_toy, self).__init__()
+
+		self.projection = nn.utils.weight_norm(nn.Linear(2, 2, bias=False), name="weight")
+		self.projection.weight_g.data.fill_(1)
+
+		self.all_layers = nn.Sequential(
+			nn.Linear(2, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, hidden_dim),
+			nn.ReLU(True),
+			nn.Linear(hidden_dim, 1),
+			nn.Sigmoid()
+		)
+
+		self.optimizer = optimizer(list(self.all_layers.parameters()), lr=lr, betas=betas)
+
+	def forward(self, x):
+		# p_x = self.projection(x)
+		out = self.all_layers(x)
+		return out

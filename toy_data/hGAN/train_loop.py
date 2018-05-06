@@ -51,6 +51,8 @@ class TrainLoop(object):
 
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
+		else:
+			self.fixed_noise = torch.randn(2500, 2).view(-1, 2)
 
 	def train(self, n_epochs=1, save_every=1):
 

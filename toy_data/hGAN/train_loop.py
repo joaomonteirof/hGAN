@@ -208,7 +208,7 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(MGD_utils.steep_direct_cost, self.proba, args = grads_list, jac = MGD_utils.steep_direc_cost_deriv, constraints = self.constraints, method = 'SLSQP', options = {'disp': False})
+			result = minimize(MGD_utils.steep_direct_cost, self.proba, args = grads_list, jac = MGD_utils.steep_direc_cost_deriv, constraints = self.constraints, method ='SLSQP', options = {'disp': False})
 
 			self.proba = result.x
 

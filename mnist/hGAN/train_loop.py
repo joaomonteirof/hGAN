@@ -5,9 +5,10 @@ import numpy as np
 import scipy.linalg as sla
 import torch
 import torch.nn.functional as F
+from scipy.optimize import minimize
 from torch.autograd import Variable
 from tqdm import tqdm
-from scipy.optimize import minimize
+
 import MGD_utils
 
 
@@ -23,11 +24,11 @@ class TrainLoop(object):
 				os.mkdir(self.checkpoint_path)
 
 		if job_id:
-			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep_'+job_id+'.pt')
-			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_'+job_id+'.pt')
+			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_' + train_mode + '_' + str(len(disc_list)) + '_{}ep_' + job_id + '.pt')
+			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_' + train_mode + '_' + job_id + '.pt')
 		else:
-			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
-			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
+			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_' + train_mode + '_' + str(len(disc_list)) + '_{}ep.pt')
+			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_' + train_mode + '_.pt')
 
 		self.cuda_mode = cuda
 		self.model = generator
@@ -220,7 +221,7 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(MGD_utils.steep_direct_cost, self.proba, args = grads_list, jac = MGD_utils.steep_direc_cost_deriv, constraints = self.constraints, method = 'SLSQP', options = {'disp': False})
+			result = minimize(MGD_utils.steep_direct_cost, self.proba, args=grads_list, jac=MGD_utils.steep_direc_cost_deriv, constraints=self.constraints, method='SLSQP', options={'disp': False})
 
 			self.proba = result.x
 
@@ -441,5 +442,5 @@ class TrainLoop(object):
 		self.model.zero_grad()
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
 		for params_grads in grads:
-			norm+=params_grads.norm(2).data[0]**2
+			norm += params_grads.norm(2).data[0] ** 2
 		return np.sqrt(norm)

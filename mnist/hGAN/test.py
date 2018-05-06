@@ -4,16 +4,20 @@ import argparse
 import os
 
 import matplotlib.pyplot as plt
-import model as model_
 import numpy as np
 import torch
 import torch.utils.data
 from torch.autograd import Variable
 
+import model as model_
+from utils import test_model
+
+
 def denorm(unorm):
 	norm = (unorm + 1) / 2
 
 	return norm.clamp(0, 1)
+
 
 def save_samples(generator, cp_name, cuda_mode, save_dir='./', fig_size=(5, 5)):
 	generator.eval()

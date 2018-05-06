@@ -1,5 +1,5 @@
-import torch
 import torch.nn as nn
+
 
 class Generator(nn.Module):
 	def __init__(self):
@@ -14,11 +14,12 @@ class Generator(nn.Module):
 			nn.Linear(1024, 784),
 			nn.Tanh()
 		)
-	
+
 	def forward(self, x):
 		x = x.view(x.size(0), 100)
 		out = self.model(x)
 		return out
+
 
 class Discriminator(nn.Module):
 	def __init__(self, optimizer, lr, betas):
@@ -42,7 +43,7 @@ class Discriminator(nn.Module):
 		)
 
 		self.optimizer = optimizer(self.hidden_layer.parameters(), lr=lr, betas=betas)
-	
+
 	def forward(self, x):
 		p_x = self.projection(x.view(x.size(0), 784))
 		out = self.hidden_layer(p_x)

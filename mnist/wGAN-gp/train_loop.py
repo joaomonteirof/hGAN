@@ -162,7 +162,7 @@ class TrainLoop(object):
 
 	def calc_gradient_penalty(self, real_data, fake_data):
 		alpha = torch.rand(fake_data.size())
-		real_data = real_data.view(real_data.size(0),-1)
+		real_data = real_data.view(real_data.size(0), -1)
 
 		if self.cuda_mode:
 			alpha = alpha.cuda()

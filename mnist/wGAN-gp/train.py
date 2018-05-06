@@ -5,15 +5,17 @@ import os
 import pickle
 
 import PIL.Image as Image
-import model
 import numpy as np
 import torch
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from train_loop import TrainLoop
+
+import model
 import models_fid
+from train_loop import TrainLoop
+
 
 def save_testdata_statistics(model, data_loader, cuda_mode):
 	for batch in data_loader:
@@ -35,6 +37,7 @@ def save_testdata_statistics(model, data_loader, cuda_mode):
 	pfile = open('../test_data_statistics.p', "wb")
 	pickle.dump({'m': m, 'C': C}, pfile)
 	pfile.close()
+
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')

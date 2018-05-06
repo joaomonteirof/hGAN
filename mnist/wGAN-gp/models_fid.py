@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class cnn(nn.Module):
 	def __init__(self):
 		super(cnn, self).__init__()
@@ -10,7 +11,7 @@ class cnn(nn.Module):
 		self.fc1 = nn.Linear(320, 50)
 		self.fc2 = nn.Linear(50, 10)
 
-	def forward(self, x, pre_softmax = False):
+	def forward(self, x, pre_softmax=False):
 		x = F.relu(F.max_pool2d(self.conv1(x), 2))
 		x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
 		x = x.view(-1, 320)
@@ -32,6 +33,7 @@ class cnn(nn.Module):
 		x = self.fc2(x)
 
 		return [F.log_softmax(x, dim=1), F.softmax(x, dim=1)]
+
 
 class cnn_soft(nn.Module):
 	def __init__(self):
@@ -53,6 +55,7 @@ class cnn_soft(nn.Module):
 
 		return F.log_softmax(y, dim=1)
 
+
 class mlp(nn.Module):
 	def __init__(self):
 		super(mlp, self).__init__()
@@ -60,7 +63,7 @@ class mlp(nn.Module):
 		self.fc2 = nn.Linear(320, 50)
 		self.fc3 = nn.Linear(50, 10)
 
-	def forward(self, x, pre_softmax = False):
+	def forward(self, x, pre_softmax=False):
 		x = x.view(x.size(0), -1)
 		x = F.relu(self.fc1(x))
 		x = F.dropout(x, training=self.training)
@@ -83,14 +86,15 @@ class mlp(nn.Module):
 
 		return [F.log_softmax(x, dim=1), F.softmax(x, dim=1)]
 
+
 class mlp_soft(nn.Module):
 	def __init__(self):
 		super(mlp_soft, self).__init__()
-		self.fc1 = nn.Linear(784,320)
+		self.fc1 = nn.Linear(784, 320)
 		self.fc2 = nn.Linear(320, 50)
 		self.fc3 = nn.Linear(50, 10)
 
-	def forward(self, x, pre_softmax = False):
+	def forward(self, x, pre_softmax=False):
 		x = x.view(x.size(0), -1)
 		x = F.relu(self.fc1(x))
 		x = F.dropout(x, training=self.training)

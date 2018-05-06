@@ -3,10 +3,11 @@ from __future__ import print_function
 import argparse
 
 import matplotlib.pyplot as plt
+import os
 import model as model_
 import torch.utils.data
-
 import numpy as np
+from torch.autograd import Variable
 from scipy.stats import chi2
 
 def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir='./'):
@@ -18,34 +19,39 @@ def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir
 	samples = generator(noise)
 
 	if (toy_dataset == '8gaussians'):
-		scale = 2.0 / 1.414
+		scale_cent = 2. 
 		centers = [
-			(1, 0),
-			(-1, 0),
-			(0, 1),
-			(0, -1),
-			(1. / np.sqrt(2), 1. / np.sqrt(2)),
-			(1. / np.sqrt(2), -1. / np.sqrt(2)),
-			(-1. / np.sqrt(2), 1. / np.sqrt(2)),
-			(-1. / np.sqrt(2), -1. / np.sqrt(2))
+		(1, 0),
+		(-1, 0),
+		(0, 1),
+		(0, -1),
+		(1. / np.sqrt(2), 1. / np.sqrt(2)),
+		(1. / np.sqrt(2), -1. / np.sqrt(2)),
+		(-1. / np.sqrt(2), 1. / np.sqrt(2)),
+		(-1. / np.sqrt(2), -1. / np.sqrt(2))
 		]
 
-		centers = [(scale * x, scale * y) for x, y in centers]
-		centers = np.asarray(centers)
-		cov_all = np.array([(0.02, 0), (0, 0.02)])
+		centers = [(scale_cent * x, scale_cent * y) for x, y in centers]
+		centers = np.asarray(centers)	
+		cov_all = np.array([(0.02**2, 0), (0, 0.02**2)])
+
+		scale = 1.414
 
 	elif (toy_dataset == '25gaussians'):
 		range_ = np.arange(-2, 3)
-		centers = np.transpose(np.meshgrid(range_, range_, indexing='ij'), (1, 2, 0)).reshape(-1, 2)
-		scale = 1. / 2.828
-		cov_all = np.array([(0.05, 0), (0, 0.05)])
+		centers = 2*np.transpose(np.meshgrid(range_, range_, indexing = 'ij'), (1, 2, 0)).reshape(-1, 2)
+		cov_all = np.array([(0.05**2, 0), (0, 0.05**2)])
+
+		scale = 2.828
+		
+	samples = scale*samples
 
 	plt.scatter(samples[:, 0], samples[:, 1], c='red', marker='o', alpha=0.1)
 	plt.scatter(centers[:, 0], centers[:, 1], c='black', marker='x', alpha=1)
 
 	for k in range(centers.shape[0]):
-		ellipse_data = plot_ellipse(x_cent=centers[k, 0], y_cent=centers[k, 1], cov=cov_all, mass_level=0.7)
-		plt.plot(ellipse_data[0], ellipse_data[1], c='black', alpha=0.2)
+		ellipse_data = plot_ellipse(x_cent=centers[k, 0], y_cent=centers[k, 1], cov=cov_all, mass_level=0.9973)
+		plt.plot(ellipse_data[0], ellipse_data[1], c='black', alpha=1)
 
 	# save figure
 
@@ -123,8 +129,10 @@ if __name__ == '__main__':
 	if not args.no_plots:
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')
-		plot_learningcurves(history, 'gen_loss_minibatch')
-		plot_learningcurves(history, 'disc_loss_minibatch')
+		# plot_learningcurves(history, 'gen_loss_minibatch')
+		# plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FD')
+	# plot_learningcurves(history, 'quality_samples')
+	# plot_learningcurves(history, 'quality_modes')
 
 	save_samples(generator=generator, cp_name=args.cp_path.split('/')[-1].split('.')[0], save_name=args.cp_path.split('/')[-2].split('.')[0], n_samples=args.n_samples, toy_dataset=args.toy_dataset)

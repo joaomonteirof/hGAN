@@ -304,6 +304,7 @@ class TrainLoop(object):
 		fd = 0
 		quality_samples = 0
 		quality_modes = 0
+		fd_modes = 0
 
 		for cent in range(n_gaussians):
 
@@ -320,12 +321,15 @@ class TrainLoop(object):
 				quality_modes += 1
 
 			if center_samples.shape[0] > 3:
+
+				fd_modes += 1
 				m = np.mean(center_samples, 0)
 				C = np.cov(center_samples, rowvar=False)
 
 				fd += ((centers[cent] - m) ** 2).sum() + np.matrix.trace(C + cov - 2 * sla.sqrtm(np.matmul(C, cov)))
 
-		fd_all = fd / len(np.unique(closest_center))
+		if (fd_modes > 0):
+			fd_all = fd / fd_modes
 
 		return fd_all, quality_samples, quality_modes
 

@@ -56,13 +56,9 @@ transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.
 trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
-generator = Generator(100, [1024, 512, 256, 128], 3).train()
 fid_model = ResNet18().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])
-
-if args.cuda:
-	generator = generator.cuda()
 
 if not os.path.isfile('../test_data_statistics.p'):
 	testset = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=transform)
@@ -70,22 +66,27 @@ if not os.path.isfile('../test_data_statistics.p'):
 	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
 
 if args.disc_mode == 'RP':
+	generator = Generator(100, [1024, 512, 256, 128], 3).train()
 	disc_list = []
 	for i in range(args.ndiscriminators):
 		disc = Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 		disc_list.append(disc)
 
 elif args.disc_mode == 'MD':
+	generator = Generator(100, [512, 256, 128, 64], 3).train()
 	D1 = Discriminator_vanilla(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 	D2 = Discriminator_f6(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 	D3 = Discriminator_f8(ndf=32, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D4 = Discriminator_f4s3(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D5 = Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
-	D6 = Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D4 = model.Discriminator_f6_dense(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D5 = model.Discriminator_f4_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D6 = Discriminator_f4s3(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D7 = Discriminator_dense(ndf=64, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
+	D8 = Discriminator_f16(ndf=16, nc=3, optimizer=optim.Adam, lr=args.lr, betas=(args.beta1, args.beta2)).train()
 
-	disc_list = [D1, D2, D3, D4, D5, D6][:min(args.ndiscriminators, 6)]
+	disc_list = [D1, D2, D3, D4, D5, D6, D7, D8][:min(args.ndiscriminators, 8)]
 
 if args.cuda:
+	generator = generator.cuda()
 	for disc in disc_list:
 		disc = disc.cuda()
 

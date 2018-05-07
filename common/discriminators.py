@@ -193,6 +193,67 @@ class Discriminator_f4s3(nn.Module):
 	def forward(self, x):
 		return self.main(x)
 
+class Discriminator_f4_dense(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_f4_dense, self).__init__()
+		self.main = nn.Sequential(
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf) x 32 x 32
+			nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*2) x 16 x 16
+			nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 4),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*4) x 8 x 8
+			nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 8),
+			nn.LeakyReLU(0.2, inplace=True) )
+
+		self.linear=nn.Sequential(
+			nn.Linear(self.ndf*8*4*4, 1),
+			nn.Sigmoid() )
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		output = self.main(x).view(x.size(0), -1)
+		output=self.linear(output)
+
+		return output.view(-1, 1).squeeze(1)
+
+class Discriminator_f6_dense(nn.Module):
+	def __init__(self, ndf, nc, optimizer, lr, betas):
+		super(Discriminator_f6_dense, self).__init__()
+
+		self.main = nn.Sequential(
+			# input is (nc) x 64 x 64
+			nn.Conv2d(nc, ndf, 6, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf) x 31 x 31
+			
+			nn.Conv2d(ndf, ndf * 2, 6, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# state size. (ndf*2) x 14 x 14
+			
+			nn.Conv2d(ndf * 2, ndf * 4, 6, 2, 1, bias=False),
+			nn.BatchNorm2d(ndf * 4),			
+			nn.LeakyReLU(0.2, inplace=True) )
+		
+		self.linear=nn.Sequential(
+			nn.Linear(self.ndf*4*6*6, 1),
+			nn.Sigmoid() )
+
+	def forward(self, x):
+		output = self.main(input).view(x.size(0), -1)		
+		output=self.linear(output)
+		
+		return output.view(-1, 1).squeeze(1)
+
 ## discrminator with 1 layer of kernel size=4, remaining part= dense
 class Discriminator_dense(nn.Module):
 	def __init__(self, ndf, nc, optimizer, lr, betas):

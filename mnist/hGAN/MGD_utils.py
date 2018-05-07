@@ -7,7 +7,7 @@ def steep_direct_cost(alpha, grad_disc_matrix=[]):
 	Calculates ||sum_i alpha_i grad_disc_i||^2
 	- alpha: k-dim array with alpha values
 	- grad_disc_matrix: list with gradients of all discriminators
-					  grad_disc_matrix = NxK, where N = number of params	  
+					  grad_disc_matrix = NxK, where N = number of params
 	"""
 
 	n_disc = grad_disc_matrix.shape[1]
@@ -15,7 +15,7 @@ def steep_direct_cost(alpha, grad_disc_matrix=[]):
 
 	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis=1)
 
-	return (np.inner(v, v))
+	return np.inner(v, v)
 
 
 def steep_direc_cost_deriv(alpha, grad_disc_matrix=[]):

@@ -8,7 +8,7 @@ print(f'Running from package root directory {sys.path[0]}')
 
 import argparse
 
-from discriminators import *
+from common.discriminators import *
 import PIL.Image as Image
 import torch.optim as optim
 import torch.utils.data
@@ -77,7 +77,7 @@ if args.cuda:
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
+trainer = TrainLoop(generator, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {} - {}'.format(args.train_mode, args.disc_mode))

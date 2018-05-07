@@ -7,10 +7,10 @@ sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
 import argparse
+from common.generators import Generator_toy
 import matplotlib.pyplot as plt
 import os
 import torch.utils.data
-from generators import Generator_toy
 import numpy as np
 from torch.autograd import Variable
 from scipy.stats import chi2
@@ -24,7 +24,7 @@ def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir
 	noise = Variable(noise, volatile=True)
 	samples = generator(noise)
 
-	if (toy_dataset == '8gaussians'):
+	if toy_dataset == '8gaussians':
 		scale_cent = 2.
 		centers = [
 			(1, 0),
@@ -43,7 +43,7 @@ def save_samples(generator, cp_name, save_name, n_samples, toy_dataset, save_dir
 
 		scale = 1.414
 
-	elif (toy_dataset == '25gaussians'):
+	elif toy_dataset == '25gaussians':
 		range_ = np.arange(-2, 3)
 		centers = 2 * np.transpose(np.meshgrid(range_, range_, indexing='ij'), (1, 2, 0)).reshape(-1, 2)
 		cov_all = np.array([(0.05 ** 2, 0), (0, 0.05 ** 2)])

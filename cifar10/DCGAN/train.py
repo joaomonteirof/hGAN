@@ -6,17 +6,17 @@ import sys
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
-from discriminators import Discriminator
-from generators import Generator
+from common.discriminators import Discriminator
+from common.generators import Generator
 import argparse
 import PIL.Image as Image
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-import resnet
+from common.resnet import ResNet18
 from train_loop import TrainLoop
-from utils import save_testdata_statistics
+from common.utils import save_testdata_statistics
 
 # Training settings
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
@@ -51,7 +51,7 @@ train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
 
 generator = Generator(100, [1024, 512, 256, 128], 3).train()
 disc = Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2), batch_norm=True).train()
-fid_model = resnet.ResNet18().eval()
+fid_model = ResNet18().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])
 

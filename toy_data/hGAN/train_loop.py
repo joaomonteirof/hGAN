@@ -8,7 +8,7 @@ from scipy.optimize import minimize
 from torch.autograd import Variable
 from tqdm import tqdm
 
-import MGD_utils
+from common.MGD_utils import *
 
 
 class TrainLoop(object):
@@ -44,7 +44,7 @@ class TrainLoop(object):
 		self.nadir_slack = nadir_slack
 		self.train_mode = train_mode
 		self.Q = np.zeros(len(self.disc_list))
-		self.constraints = MGD_utils.make_constraints(len(disc_list))
+		self.constraints = make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba) 
 
@@ -208,7 +208,7 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(MGD_utils.steep_direct_cost, self.proba, args = grads_list, jac = MGD_utils.steep_direc_cost_deriv, constraints = self.constraints, method ='SLSQP', options = {'disp': False})
+			result = minimize(steep_direct_cost, self.proba, args = grads_list, jac = steep_direc_cost_deriv, constraints = self.constraints, method ='SLSQP', options = {'disp': False})
 
 			self.proba = result.x
 

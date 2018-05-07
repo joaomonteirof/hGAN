@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
-from generators import Generator
+from common.generators import Generator
 import matplotlib.pyplot as plt
 import torch.utils.data
 

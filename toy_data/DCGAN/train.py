@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
 import argparse
-from discriminators import Discriminator_toy
-from generators import Generator_toy
+from common.discriminators import Discriminator_toy
+from common.generators import Generator_toy
 import torch.optim as optim
 import torch.utils.data
 from train_loop import TrainLoop

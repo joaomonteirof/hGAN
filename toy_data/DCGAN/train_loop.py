@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 class TrainLoop(object):
 
-	def __init__(self, generator, disc, optimizer, toy_dataset, centers, cov, train_loader, checkpoint_path=None, checkpoint_epoch=None, cuda=True):
+	def __init__(self, generator, disc, optimizer, toy_dataset, centers, cov, train_loader, checkpoint_path=None, checkpoint_epoch=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -21,7 +21,6 @@ class TrainLoop(object):
 
 		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'checkpoint_{}ep.pt')
 		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_checkpoint_{}ep.pt')
-		self.cuda_mode = cuda
 		self.model = generator
 		self.disc = disc
 		self.optimizer = optimizer
@@ -89,12 +88,6 @@ class TrainLoop(object):
 		y_real_ = torch.ones(x.size(0))
 		y_fake_ = torch.zeros(x.size(0))
 
-		if self.cuda_mode:
-			x = x.cuda()
-			z_ = z_.cuda()
-			y_real_ = y_real_.cuda()
-			y_fake_ = y_fake_.cuda()
-
 		x = Variable(x)
 		z_ = Variable(z_)
 		y_real_ = Variable(y_real_)
@@ -114,9 +107,6 @@ class TrainLoop(object):
 		self.model.train()
 
 		z_ = torch.randn(x.size(0), 2).view(-1, 2)
-
-		if self.cuda_mode:
-			z_ = z_.cuda()
 
 		z_ = Variable(z_)
 		out = self.model.forward(z_)

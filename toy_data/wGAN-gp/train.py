@@ -1,14 +1,20 @@
 from __future__ import print_function
 
+import os
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
+
 import argparse
 
 import torch.optim as optim
 import torch.utils.data
 
 # Training settings
-from discriminators import Discriminator_toy
-from generators import Generator_toy
-from toy_data import ToyData
+from common.discriminators import Discriminator_toy_wgan
+from common.generators import Generator_toy
+from common.toy_data import ToyData
 from train_loop import TrainLoop
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
@@ -39,7 +45,7 @@ cov = toy_data.get_cov()
 # hidden_size = 512
 generator = Generator_toy(512).train()
 
-disc = Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+disc = Discriminator_toy_wgan(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 

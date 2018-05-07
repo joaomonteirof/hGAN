@@ -5,11 +5,12 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from tqdm import tqdm
+from common.MGD_utils import *
 
 
 class TrainLoop(object):
 
-	def __init__(self, generator, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
+	def __init__(self, generator, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -18,12 +19,9 @@ class TrainLoop(object):
 			if not os.path.isdir(self.checkpoint_path):
 				os.mkdir(self.checkpoint_path)
 
-		if job_id:
-			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep_'+job_id+'.pt')
-			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_'+job_id+'.pt')
-		else:
-			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
-			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
+
+		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
+		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
 
 		self.cuda_mode = cuda
 		self.model = generator
@@ -36,7 +34,7 @@ class TrainLoop(object):
 		self.alpha = alpha
 		self.nadir_slack = nadir_slack
 		self.train_mode = train_mode
-		self.constraints = MGD_utils.make_constraints(len(disc_list))
+		self.constraints = make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba) 
 		self.Q = np.zeros(len(self.disc_list))
@@ -195,7 +193,7 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(MGD_utils.steep_direct_cost, self.proba, args = grads_list, jac = MGD_utils.steep_direc_cost_deriv, constraints = self.constraints, method = 'SLSQP', options = {'disp': False})
+			result = minimize(steep_direct_cost, self.proba, args = grads_list, jac = steep_direc_cost_deriv, constraints = self.constraints, method = 'SLSQP', options = {'disp': False})
 
 			self.proba = result.x
 
@@ -343,6 +341,18 @@ class TrainLoop(object):
 			self.Q[i] = self.alpha * reward[i] + (1 - self.alpha) * self.Q[i]
 
 		self.proba = torch.nn.functional.softmax(Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
+
+	def get_gen_grads(self, loss_):
+		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
+		self.model.zero_grad()
+		for params_grads in grads:
+
+			try:
+				grads_ = torch.cat([grads_, params_grads.view(-1)], 0)
+			except:
+				grads_ = params_grads.view(-1)
+
+		return grads_
 
 	def get_gen_grads_norm(self, loss_):
 		norm = 0.0

@@ -6,6 +6,7 @@ import sys
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
+from common.generators import Generator
 import argparse
 import matplotlib.pyplot as plt
 import torch.utils.data
@@ -42,7 +43,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	model = torch.Generator(100, [1024, 512, 256, 128], 3)
+	model = Generator(100, [1024, 512, 256, 128], 3)
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])

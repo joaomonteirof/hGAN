@@ -286,6 +286,8 @@ class TrainLoop(object):
 
 		if self.cuda_mode:
 			z_ = self.fixed_noise.cuda()
+		else:
+			z_ = self.fixed_noise
 
 		z_ = Variable(z_)
 

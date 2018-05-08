@@ -166,7 +166,6 @@ class TrainLoop(object):
 				prob_list.append(1 / (self.nadir - losses_list_float[i]))
 				coefs_sum += prob_list[-1]
 
-			loss_G /= coefs_sum
 			self.proba = np.asarray(prob_list) / coefs_sum
 
 		elif self.train_mode == 'gman':
@@ -259,7 +258,6 @@ class TrainLoop(object):
 		elif self.train_mode == 'vanilla':
 			for disc in self.disc_list:
 				loss_G += F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_)
-			loss_G /= len(self.disc_list)
 			self.proba = np.ones(len(self.disc_list)) * 1 / len(self.disc_list)
 
 		self.optimizer.zero_grad()

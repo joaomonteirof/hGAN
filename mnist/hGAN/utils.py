@@ -2,6 +2,10 @@ from __future__ import print_function
 
 import os
 import pickle
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,28 +14,6 @@ import torch.utils.data
 from scipy.stats import chi2
 from torch.autograd import Variable
 from torchvision.transforms import transforms
-
-
-def save_testdata_statistics(model, data_loader, cuda_mode):
-	for batch in data_loader:
-
-		x, y = batch
-
-		x = torch.autograd.Variable(x)
-
-		out = model.forward(x).data.cpu().numpy()
-
-		try:
-			logits = np.concatenate([logits, out], 0)
-		except NameError:
-			logits = out
-
-	m = logits.mean(0)
-	C = np.cov(logits, rowvar=False)
-
-	pfile = open('../test_data_statistics.p', "wb")
-	pickle.dump({'m': m, 'C': C}, pfile)
-	pfile.close()
 
 
 def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', fig_size=(5, 5), nc=3, im_size=64):

@@ -287,7 +287,7 @@ class TrainLoop(object):
 
 		return dist_matrix
 
-	def metrics(self, x, centers, cov, slack=3.0):
+	def metrics(self, x, centers, cov, slack = 3.0):
 
 		if self.toy_dataset == '8gaussians':
 			distances = self.calculate_dist(1.414 * x, self.centers)

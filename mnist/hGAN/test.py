@@ -3,6 +3,12 @@ from __future__ import print_function
 import argparse
 import os
 
+import os
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch

@@ -2,11 +2,12 @@ from __future__ import print_function
 
 import argparse
 import os
-import pickle
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
 
 import PIL.Image as Image
-import numpy as np
-import torch
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
@@ -16,30 +17,9 @@ import model
 import models_fid
 from train_loop import TrainLoop
 
-
-def save_testdata_statistics(model, data_loader, cuda_mode):
-	for batch in data_loader:
-
-		x, y = batch
-
-		x = torch.autograd.Variable(x)
-
-		out = model.forward(x).data.cpu().numpy()
-
-		try:
-			logits = np.concatenate([logits, out], 0)
-		except NameError:
-			logits = out
-
-	m = logits.mean(0)
-	C = np.cov(logits, rowvar=False)
-
-	pfile = open('../test_data_statistics.p', "wb")
-	pickle.dump({'m': m, 'C': C}, pfile)
-	pfile.close()
-
-
 # Training settings
+from common.utils import save_testdata_statistics
+
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')

@@ -330,6 +330,8 @@ class TrainLoop(object):
 
 		if (fd_modes > 0):
 			fd_all = fd / fd_modes
+		else:
+			fd_all = float("inf")
 
 		return fd_all, quality_samples, quality_modes
 

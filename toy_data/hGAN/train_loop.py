@@ -285,9 +285,9 @@ class TrainLoop(object):
 		else:
 			z_ = self.fixed_noise
 
-		z_ = Variable(self.fixed_noise)
+		z_ = Variable(z_)
 
-		x_gen = self.model.forward(z_).cpu().data.numpy()
+		x_gen = self.model.forward(z_)
 
 		fd, q_samples, q_modes = self.metrics(x_gen, self.centers, self.cov)
 
@@ -325,6 +325,7 @@ class TrainLoop(object):
 		for cent in range(n_gaussians):
 
 			center_samples = x[np.where(closest_center == cent)]
+			center_samples = center_samples.cpu().data.numpy()
 
 			center_distances = distances[np.where(closest_center == cent)]
 

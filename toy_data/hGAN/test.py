@@ -138,6 +138,7 @@ if __name__ == '__main__':
 		# plot_learningcurves(history, 'gen_loss_minibatch')
 		# plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FD')
+		plot_learningcurves(history, 'steepest_dir_norm')
 	# plot_learningcurves(history, 'quality_samples')
 	# plot_learningcurves(history, 'quality_modes')
 

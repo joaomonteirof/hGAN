@@ -289,7 +289,7 @@ class TrainLoop(object):
 
 		x_gen = self.model.forward(z_)
 
-		fd, q_samples, q_modes = self.metrics(x_gen, self.centers, self.cov)
+		fd, q_samples, q_modes = self.metrics(x_gen.cpu().data.numpy(), self.centers, self.cov)
 
 		steepest_dir_norm = self.compute_steepest_direction_norm()
 
@@ -325,7 +325,7 @@ class TrainLoop(object):
 		for cent in range(n_gaussians):
 
 			center_samples = x[np.where(closest_center == cent)]
-			center_samples = center_samples.cpu().data.numpy()
+			#center_samples = center_samples.cpu().data.numpy()
 
 			center_distances = distances[np.where(closest_center == cent)]
 

@@ -30,6 +30,7 @@ class TrainLoop(object):
 			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
 			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
 
+		self.cuda_mode = cuda
 		self.model = generator
 		self.disc_list = disc_list
 		self.optimizer = optimizer
@@ -105,6 +106,12 @@ class TrainLoop(object):
 		y_real_ = torch.ones(x.size(0))
 		y_fake_ = torch.zeros(x.size(0))
 
+		if self.cuda_mode:
+			x = x.cuda()
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+			y_fake_ = y_fake_.cuda()
+
 		x = Variable(x)
 		z_ = Variable(z_)
 		y_real_ = Variable(y_real_)
@@ -129,6 +136,9 @@ class TrainLoop(object):
 		## Train G
 
 		z_ = torch.randn(x.size(0), 2).view(-1, 2)
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
 
 		z_ = Variable(z_)
 		out = self.model.forward(z_)
@@ -225,6 +235,9 @@ class TrainLoop(object):
 
 			z_probs = torch.randn(x.size(0), 2)
 
+			if self.cuda_mode:
+				z_probs = z_probs.cuda()
+
 			z_probs = Variable(z_probs)
 
 			out_probs = self.model.forward(z_probs)
@@ -266,6 +279,11 @@ class TrainLoop(object):
 	def valid(self):
 
 		self.model.eval()
+
+		if self.cuda_mode:
+			z_ = self.fixed_noise.cuda()
+		else:
+			z_ = self.fixed_noise
 
 		z_ = Variable(self.fixed_noise)
 
@@ -398,6 +416,10 @@ class TrainLoop(object):
 		z_ = torch.randn(20, 2)
 		y_real_ = torch.ones(z_.size(0))
 
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+
 		z_ = Variable(z_)
 		y_real_ = Variable(y_real_)
 		out = self.model.forward(z_)
@@ -426,6 +448,10 @@ class TrainLoop(object):
 		z_ = torch.randn(128, 2)
 
 		y_real_ = torch.ones(128)
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
 
 		z_ = Variable(z_, requires_grad=False)
 		y_real_ = Variable(y_real_)

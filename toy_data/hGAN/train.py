@@ -33,9 +33,14 @@ parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='U
 parser.add_argument('--toy-dataset', choices=['8gaussians', '25gaussians'], default='8gaussians')
 parser.add_argument('--toy-length', type=int, metavar='N', help='Toy dataset length', default=100000)
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
+parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
+args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
+
 
 torch.manual_seed(args.seed)
+if args.cuda:
+	torch.cuda.manual_seed(args.seed)
 
 disc_list = []
 
@@ -52,10 +57,16 @@ for i in range(args.ndiscriminators):
 	disc = Discriminator_toy(512, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
 
+if args.cuda:
+	generator = generator.cuda()
+	for disc in disc_list:
+		disc = disc.cuda()
+
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, job_id=args.job_id)
+trainer = TrainLoop(generator, disc_list, optimizer, args.toy_dataset, centers, cov, train_loader=train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda = args.cuda, job_id=args.job_id)
 
+print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {}'.format(args.train_mode))
 print('Number of discriminators is: {}'.format(len(disc_list)))
 

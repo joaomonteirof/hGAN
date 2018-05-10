@@ -9,15 +9,11 @@ print(f'Running from package root directory {sys.path[0]}')
 import argparse
 
 from generators import Generator
-import matplotlib.pyplot as plt
 
 import torch.utils.data
 
 from common.metrics import inception_score
 from common.utils import test_model, save_samples
-
-
-
 
 if __name__ == '__main__':
 

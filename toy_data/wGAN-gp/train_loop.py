@@ -93,7 +93,6 @@ class TrainLoop(object):
 		y_fake_ = Variable(y_fake_)
 
 		for i in range(self.its_disc):
-
 			z_ = torch.randn(x.size(0), 2).view(-1, 2)
 
 			z_ = Variable(z_)
@@ -182,7 +181,6 @@ class TrainLoop(object):
 				quality_modes += 1
 
 			if center_samples.shape[0] > 3:
-
 				fd += 1
 				m = np.mean(center_samples, 0)
 				C = np.cov(center_samples, rowvar=False)

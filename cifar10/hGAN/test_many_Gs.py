@@ -13,7 +13,6 @@ import numpy as np
 import torch.utils.data
 from scipy.stats import sem
 
-
 if __name__ == '__main__':
 
 	# Testing settings
@@ -24,7 +23,7 @@ if __name__ == '__main__':
 	if args.models_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --models-path to indicate the path!')
 
-	models_list = glob.glob(args.models_path+'G*.pt')
+	models_list = glob.glob(args.models_path + 'G*.pt')
 
 	sdd = []
 	fid = []

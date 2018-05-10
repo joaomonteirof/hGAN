@@ -1,10 +1,8 @@
 import os
 
-import numpy as np
 import scipy.linalg as sla
 import torch
 import torch.nn.functional as F
-from scipy.optimize import minimize
 from torch.autograd import Variable
 from tqdm import tqdm
 
@@ -24,11 +22,11 @@ class TrainLoop(object):
 				os.mkdir(self.checkpoint_path)
 
 		if job_id:
-			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep_'+job_id+'.pt')
-			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_'+job_id+'.pt')
+			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_' + train_mode + '_' + str(len(disc_list)) + '_{}ep_' + job_id + '.pt')
+			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_' + train_mode + '_' + job_id + '.pt')
 		else:
-			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
-			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
+			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_' + train_mode + '_' + str(len(disc_list)) + '_{}ep.pt')
+			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_' + train_mode + '_.pt')
 
 		self.cuda_mode = cuda
 		self.model = generator
@@ -47,7 +45,7 @@ class TrainLoop(object):
 		self.Q = np.zeros(len(self.disc_list))
 		self.constraints = make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
-		self.proba /= np.sum(self.proba) 
+		self.proba /= np.sum(self.proba)
 
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
@@ -217,7 +215,7 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(steep_direct_cost, self.proba, args = grads_list, jac = steep_direc_cost_deriv, constraints = self.constraints, method ='SLSQP', options = {'disp': False})
+			result = minimize(steep_direct_cost, self.proba, args=grads_list, jac=steep_direc_cost_deriv, constraints=self.constraints, method='SLSQP', options={'disp': False})
 
 			self.proba = result.x
 
@@ -305,7 +303,7 @@ class TrainLoop(object):
 
 		return dist_matrix
 
-	def metrics(self, x, centers, cov, slack = 3.0):
+	def metrics(self, x, centers, cov, slack=3.0):
 
 		if self.toy_dataset == '8gaussians':
 			distances = self.calculate_dist(1.414 * x, self.centers)
@@ -325,7 +323,7 @@ class TrainLoop(object):
 		for cent in range(n_gaussians):
 
 			center_samples = x[np.where(closest_center == cent)]
-			#center_samples = center_samples.cpu().data.numpy()
+			# center_samples = center_samples.cpu().data.numpy()
 
 			center_distances = distances[np.where(closest_center == cent)]
 
@@ -338,7 +336,6 @@ class TrainLoop(object):
 				quality_modes += 1
 
 			if center_samples.shape[0] > 3:
-
 				fd_modes += 1
 				m = np.mean(center_samples, 0)
 				C = np.cov(center_samples, rowvar=False)
@@ -441,7 +438,7 @@ class TrainLoop(object):
 		for i in range(len(self.Q)):
 			self.Q[i] = self.alpha * reward[i] + (1 - self.alpha) * self.Q[i]
 
-		self.proba = torch.nn.functional.softmax(15*Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
+		self.proba = torch.nn.functional.softmax(15 * Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
 
 	def compute_steepest_direction_norm(self):
 		self.model.train()
@@ -492,5 +489,5 @@ class TrainLoop(object):
 		self.model.zero_grad()
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
 		for params_grads in grads:
-			norm+=params_grads.norm(2).data[0]**2
+			norm += params_grads.norm(2).data[0] ** 2
 		return np.sqrt(norm)

@@ -1,10 +1,10 @@
 import os
 
-import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 from tqdm import tqdm
+
 from common.MGD_utils import *
 
 
@@ -19,9 +19,8 @@ class TrainLoop(object):
 			if not os.path.isdir(self.checkpoint_path):
 				os.mkdir(self.checkpoint_path)
 
-
-		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
-		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
+		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_' + train_mode + '_' + str(len(disc_list)) + '_{}ep.pt')
+		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_' + train_mode + '_.pt')
 
 		self.cuda_mode = cuda
 		self.model = generator
@@ -36,7 +35,7 @@ class TrainLoop(object):
 		self.train_mode = train_mode
 		self.constraints = make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
-		self.proba /= np.sum(self.proba) 
+		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
 
 		if checkpoint_epoch is not None:
@@ -192,7 +191,7 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(steep_direct_cost, self.proba, args = grads_list, jac = steep_direc_cost_deriv, constraints = self.constraints, method = 'SLSQP', options = {'disp': False})
+			result = minimize(steep_direct_cost, self.proba, args=grads_list, jac=steep_direc_cost_deriv, constraints=self.constraints, method='SLSQP', options={'disp': False})
 
 			self.proba = result.x
 
@@ -338,7 +337,7 @@ class TrainLoop(object):
 		for i in range(len(self.Q)):
 			self.Q[i] = self.alpha * reward[i] + (1 - self.alpha) * self.Q[i]
 
-		self.proba = torch.nn.functional.softmax(15*Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
+		self.proba = torch.nn.functional.softmax(15 * Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
 
 	def get_gen_grads(self, loss_):
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
@@ -357,5 +356,5 @@ class TrainLoop(object):
 		self.model.zero_grad()
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
 		for params_grads in grads:
-			norm+=params_grads.norm(2).data[0]**2
+			norm += params_grads.norm(2).data[0] ** 2
 		return np.sqrt(norm)

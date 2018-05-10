@@ -2,18 +2,13 @@ from __future__ import print_function
 
 import argparse
 import os
-
-import os
 import sys
 
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
 import matplotlib.pyplot as plt
-import numpy as np
-import torch
 import torch.utils.data
-from torch.autograd import Variable
 
 import model as model_
 from utils import test_model, save_samples
@@ -23,6 +18,7 @@ def denorm(unorm):
 	norm = (unorm + 1) / 2
 
 	return norm.clamp(0, 1)
+
 
 def plot_learningcurves(history, *keys):
 	for key in keys:
@@ -63,7 +59,6 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'gen_loss_minibatch')
 		plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FID-c')
-
 
 	test_model(model=model, n_tests=args.n_tests, nc=1, im_size=28, cuda_mode=args.cuda)
 	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], prefix='mnist', fig_size=(10, 10), nc=1, im_size=28, cuda_mode=args.cuda)

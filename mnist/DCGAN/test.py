@@ -1,13 +1,9 @@
 from __future__ import print_function
 
 import argparse
-import os
 
 import matplotlib.pyplot as plt
-import numpy as np
-import torch
 import torch.utils.data
-from torch.autograd import Variable
 
 import model as model_
 from utils import test_model, save_samples
@@ -17,6 +13,7 @@ def denorm(unorm):
 	norm = (unorm + 1) / 2
 
 	return norm.clamp(0, 1)
+
 
 def plot_learningcurves(history, *keys):
 	for key in keys:

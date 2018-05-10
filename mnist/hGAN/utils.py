@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import os
-import pickle
 import sys
 
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
@@ -39,11 +38,11 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		ax.set_adjustable('box-forced')
 		# Scale to 0-255
 		img = (((img - img.min()) * 255) / (img.max() - img.min())).cpu().data.numpy().transpose(1, 2, 0).astype(np.uint8).squeeze()
-		#img = (img).cpu().data.numpy().transpose(1, 2, 0).squeeze()
+		# img = (img).cpu().data.numpy().transpose(1, 2, 0).squeeze()
 
 		# ax.imshow(img.cpu().data.view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
 		ax.imshow(img, cmap="gray", aspect='equal')
-		#ax.imshow(img)
+	# ax.imshow(img)
 	plt.subplots_adjust(wspace=0, hspace=0)
 	title = 'Samples'
 	fig.text(0.5, 0.04, title, ha='center')

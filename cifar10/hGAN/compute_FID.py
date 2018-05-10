@@ -7,31 +7,28 @@ sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
 import argparse
-import glob
-import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from torch.autograd import Variable
 import torch.utils.data
-from scipy.stats import sem
 import scipy.linalg as sla
 from common.generators import Generator
 from common.resnet import ResNet18
 from common.discriminators import *
 import pickle
 
-def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 
+def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 	model.eval()
 	fid_model_.eval()
 
-	if nsamples % batch_size == 0: 
-		n_batches = nsamples//batch_size
-	else: n_batches = nsamples//batch_size + 1
+	if nsamples % batch_size == 0:
+		n_batches = nsamples // batch_size
+	else:
+		n_batches = nsamples // batch_size + 1
 
 	for i in range(n_batches):
 
-		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+		z_ = torch.randn(min(batch_size, nsamples - batch_size * i), 100).view(-1, 100, 1, 1)
 		if cuda:
 			z_ = z_.cuda()
 
@@ -40,7 +37,7 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 		x_gen = model.forward(z_)
 
 		try:
-			logits = np.concatenate( [logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0 )
+			logits = np.concatenate([logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0)
 		except NameError:
 			logits = fid_model_.forward(x_gen).cpu().data.numpy()
 
@@ -51,6 +48,7 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 	fid = ((m_data - m_gen) ** 2).sum() + np.matrix.trace(C_data + C_gen - 2 * sla.sqrtm(np.matmul(C_data, C_gen)))
 
 	return fid
+
 
 if __name__ == '__main__':
 

@@ -173,7 +173,6 @@ class TrainLoop(object):
 				quality_modes += 1
 
 			if center_samples.shape[0] > 3:
-
 				fd_modes += 1
 				m = np.mean(center_samples, 0)
 				C = np.cov(center_samples, rowvar=False)

@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import sys
+import numpy as np
 
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
@@ -54,6 +55,9 @@ if __name__ == '__main__':
 	print('Cuda Mode is: {}'.format(args.cuda))
 
 	history = ckpt['history']
+
+	print('Min FID:', np.min(history['FID-c']))
+	print('Epoch with min FID:', np.argmin(history['FID-c']))
 
 	if not args.no_plots:
 		plot_learningcurves(history, 'gen_loss')

@@ -14,6 +14,7 @@ import torch
 from torch.autograd import Variable
 import torch.utils.data
 from scipy.stats import sem
+import scipy.linalg as sla
 from common.generators import Generator
 from common.resnet import ResNet18
 from common.discriminators import *
@@ -24,9 +25,9 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 	model.eval()
 	fid_model_.eval()
 
-	if nsamples % batch_size == 0: n_batches = nsamples//batch_size else: n_batches = nsamples//batch_size + 1
-
-	logits = []
+	if nsamples % batch_size == 0: 
+		n_batches = nsamples//batch_size
+	else: n_batches = nsamples//batch_size + 1
 
 	for i in range(n_batches):
 
@@ -38,7 +39,10 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 
 		x_gen = model.forward(z_)
 
-		logits.append( fid_model_.forward(x_gen).cpu().data.numpy() )
+		try:
+			logits = np.concatenate( [logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0 )
+		except NameError:
+			logits = fid_model_.forward(x_gen).cpu().data.numpy()
 
 	logits = np.asarray(logits)
 	m_gen = logits.mean(0)
@@ -87,7 +91,7 @@ if __name__ == '__main__':
 	fid = []
 
 	for i in range(args.ntests):
-		fid.append(compute_fid(generator, fid_model, args.nsamples, m, C, args.cuda))
+		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda))
 
 	fid = np.asarray(fid)
 

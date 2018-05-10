@@ -193,6 +193,57 @@ def save_samples_toy_data(x, centers, save_name, toy_dataset):
 
 	plt.close()
 
+def save_samples_toy_data_gen(generator, cp_name, save_name, n_samples, toy_dataset, save_dir='./'):
+	generator.eval()
+
+	noise = torch.randn(n_samples, 2).view(-1, 2)
+
+	noise = Variable(noise, volatile=True)
+	samples = generator(noise)
+
+	if toy_dataset == '8gaussians':
+		scale_cent = 2.
+		centers = [
+			(1, 0),
+			(-1, 0),
+			(0, 1),
+			(0, -1),
+			(1. / np.sqrt(2), 1. / np.sqrt(2)),
+			(1. / np.sqrt(2), -1. / np.sqrt(2)),
+			(-1. / np.sqrt(2), 1. / np.sqrt(2)),
+			(-1. / np.sqrt(2), -1. / np.sqrt(2))
+		]
+
+		centers = [(scale_cent * x, scale_cent * y) for x, y in centers]
+		centers = np.asarray(centers)
+		cov_all = np.array([(0.02 ** 2, 0), (0, 0.02 ** 2)])
+
+		scale = 1.414
+
+	elif toy_dataset == '25gaussians':
+		range_ = np.arange(-2, 3)
+		centers = 2 * np.transpose(np.meshgrid(range_, range_, indexing='ij'), (1, 2, 0)).reshape(-1, 2)
+		cov_all = np.array([(0.05 ** 2, 0), (0, 0.05 ** 2)])
+
+		scale = 2.828
+
+	samples = scale * samples
+
+	plt.scatter(samples[:, 0], samples[:, 1], c='red', marker='o', alpha=0.1)
+	plt.scatter(centers[:, 0], centers[:, 1], c='black', marker='x', alpha=1)
+
+	for k in range(centers.shape[0]):
+		ellipse_data = plot_ellipse(x_cent=centers[k, 0], y_cent=centers[k, 1], cov=cov_all, mass_level=0.9973)
+		plt.plot(ellipse_data[0], ellipse_data[1], c='black', alpha=1)
+
+	# save figure
+
+	if not os.path.exists(save_dir):
+		os.mkdir(save_dir)
+	save_fn = save_dir + 'toy_data_' + save_name + '_' + cp_name + '.png'
+	plt.savefig(save_fn)
+
+	plt.close()
 
 def calculate_dist(x_, y_):
 

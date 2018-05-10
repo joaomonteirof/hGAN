@@ -84,6 +84,3 @@ class Generator_mnist(nn.Module):
 		x = x.view(x.size(0), 100)
 		out = self.model(x)
 		return out
-
-
-

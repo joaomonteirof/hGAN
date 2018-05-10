@@ -64,8 +64,9 @@ if __name__ == '__main__':
 	fid = []
 
 	for i in range(args.ntests):
-		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda))
+		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda, mnist = True if args.dataset == 'mnist' else False))
 
 	fid = np.asarray(fid)
+	print(fid)
 
 	print('min sdd: {:0.4f} +- {:0.4f}'.format(fid.mean(), fid.std()))

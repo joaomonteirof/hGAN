@@ -11,7 +11,7 @@ from torch.nn import functional as F
 from torchvision.models.inception import inception_v3
 import scipy.linalg as sla
 
-def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
+def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, mnist = True):
 
 	model.eval()
 	fid_model_.eval()
@@ -19,6 +19,8 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 	if nsamples % batch_size == 0: 
 		n_batches = nsamples//batch_size
 	else: n_batches = nsamples//batch_size + 1
+
+	logits = None
 
 	for i in range(n_batches):
 
@@ -28,14 +30,16 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
 
 		z_ = Variable(z_)
 
-		x_gen = model.forward(z_)
+		if mnist:
+			x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
 
-		try:
+		if logits is not None:
 			logits = np.concatenate( [logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0 )
-		except NameError:
+		else:
 			logits = fid_model_.forward(x_gen).cpu().data.numpy()
 
 	logits = np.asarray(logits)
+	print(logits.shape)
 	m_gen = logits.mean(0)
 	C_gen = np.cov(logits, rowvar=False)
 

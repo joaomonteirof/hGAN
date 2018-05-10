@@ -157,7 +157,7 @@ class cnn(nn.Module):
 		else:
 			return F.log_softmax(x, dim=1)
 
-	def forward_oltl(self, x):
+	def forward_fid(self, x):
 		x = F.relu(F.max_pool2d(self.conv1(x), 2))
 		x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
 		x = x.view(-1, 320)
@@ -165,4 +165,4 @@ class cnn(nn.Module):
 		x = F.dropout(x, training=self.training)
 		x = self.fc2(x)
 
-		return [F.log_softmax(x, dim=1), F.softmax(x, dim=1)]
+		return F.log_softmax(x, dim=1)

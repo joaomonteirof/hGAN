@@ -30,6 +30,7 @@ class TrainLoop(object):
 			self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_'+train_mode+'_'+str(len(disc_list))+'_{}ep.pt')
 			self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_{}_'+train_mode+'_.pt')
 
+		self.cuda_mode = cuda
 		self.model = generator
 		self.disc_list = disc_list
 		self.optimizer = optimizer
@@ -105,6 +106,12 @@ class TrainLoop(object):
 		y_real_ = torch.ones(x.size(0))
 		y_fake_ = torch.zeros(x.size(0))
 
+		if self.cuda_mode:
+			x = x.cuda()
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+			y_fake_ = y_fake_.cuda()
+
 		x = Variable(x)
 		z_ = Variable(z_)
 		y_real_ = Variable(y_real_)
@@ -129,6 +136,9 @@ class TrainLoop(object):
 		## Train G
 
 		z_ = torch.randn(x.size(0), 2).view(-1, 2)
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
 
 		z_ = Variable(z_)
 		out = self.model.forward(z_)
@@ -225,6 +235,9 @@ class TrainLoop(object):
 
 			z_probs = torch.randn(x.size(0), 2)
 
+			if self.cuda_mode:
+				z_probs = z_probs.cuda()
+
 			z_probs = Variable(z_probs)
 
 			out_probs = self.model.forward(z_probs)
@@ -267,11 +280,16 @@ class TrainLoop(object):
 
 		self.model.eval()
 
-		z_ = Variable(self.fixed_noise)
+		if self.cuda_mode:
+			z_ = self.fixed_noise.cuda()
+		else:
+			z_ = self.fixed_noise
 
-		x_gen = self.model.forward(z_).cpu().data.numpy()
+		z_ = Variable(z_)
 
-		fd, q_samples, q_modes = self.metrics(x_gen, self.centers, self.cov)
+		x_gen = self.model.forward(z_)
+
+		fd, q_samples, q_modes = self.metrics(x_gen.cpu().data.numpy(), self.centers, self.cov)
 
 		steepest_dir_norm = self.compute_steepest_direction_norm()
 
@@ -287,7 +305,7 @@ class TrainLoop(object):
 
 		return dist_matrix
 
-	def metrics(self, x, centers, cov, slack=3.0):
+	def metrics(self, x, centers, cov, slack = 3.0):
 
 		if self.toy_dataset == '8gaussians':
 			distances = self.calculate_dist(1.414 * x, self.centers)
@@ -307,6 +325,7 @@ class TrainLoop(object):
 		for cent in range(n_gaussians):
 
 			center_samples = x[np.where(closest_center == cent)]
+			#center_samples = center_samples.cpu().data.numpy()
 
 			center_distances = distances[np.where(closest_center == cent)]
 
@@ -328,6 +347,8 @@ class TrainLoop(object):
 
 		if (fd_modes > 0):
 			fd_all = fd / fd_modes
+		else:
+			fd_all = float("inf")
 
 		return fd_all, quality_samples, quality_modes
 
@@ -396,6 +417,10 @@ class TrainLoop(object):
 		z_ = torch.randn(20, 2)
 		y_real_ = torch.ones(z_.size(0))
 
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
+
 		z_ = Variable(z_)
 		y_real_ = Variable(y_real_)
 		out = self.model.forward(z_)
@@ -424,6 +449,10 @@ class TrainLoop(object):
 		z_ = torch.randn(128, 2)
 
 		y_real_ = torch.ones(128)
+
+		if self.cuda_mode:
+			z_ = z_.cuda()
+			y_real_ = y_real_.cuda()
 
 		z_ = Variable(z_, requires_grad=False)
 		y_real_ = Variable(y_real_)

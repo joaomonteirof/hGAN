@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import sys
+import numpy as np
 
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
@@ -61,6 +62,7 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'gen_loss_minibatch')
 		plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FID-c')
+
 
 	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
 	save_samples(prefix='CIFAR10_hGAN', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)

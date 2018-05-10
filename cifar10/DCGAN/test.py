@@ -12,15 +12,7 @@ import matplotlib.pyplot as plt
 import torch.utils.data
 
 from common.metrics import inception_score
-from common.utils import test_model, save_samples
-
-
-def plot_learningcurves(history, *keys):
-	for key in keys:
-		plt.plot(history[key])
-
-	plt.show()
-
+from common.utils import test_model, save_samples, denorm, plot_learningcurves
 
 if __name__ == '__main__':
 

@@ -13,8 +13,13 @@ import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
-import model
-import models_fid
+from common.discriminators import *
+from common.utils import save_testdata_statistics
+from common.generators import Generator
+
+from common.generators import Generator_mnist
+from common.discriminators import Discriminator_mnist
+from common.models_fid import cnn
 from common.utils import save_testdata_statistics
 from train_loop import TrainLoop
 
@@ -53,8 +58,8 @@ transform = transforms.Compose([transforms.Resize((28, 28), interpolation=Image.
 trainset = datasets.MNIST(root=args.data_path, train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
-generator = model.Generator().train()
-fid_model = models_fid.cnn().eval()
+generator = Generator_mnist().train()
+fid_model = cnn().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])
 
@@ -68,7 +73,7 @@ if not os.path.isfile('../test_data_statistics.p'):
 
 disc_list = []
 for i in range(args.ndiscriminators):
-	disc = model.Discriminator(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+	disc = Discriminator_mnist(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
 
 if args.cuda:

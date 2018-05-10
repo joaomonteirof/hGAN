@@ -2,6 +2,10 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
+
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+print(f'Running from package root directory {sys.path[0]}')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,21 +13,8 @@ import torch
 import torch.utils.data
 from torch.autograd import Variable
 
-import model as model_
-from utils import test_model, save_samples
-
-
-def denorm(unorm):
-	norm = (unorm + 1) / 2
-
-	return norm.clamp(0, 1)
-
-def plot_learningcurves(history, *keys):
-	for key in keys:
-		plt.plot(history[key])
-
-	plt.show()
-
+from common.generators import Generator_mnist
+from common.utils import *
 
 if __name__ == '__main__':
 
@@ -39,7 +30,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	model = model_.Generator()
+	model = Generator_mnist()
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])

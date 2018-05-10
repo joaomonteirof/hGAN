@@ -9,6 +9,39 @@ from torch import nn
 from torch.autograd import Variable
 from torch.nn import functional as F
 from torchvision.models.inception import inception_v3
+import scipy.linalg as sla
+
+def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda):
+
+	model.eval()
+	fid_model_.eval()
+
+	if nsamples % batch_size == 0: 
+		n_batches = nsamples//batch_size
+	else: n_batches = nsamples//batch_size + 1
+
+	for i in range(n_batches):
+
+		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+		if cuda:
+			z_ = z_.cuda()
+
+		z_ = Variable(z_)
+
+		x_gen = model.forward(z_)
+
+		try:
+			logits = np.concatenate( [logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0 )
+		except NameError:
+			logits = fid_model_.forward(x_gen).cpu().data.numpy()
+
+	logits = np.asarray(logits)
+	m_gen = logits.mean(0)
+	C_gen = np.cov(logits, rowvar=False)
+
+	fid = ((m_data - m_gen) ** 2).sum() + np.matrix.trace(C_data + C_gen - 2 * sla.sqrtm(np.matmul(C_data, C_gen)))
+
+	return fid
 
 
 def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, splits=1):

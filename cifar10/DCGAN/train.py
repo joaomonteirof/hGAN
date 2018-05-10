@@ -14,7 +14,7 @@ import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from common.resnet import ResNet18
+from common.models_fid import ResNet18
 from train_loop import TrainLoop
 from common.utils import save_testdata_statistics
 

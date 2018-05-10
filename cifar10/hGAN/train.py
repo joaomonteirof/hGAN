@@ -6,16 +6,16 @@ import sys
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
-from common.resnet import ResNet18
+from common.models_fid import ResNet18
 from common.discriminators import *
 from common.utils import save_testdata_statistics
+from common.generators import Generator
 import argparse
 import PIL.Image as Image
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from common.generators import Generator
 
 from train_loop import TrainLoop
 

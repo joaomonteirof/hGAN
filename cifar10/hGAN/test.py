@@ -65,6 +65,7 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'gen_loss_minibatch')
 		plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FID-c')
+		plot_learningcurves(history, 'steepest_dir_norm')
 
 	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
 	save_samples(prefix='CIFAR10_hGAN', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)

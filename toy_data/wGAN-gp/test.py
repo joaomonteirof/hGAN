@@ -132,6 +132,9 @@ if __name__ == '__main__':
 
 	history = ckpt['history']
 
+	print('Min FD:', np.min(history['FD']))
+	print('Epoch with min FD:', np.argmin(history['FD']))
+
 	if not args.no_plots:
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')

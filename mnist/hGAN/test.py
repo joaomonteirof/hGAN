@@ -40,12 +40,16 @@ if __name__ == '__main__':
 
 	history = ckpt['history']
 
+	print('Min FID:', np.min(history['FID-c']))
+	print('Epoch with min FID:', np.argmin(history['FID-c']))
+
 	if not args.no_plots:
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')
 		plot_learningcurves(history, 'gen_loss_minibatch')
 		plot_learningcurves(history, 'disc_loss_minibatch')
 		plot_learningcurves(history, 'FID-c')
+		plot_learningcurves(history, 'steepest_dir_norm')
 
 	test_model(model=model, n_tests=args.n_tests, nc=1, im_size=28, cuda_mode=args.cuda)
 	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], prefix='mnist', fig_size=(10, 10), nc=1, im_size=28, cuda_mode=args.cuda)

@@ -50,6 +50,9 @@ if __name__ == '__main__':
 
 	history = ckpt['history']
 
+	print('Min FID:', np.min(history['FID-c']))
+	print('Epoch with min FID:', np.argmin(history['FID-c']))
+
 	if not args.no_plots:
 		plot_learningcurves(history, 'gen_loss')
 		plot_learningcurves(history, 'disc_loss')

@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
-from common.discriminators import Discriminator
+from common.discriminators import Discriminator_noproj
 from common.generators import Generator
 import argparse
 import PIL.Image as Image
@@ -50,7 +50,7 @@ trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, tran
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
 generator = Generator(100, [1024, 512, 256, 128], 3).train()
-disc = Discriminator(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2), batch_norm=True).train()
+disc = Discriminator_noproj(3, [128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2), batch_norm=True).train()
 fid_model = ResNet18().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])

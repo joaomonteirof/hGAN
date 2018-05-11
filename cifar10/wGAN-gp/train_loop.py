@@ -71,6 +71,8 @@ class TrainLoop(object):
 			self.history['disc_loss'].append(disc_loss / (t + 1))
 			self.history['FID-c'].append(fid_c)
 
+			print('Best FID so far is: {}'.format(np.min(self.history['FID-c'])))
+
 			self.cur_epoch += 1
 
 			if self.history['FID-c'][-1] < best_fid:

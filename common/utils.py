@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import torch.utils.data
 from scipy.stats import chi2
+import scipy.linalg as sla
 from torch.autograd import Variable
 from torchvision.transforms import transforms
 
@@ -140,3 +141,159 @@ def test_model(model, n_tests, cuda_mode):
 		sample = denorm(out[i].data)
 		sample = to_pil(sample.cpu())
 		sample.save('sample_{}.png'.format(i + 1))
+
+def plot_toy_data(x, centers, toy_dataset):
+	
+	if (toy_dataset == '8gaussians'):
+		cov_all = np.array([(0.02**2, 0), (0, 0.02**2)])
+		scale = 1.414
+
+	elif (toy_dataset == '25gaussians'):
+		cov_all = np.array([(0.05**2, 0), (0, 0.05**2)])
+		scale = 2.828
+		
+	samples = scale*x
+
+	plt.scatter(samples[:, 0], samples[:, 1], c = 'red', marker = 'o', alpha = 0.1)
+	plt.scatter(centers[:, 0], centers[:, 1], c = 'black', marker = 'x', alpha = 1)
+
+	for k in range(centers.shape[0]):
+		ellipse_data = plot_ellipse(x_cent = centers[k, 0], y_cent = centers[k, 1], cov = cov_all, mass_level = 0.9545)
+		plt.plot(ellipse_data[0], ellipse_data[1], c = 'black', alpha = 0.2)
+
+	plt.show()
+
+def save_samples_toy_data(x, centers, save_name, toy_dataset):
+	
+	if (toy_dataset == '8gaussians'):	
+		cov_all = np.array([(0.02**2, 0), (0, 0.02**2)])
+
+		scale = 1.414
+
+	elif (toy_dataset == '25gaussians'):
+		cov_all = np.array([(0.05**2, 0), (0, 0.05**2)])
+
+		scale = 2.828
+		
+	samples = scale*x
+
+	plt.scatter(samples[:, 0], samples[:, 1], c = 'red', marker = 'o', alpha = 0.1)
+	plt.scatter(centers[:, 0], centers[:, 1], c = 'black', marker = 'x', alpha = 1)
+
+
+	for k in range(centers.shape[0]):
+
+		ellipse_data = plot_ellipse(x_cent = centers[k, 0], y_cent = centers[k, 1], cov = cov_all, mass_level = 0.9973)
+		plt.plot(ellipse_data[0], ellipse_data[1], c = 'black', alpha = 1)
+
+	# save figure
+
+	save_name = save_name + '.png'
+	plt.savefig(save_name)
+
+	plt.close()
+
+def save_samples_toy_data_gen(generator, cp_name, save_name, n_samples, toy_dataset, save_dir='./'):
+	generator.eval()
+
+	noise = torch.randn(n_samples, 2).view(-1, 2)
+
+	noise = Variable(noise, volatile=True)
+	samples = generator(noise)
+
+	if toy_dataset == '8gaussians':
+		scale_cent = 2.
+		centers = [
+			(1, 0),
+			(-1, 0),
+			(0, 1),
+			(0, -1),
+			(1. / np.sqrt(2), 1. / np.sqrt(2)),
+			(1. / np.sqrt(2), -1. / np.sqrt(2)),
+			(-1. / np.sqrt(2), 1. / np.sqrt(2)),
+			(-1. / np.sqrt(2), -1. / np.sqrt(2))
+		]
+
+		centers = [(scale_cent * x, scale_cent * y) for x, y in centers]
+		centers = np.asarray(centers)
+		cov_all = np.array([(0.02 ** 2, 0), (0, 0.02 ** 2)])
+
+		scale = 1.414
+
+	elif toy_dataset == '25gaussians':
+		range_ = np.arange(-2, 3)
+		centers = 2 * np.transpose(np.meshgrid(range_, range_, indexing='ij'), (1, 2, 0)).reshape(-1, 2)
+		cov_all = np.array([(0.05 ** 2, 0), (0, 0.05 ** 2)])
+
+		scale = 2.828
+
+	samples = scale * samples
+
+	plt.scatter(samples[:, 0], samples[:, 1], c='red', marker='o', alpha=0.1)
+	plt.scatter(centers[:, 0], centers[:, 1], c='black', marker='x', alpha=1)
+
+	for k in range(centers.shape[0]):
+		ellipse_data = plot_ellipse(x_cent=centers[k, 0], y_cent=centers[k, 1], cov=cov_all, mass_level=0.9973)
+		plt.plot(ellipse_data[0], ellipse_data[1], c='black', alpha=1)
+
+	# save figure
+
+	if not os.path.exists(save_dir):
+		os.mkdir(save_dir)
+	save_fn = save_dir + 'toy_data_' + save_name + '_' + cp_name + '.png'
+	plt.savefig(save_fn)
+
+	plt.close()
+
+def calculate_dist(x_, y_):
+
+	dist_matrix = np.zeros([x_.shape[0], y_.shape[0]])
+
+	for i in range(x_.shape[0]):
+		for j in range(y_.shape[0]):
+
+			dist_matrix[i, j] = np.sqrt((x_[i, 0] - y_[j, 0])**2 + (x_[i, 1] - y_[j, 1])**2)
+
+	return dist_matrix
+
+def metrics_toy_data(x, centers, cov, toy_dataset, slack = 3.0):
+
+	if (toy_dataset == '8gaussians'):
+		distances = calculate_dist(1.414*x, centers)
+	
+	elif (toy_dataset == '25gaussians'):
+		distances = calculate_dist(2.828*x, centers)
+		
+	closest_center = np.argmin(distances, 1)
+
+	n_gaussians = centers.shape[0]
+
+	fd = 0
+	quality_samples = 0
+	quality_modes = 0
+
+	for cent in range(n_gaussians):
+
+		center_samples = x[np.where(closest_center == cent)]
+
+		center_distances = distances[np.where(closest_center == cent)]
+
+		sigma = cov[0, 0]
+
+		quality_samples_center = np.sum(center_distances[:, cent] <= slack*np.sqrt(sigma))
+		quality_samples += quality_samples_center
+
+		if (quality_samples_center > 0):
+			quality_modes += 1
+
+		if (center_samples.shape[0] > 3):
+
+			m = np.mean(center_samples, 0)
+			C = np.cov(center_samples, rowvar = False)
+
+			fd += ((centers[cent] - m)**2).sum() + np.matrix.trace(C + cov - 2*sla.sqrtm( np.matmul(C, cov)))
+
+
+	fd_all = fd / len(np.unique(closest_center))
+
+	return fd_all, quality_samples, quality_modes

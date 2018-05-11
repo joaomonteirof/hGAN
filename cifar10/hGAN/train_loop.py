@@ -84,6 +84,8 @@ class TrainLoop(object):
 			self.history['FID-c'].append(fid_c)
 			self.history['steepest_dir_norm'].append(st_dir_norm)
 
+			print('Best FID so far is: {}'.format(np.min(self.history['FID-c'])))
+
 			self.cur_epoch += 1
 
 			if self.history['FID-c'][-1] < best_fid:

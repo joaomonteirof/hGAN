@@ -35,7 +35,7 @@ def save_testdata_statistics(model, data_loader, cuda_mode):
 	pfile.close()
 
 
-def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', fig_size=(5, 5)):
+def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', nc=3, im_size=64, fig_size=(5, 5)):
 	generator.eval()
 
 	n_tests = fig_size[0] * fig_size[1]
@@ -46,10 +46,8 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		noise = noise.cuda()
 
 	noise = Variable(noise, volatile=True)
-	gen_image = generator(noise)
+	gen_image = generator(noise).view(-1, nc, im_size, im_size)
 	gen_image = denorm(gen_image)
-
-	generator.train()
 
 	n_rows = np.sqrt(noise.size()[0]).astype(np.int32)
 	n_cols = np.sqrt(noise.size()[0]).astype(np.int32)
@@ -58,9 +56,14 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		ax.axis('off')
 		ax.set_adjustable('box-forced')
 		# Scale to 0-255
-		img = (((img - img.min()) * 255) / (img.max() - img.min())).cpu().data.numpy().transpose(1, 2, 0).astype(np.uint8)
+		img = (((img - img.min()) * 255) / (img.max() - img.min())).cpu().data.numpy().transpose(1, 2, 0).astype(np.uint8).squeeze()
 		# ax.imshow(img.cpu().data.view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
-		ax.imshow(img, cmap=None, aspect='equal')
+
+		if (nc == 1):
+			ax.imshow(img, cmap="gray", aspect='equal')
+		else:
+			ax.imshow(img, cmap=None, aspect='equal')	
+
 	plt.subplots_adjust(wspace=0, hspace=0)
 	title = 'Samples'
 	fig.text(0.5, 0.04, title, ha='center')
@@ -139,6 +142,10 @@ def test_model(model, n_tests, cuda_mode):
 
 	for i in range(out.size(0)):
 		sample = denorm(out[i].data)
+
+		if len(sample.size())<3:
+			sample = sample.view(1, 28, 28)
+
 		sample = to_pil(sample.cpu())
 		sample.save('sample_{}.png'.format(i + 1))
 

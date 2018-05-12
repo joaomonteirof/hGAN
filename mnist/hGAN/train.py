@@ -63,9 +63,6 @@ fid_model = cnn().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])
 
-if args.cuda:
-	generator = generator.cuda()
-
 if not os.path.isfile('../test_data_statistics.p'):
 	testset = datasets.MNIST(root=args.data_path, train=False, download=True, transform=transform)
 	test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
@@ -77,8 +74,10 @@ for i in range(args.ndiscriminators):
 	disc_list.append(disc)
 
 if args.cuda:
+	generator = generator.cuda()
 	for disc in disc_list:
 		disc = disc.cuda()
+	torch.backends.cudnn.benchmark=True
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 

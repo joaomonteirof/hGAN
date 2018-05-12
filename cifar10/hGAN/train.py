@@ -89,6 +89,7 @@ if args.cuda:
 	generator = generator.cuda()
 	for disc in disc_list:
 		disc = disc.cuda()
+	torch.backends.cudnn.benchmark=True
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 

@@ -61,6 +61,7 @@ if args.cuda:
 	generator = generator.cuda()
 	for disc in disc_list:
 		disc = disc.cuda()
+	torch.backends.cudnn.benchmark=True
 
 if args.train_mode == 'mgd':
 	optimizer = optim.SGD(generator.parameters(), lr=args.mgd_lr)

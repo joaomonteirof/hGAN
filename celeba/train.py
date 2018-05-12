@@ -52,9 +52,6 @@ train_loader = torch.utils.data.DataLoader(celebA_data, batch_size=args.batch_si
 
 generator = Generator(100, [1024, 512, 256, 128], 3).train()
 
-if args.cuda:
-	generator = generator.cuda()
-
 if args.disc_mode == 'RP':
 	disc_list = []
 	for i in range(args.ndiscriminators):
@@ -72,8 +69,10 @@ elif args.disc_mode == 'MD':
 	disc_list = [D1, D2, D3, D4, D5, D6][:min(args.ndiscriminators, 6)]
 
 if args.cuda:
+	generator = generator.cuda()
 	for disc in disc_list:
 		disc = disc.cuda()
+	torch.backends.cudnn.benchmark=True
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 

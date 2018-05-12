@@ -58,6 +58,7 @@ fid_model.load_state_dict(mod_state['model_state'])
 if args.cuda:
 	generator = generator.cuda()
 	disc = disc.cuda()
+	torch.backends.cudnn.benchmark=True
 
 if not os.path.isfile('../test_data_statistics.p'):
 	testset = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=transform)

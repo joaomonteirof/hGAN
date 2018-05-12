@@ -96,6 +96,8 @@ class TrainLoop(object):
 			elif self.cur_epoch % save_every == 0:
 				self.checkpointing()
 
+			print(best_fid)
+
 		# saving final models
 		print('Saving final model...')
 		self.checkpointing()

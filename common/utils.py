@@ -59,7 +59,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		img = (((img - img.min()) * 255) / (img.max() - img.min())).cpu().data.numpy().transpose(1, 2, 0).astype(np.uint8).squeeze()
 		# ax.imshow(img.cpu().data.view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
 
-		if (nc == 1):
+		if nc == 1:
 			ax.imshow(img, cmap="gray", aspect='equal')
 		else:
 			ax.imshow(img, cmap=None, aspect='equal')	
@@ -151,11 +151,11 @@ def test_model(model, n_tests, cuda_mode):
 
 def plot_toy_data(x, centers, toy_dataset):
 	
-	if (toy_dataset == '8gaussians'):
+	if toy_dataset == '8gaussians':
 		cov_all = np.array([(0.02**2, 0), (0, 0.02**2)])
 		scale = 1.414
 
-	elif (toy_dataset == '25gaussians'):
+	elif toy_dataset == '25gaussians':
 		cov_all = np.array([(0.05**2, 0), (0, 0.05**2)])
 		scale = 2.828
 		
@@ -172,12 +172,12 @@ def plot_toy_data(x, centers, toy_dataset):
 
 def save_samples_toy_data(x, centers, save_name, toy_dataset):
 	
-	if (toy_dataset == '8gaussians'):	
+	if toy_dataset == '8gaussians':
 		cov_all = np.array([(0.02**2, 0), (0, 0.02**2)])
 
 		scale = 1.414
 
-	elif (toy_dataset == '25gaussians'):
+	elif toy_dataset == '25gaussians':
 		cov_all = np.array([(0.05**2, 0), (0, 0.05**2)])
 
 		scale = 2.828
@@ -265,10 +265,10 @@ def calculate_dist(x_, y_):
 
 def metrics_toy_data(x, centers, cov, toy_dataset, slack = 3.0):
 
-	if (toy_dataset == '8gaussians'):
+	if toy_dataset == '8gaussians':
 		distances = calculate_dist(1.414*x, centers)
 	
-	elif (toy_dataset == '25gaussians'):
+	elif toy_dataset == '25gaussians':
 		distances = calculate_dist(2.828*x, centers)
 		
 	closest_center = np.argmin(distances, 1)
@@ -290,10 +290,10 @@ def metrics_toy_data(x, centers, cov, toy_dataset, slack = 3.0):
 		quality_samples_center = np.sum(center_distances[:, cent] <= slack*np.sqrt(sigma))
 		quality_samples += quality_samples_center
 
-		if (quality_samples_center > 0):
+		if quality_samples_center > 0:
 			quality_modes += 1
 
-		if (center_samples.shape[0] > 3):
+		if center_samples.shape[0] > 3:
 
 			m = np.mean(center_samples, 0)
 			C = np.cov(center_samples, rowvar = False)

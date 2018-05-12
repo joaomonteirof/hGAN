@@ -49,7 +49,7 @@ if __name__ == '__main__':
 		discard = 1
 		discard_ep0 = history['quality_modes'][discard:-1]
 
-		epoch_interest =  np.amax(np.argwhere(discard_ep0 == np.amax((discard_ep0))))
+		epoch_interest =  np.amax(np.argwhere(discard_ep0 == np.amax(discard_ep0)))
 
 		epoch_interest += discard
 		print('Epoch with Max #high quality modes:', epoch_interest)

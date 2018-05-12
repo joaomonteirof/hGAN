@@ -179,7 +179,7 @@ class TrainLoop(object):
 
 				fd += ((centers[cent] - m) ** 2).sum() + np.matrix.trace(C + cov - 2 * sla.sqrtm(np.matmul(C, cov)))
 
-		if (fd_modes > 0):
+		if fd_modes > 0:
 			fd_all = fd / fd_modes
 		else:
 			fd_all = float("inf")

@@ -117,23 +117,24 @@ class ResNet(nn.Module):
 
 
 def ResNet18(soft=False):
-	return ResNet(BasicBlock, [2, 2, 2, 2], soft=False)
+	return ResNet(BasicBlock, [2, 2, 2, 2], soft=soft)
 
 
 def ResNet34(soft=False):
-	return ResNet(BasicBlock, [3, 4, 6, 3], soft=False)
+	return ResNet(BasicBlock, [3, 4, 6, 3], soft=soft)
 
 
 def ResNet50(soft=False):
-	return ResNet(Bottleneck, [3, 4, 6, 3], soft=False)
+	return ResNet(Bottleneck, [3, 4, 6, 3], soft=soft)
 
 
 def ResNet101(soft=False):
-	return ResNet(Bottleneck, [3, 4, 23, 3], soft=False)
+	return ResNet(Bottleneck, [3, 4, 23, 3], soft=soft)
 
 
 def ResNet152(soft=False):
-	return ResNet(Bottleneck, [3, 8, 36, 3], soft=False)
+	return ResNet(Bottleneck, [3, 8, 36, 3], soft=soft)
+
 
 class cnn(nn.Module):
 	def __init__(self):

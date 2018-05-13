@@ -12,61 +12,82 @@ print(f'Running from package root directory {sys.path[0]}')
 import matplotlib.pyplot as plt
 import torch.utils.data
 
+import pandas as pd
+import seaborn as sns
+
 from common.generators import Generator_mnist
 from common.utils import *
+from common.models_fid import *
+from common.metrics import compute_fid
 
 if __name__ == '__main__':
 
 	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-folder', type=str, default=None, metavar='Path', help='Checkpoint/model path')
-	parser.add_argument('--n-tests', type=int, default=4, metavar='N', help='number of samples to generate (default: 4)')
+	parser.add_argument('--ntests', type=int, default=5, metavar='N', help='number of samples to generate (default: 4)')
+	parser.add_argument('--nsamples', type=int, default=15000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--no-plots', action='store_true', default=False, help='Disables plot of train/test losses')
+	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
+	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
+	parser.add_argument('--model-mnist', choices=['cnn', 'mlp'], default='cnn', help='model for FID computation on Cifar. (Default=cnn)')
+	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
-	if args.cp_folder is None:
-		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
+	disc_list = [8, 16, 24]
 
-	files_list = glob.glob(args.cp_folder + 'G_hyper_*_50ep_*.pt')
-	files_list.sort()
+	fid_dict = {}
 
-	best_fid = []
-	best_epoch = []
+	pfile = open(args.data_stat_path, 'rb')
+	statistics = pickle.load(pfile)
+	pfile.close()
 
-	for file_id in files_list:
+	m, C = statistics['m'], statistics['C']
 
-		model = Generator_mnist()
+	for disc in disc_list:
 
-		ckpt = torch.load(file_id, map_location=lambda storage, loc: storage)
-		model.load_state_dict(ckpt['model_state'])
+		fid_list = []
 
-		if args.cuda:
-			model = model.cuda()
+		if args.cp_folder is None:
+			raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-		history = ckpt['history']
+		cp_folder_disc = args.cp_folder + str(disc) + '/'
 
-		min_fid = np.min(history['FID-c'])
-		min_epoch = np.argmin(history['FID-c'])
+		print(cp_folder_disc)
 
-		print('Min FID:', min_fid)
-		print('Epoch with min FID:', min_epoch)
+		files_list = glob.glob(cp_folder_disc + 'G_hyper_*_50ep_*.pt')
+		files_list.sort()
 
-		best_fid.append(min_fid)
-		best_epoch.append(min_epoch)
+		for file_id in files_list:
 
-		test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
-		save_samples(generator=model, cp_name=file_id.split('/')[-1].split('.')[0], prefix='mnist', fig_size=(10, 10), nc=1, im_size=28, cuda_mode=args.cuda)
+			generator = Generator_mnist().eval()
+			gen_state = torch.load(file_id, map_location=lambda storage, loc: storage)
+			generator.load_state_dict(gen_state['model_state'])
 
-	fid_mean = np.mean(best_fid)
-	fid_std = np.std(best_fid)
+			if args.model_mnist == 'cnn':
+				fid_model = cnn().eval()
 
-	epoch_mean = np.mean(best_epoch)
-	epoch_std = np.std(best_epoch)
+			elif args.model_mnist == 'mlp':
+				fid_model = mlp().eval()
 
-	print('Average Min fid:', fid_mean)
-	print('STD Min fid:', fid_std)
+			mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
+			fid_model.load_state_dict(mod_state['model_state'])
 
-	print('Average Min fid epoch:', epoch_mean)
-	print('STD Min fid epoch:', epoch_std)
+			if args.cuda:
+				generator = generator.cuda()
+				fid_model = fid_model.cuda()
+
+			fid = []
+
+			for i in range(args.ntests):
+				fid.append(compute_fid(generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))
+
+		fid_dict[disc] = fid
+
+	df = pd.DataFrame(fid_dict)
+	df.head()
+	sns.boxplot(data = df, palette = "Set3", width = 0.4, linewidth = 1.0, showfliers = False).set(xlabel = 'Number of discriminators', ylabel = 'FID')	
+	plt.savefig('FID_hyper_manyslacks.pdf')
+	plt.show()

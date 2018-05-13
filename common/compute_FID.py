@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	parser.add_argument('--model-cifar', choices=['resnet', 'vgg', 'inception'], default='resnet', help='model for FID computation on Cifar. (Default=Resnet)')
 	parser.add_argument('--model-mnist', choices=['cnn', 'mlp'], default='resnet', help='model for FID computation on Cifar. (Default=cnn)')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
-	parser.add_argument('--nsamples', type=int, default=1000, metavar='Path', help='number of samples per replication')
+	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--ntests', type=int, default=3, metavar='Path', help='number of replications')
 	parser.add_argument('--dataset', choices=['cifar10', 'mnist'], default='cifar10', help='cifar10 or mnist')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')

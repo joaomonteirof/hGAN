@@ -60,6 +60,8 @@ if __name__ == '__main__':
 		files_list = glob.glob(cp_folder_disc + 'G_hyper_*_50ep_*.pt')
 		files_list.sort()
 
+		fid = []
+
 		for file_id in files_list:
 
 			generator = Generator_mnist().eval()
@@ -78,8 +80,6 @@ if __name__ == '__main__':
 			if args.cuda:
 				generator = generator.cuda()
 				fid_model = fid_model.cuda()
-
-			fid = []
 
 			for i in range(args.ntests):
 				fid.append(compute_fid(generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))

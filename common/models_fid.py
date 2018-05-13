@@ -1,13 +1,50 @@
-'''ResNet in PyTorch.
-
-For Pre-activation ResNet, see 'preact_resnet.py'.
-
-Reference:
-[1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
-	Deep Residual Learning for Image Recognition. arXiv:1512.03385
-'''
 import torch.nn as nn
 import torch.nn.functional as F
+
+cfg = {
+	'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+	'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+	'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+	'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
+}
+
+
+class VGG(nn.Module):
+	def __init__(self, vgg_name='VGG16', soft=False):
+		super(VGG, self).__init__()
+		self.features = self._make_layers(cfg[vgg_name])
+		self.classifier = nn.Linear(512, 10)
+		self.soft = soft
+
+	def forward(self, x):
+		out = self.features(x)
+		out = out.view(out.size(0), -1)
+		out = self.classifier(out)
+		if self.soft:
+			out = F.softmax(out, dim=1)
+			return F.log_softmax(out, dim=1)
+		else:
+			return F.log_softmax(out, dim=1)
+
+	def forward_oltl(self, x):
+		out = self.features(x)
+		out = out.view(out.size(0), -1)
+		out = self.classifier(out)
+		return F.log_softmax(out, dim=1), F.softmax(out, dim=1)
+
+	def _make_layers(self, cfg):
+		layers = []
+		in_channels = 3
+		for x in cfg:
+			if x == 'M':
+				layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+			else:
+				layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+						   nn.BatchNorm2d(x),
+						   nn.ReLU(inplace=True)]
+				in_channels = x
+		layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+		return nn.Sequential(*layers)
 
 
 class BasicBlock(nn.Module):
@@ -167,3 +204,33 @@ class cnn(nn.Module):
 		x = self.fc2(x)
 
 		return F.log_softmax(x, dim=1)
+
+class mlp(nn.Module):
+	def __init__(self):
+		super(mlp, self).__init__()
+		self.fc1 = nn.Linear(784, 320)
+		self.fc2 = nn.Linear(320, 50)
+		self.fc3 = nn.Linear(50, 10)
+
+	def forward(self, x, pre_softmax = False):
+		x = x.view(x.size(0), -1)
+		x = F.relu(self.fc1(x))
+		x = F.dropout(x, training=self.training)
+		x = F.relu(self.fc2(x))
+		x = F.dropout(x, training=self.training)
+		x = F.relu(self.fc3(x))
+
+		if pre_softmax:
+			return x
+		else:
+			return F.log_softmax(x, dim=1)
+
+	def forward_oltl(self, x):
+		x = x.view(x.size(0), -1)
+		x = F.relu(self.fc1(x))
+		x = F.dropout(x, training=self.training)
+		x = F.relu(self.fc2(x))
+		x = F.dropout(x, training=self.training)
+		x = F.relu(self.fc3(x))
+
+		return [F.log_softmax(x, dim=1), F.softmax(x, dim=1)]

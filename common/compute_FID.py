@@ -4,6 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torchvision
 from torch.autograd import Variable
 import torch.utils.data
 from scipy.stats import sem
@@ -11,6 +12,7 @@ import scipy.linalg as sla
 from generators import *
 from models_fid import *
 from metrics import compute_fid
+from torchvision.models.inception import inception_v3
 
 import pickle
 
@@ -21,6 +23,8 @@ if __name__ == '__main__':
 	parser.add_argument('--model-path', type=str, default=None, metavar='Path', help='Checkpoint/model path')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
+	parser.add_argument('--model-cifar', choices=['resnet', 'vgg', 'inception'], default='resnet', help='model for FID computation on Cifar. (Default=Resnet)')
+	parser.add_argument('--model-mnist', choices=['cnn', 'mlp'], default='resnet', help='model for FID computation on Cifar. (Default=cnn)')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
 	parser.add_argument('--nsamples', type=int, default=1000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--ntests', type=int, default=3, metavar='Path', help='number of replications')
@@ -40,7 +44,13 @@ if __name__ == '__main__':
 	m, C = statistics['m'], statistics['C']
 
 	if args.dataset == 'cifar10':
-		fid_model = ResNet18().eval()
+		if args.model_cifar=='resnet':
+			fid_model = ResNet18().eval()
+		elif args.model_cifar=='vgg':
+			fid_model = VGG().eval()
+		elif args.model_cifar=='inception':
+			fid_model = inception_v3(pretrained=True, transform_input=False).eval()
+
 		mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 		fid_model.load_state_dict(mod_state['model_state'])
 
@@ -49,7 +59,11 @@ if __name__ == '__main__':
 		generator.load_state_dict(gen_state['model_state'])
 
 	elif args.dataset == 'mnist':
-		fid_model = cnn().eval()
+		if args.model_mnist=='cnn':
+			fid_model = cnn().eval()
+		elif args.model_mnist=='mlp':
+			fid_model = mlp().eval()
+
 		mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 		fid_model.load_state_dict(mod_state['model_state'])
 
@@ -64,7 +78,7 @@ if __name__ == '__main__':
 	fid = []
 
 	for i in range(args.ntests):
-		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda, mnist = True if args.dataset == 'mnist' else False))
+		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = True if args.dataset == 'mnist' else False))
 
 	fid = np.asarray(fid)
 	print(fid)

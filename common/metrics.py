@@ -11,7 +11,7 @@ from torch.nn import functional as F
 from torchvision.models.inception import inception_v3
 import scipy.linalg as sla
 
-def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, mnist = True):
+def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, inception=False, mnist=True):
 
 	model.eval()
 	fid_model_.eval()
@@ -19,6 +19,9 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, m
 	if nsamples % batch_size == 0: 
 		n_batches = nsamples//batch_size
 	else: n_batches = nsamples//batch_size + 1
+
+	if inception:
+		up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
 
 	logits = None
 
@@ -32,6 +35,14 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, m
 
 		if mnist:
 			x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
+		else:
+			x_gen = model.forward(z_)
+
+		if inception:
+			x_gen = up(x_gen)
+			new_logits = F.softmax(fid_model_.forward(x_gen), dim=1).data.cpu().numpy()
+		else:
+			new_logits = fid_model_.forward(x_gen).cpu().data.numpy()
 
 		if logits is not None:
 			logits = np.concatenate( [logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0 )
@@ -39,14 +50,13 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, m
 			logits = fid_model_.forward(x_gen).cpu().data.numpy()
 
 	logits = np.asarray(logits)
-	print(logits.shape)
+
 	m_gen = logits.mean(0)
 	C_gen = np.cov(logits, rowvar=False)
 
 	fid = ((m_data - m_gen) ** 2).sum() + np.matrix.trace(C_data + C_gen - 2 * sla.sqrtm(np.matmul(C_data, C_gen)))
 
 	return fid
-
 
 def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, splits=1):
 	"""

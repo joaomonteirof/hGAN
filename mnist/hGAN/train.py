@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
 parser.add_argument('--lr', type=float, default=0.0002, metavar='LR', help='learning rate (default: 0.0002)')
+parser.add_argument('--mgd_lr', type=float, default=0.01, metavar='LR', help='learning rate for mgd (default: 0.01)')
 parser.add_argument('--beta1', type=float, default=0.5, metavar='lambda', help='Adam beta param (default: 0.5)')
 parser.add_argument('--beta2', type=float, default=0.999, metavar='lambda', help='Adam beta param (default: 0.999)')
 parser.add_argument('--ndiscriminators', type=int, default=8, help='Number of discriminators. Default=8')
@@ -41,6 +42,7 @@ parser.add_argument('--train-mode', choices=['vanilla', 'hyper', 'gman', 'gman_g
 parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', help='factor for nadir-point update. Only used in hyper mode (default: 1.5)')
 parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
+parser.add_argument('--sgd', action='store_true', default=False, help='enables SGD - *MGD only* ')
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -79,7 +81,10 @@ if args.cuda:
 		disc = disc.cuda()
 	torch.backends.cudnn.benchmark=True
 
-optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
+if args.train_mode == 'mgd' and args.sgd:
+	optimizer = optim.SGD(generator.parameters(), lr=args.mgd_lr)
+else:
+	optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
 trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
 

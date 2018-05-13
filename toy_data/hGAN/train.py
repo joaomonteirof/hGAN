@@ -34,6 +34,7 @@ parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='U
 parser.add_argument('--toy-dataset', choices=['8gaussians', '25gaussians'], default='8gaussians')
 parser.add_argument('--toy-length', type=int, metavar='N', help='Toy dataset length', default=100000)
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
+parser.add_argument('--sgd', action='store_true', default=False, help='enables SGD - *MGD only* ')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -63,7 +64,7 @@ if args.cuda:
 		disc = disc.cuda()
 	torch.backends.cudnn.benchmark=True
 
-if args.train_mode == 'mgd':
+if args.train_mode == 'mgd' and args.sgd:
 	optimizer = optim.SGD(generator.parameters(), lr=args.mgd_lr)
 else:
 	optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))

@@ -14,7 +14,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
 from common.generators import Generator_mnist
-from common.discriminators import Discriminator_mnist
+from common.discriminators import Discriminator_mnist_noproj
 from common.models_fid import cnn
 from train_loop import TrainLoop
 from common.utils import save_testdata_statistics
@@ -51,7 +51,7 @@ trainset = datasets.MNIST(root=args.data_path, train=True, download=True, transf
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
 generator = Generator_mnist().train()
-disc = Discriminator_mnist(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+disc = Discriminator_mnist_noproj(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 fid_model = cnn().eval()
 mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
 fid_model.load_state_dict(mod_state['model_state'])

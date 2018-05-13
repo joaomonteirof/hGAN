@@ -101,6 +101,51 @@ class Discriminator_noproj(torch.nn.Module):
 		out = self.output_layer(h)
 		return out
 
+class Discriminator_wgan(torch.nn.Module):
+	def __init__(self, input_dim, num_filters, output_dim, optimizer, lr, betas, batch_norm=False):
+		super(Discriminator_wgan, self).__init__()
+
+		# Hidden layers
+		self.hidden_layer = torch.nn.Sequential()
+		for i in range(len(num_filters)):
+			# Convolutional layer
+			if i == 0:
+				conv = nn.Conv2d(input_dim, num_filters[i], kernel_size=4, stride=2, padding=1)
+			else:
+				conv = nn.Conv2d(num_filters[i-1], num_filters[i], kernel_size=4, stride=2, padding=1)
+
+			conv_name = 'conv' + str(i + 1)
+			self.hidden_layer.add_module(conv_name, conv)
+
+			# Initializer
+			nn.init.normal(conv.weight, mean=0.0, std=0.02)
+			nn.init.constant(conv.bias, 0.0)
+
+			# Batch normalization
+			if i != 0 and batch_norm:
+				bn_name = 'bn' + str(i + 1)
+				self.hidden_layer.add_module(bn_name, torch.nn.BatchNorm2d(num_filters[i]))
+
+			# Activation
+			act_name = 'act' + str(i + 1)
+			self.hidden_layer.add_module(act_name, torch.nn.LeakyReLU(0.2))
+
+		# Output layer
+		self.output_layer = torch.nn.Sequential()
+		# Convolutional layer
+		out = nn.Conv2d(num_filters[i], output_dim, kernel_size=4, stride=1, padding=0)
+		self.output_layer.add_module('out', out)
+		# Initializer
+		nn.init.normal(out.weight, mean=0.0, std=0.02)
+		nn.init.constant(out.bias, 0.0)
+
+		self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, betas=betas)
+
+	def forward(self, x):
+		h = self.hidden_layer(x)
+		out = self.output_layer(h)
+		return out
+
 
 ## vanilla discriminator with kernel size=4
 class Discriminator_vanilla(nn.Module):
@@ -400,4 +445,51 @@ class Discriminator_mnist(nn.Module):
 	def forward(self, x):
 		p_x = self.projection(x.view(x.size(0), 784))
 		out = self.hidden_layer(p_x)
+		return out
+
+class Discriminator_mnist_noproj(nn.Module):
+	def __init__(self, optimizer, lr, betas):
+		super().__init__()
+
+		self.hidden_layer = nn.Sequential(
+			nn.Linear(784, 1024),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Dropout(0.3),
+			nn.Linear(1024, 512),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Dropout(0.3),
+			nn.Linear(512, 256),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Dropout(0.3),
+			nn.Linear(256, 1),
+			nn.Sigmoid()
+		)
+
+		self.optimizer = optimizer(self.hidden_layer.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		out = self.hidden_layer(x.view(x.size(0), 784))
+		return out
+
+class Discriminator_mnist_wgan(nn.Module):
+	def __init__(self, optimizer, lr, betas):
+		super().__init__()
+
+		self.hidden_layer = nn.Sequential(
+			nn.Linear(784, 1024),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Dropout(0.3),
+			nn.Linear(1024, 512),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Dropout(0.3),
+			nn.Linear(512, 256),
+			nn.LeakyReLU(0.2, inplace=True),
+			nn.Dropout(0.3),
+			nn.Linear(256, 1)
+		)
+
+		self.optimizer = optimizer(self.hidden_layer.parameters(), lr=lr, betas=betas)
+
+	def forward(self, x):
+		out = self.hidden_layer(x.view(x.size(0), 784))
 		return out

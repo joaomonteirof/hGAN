@@ -48,6 +48,7 @@ if __name__ == '__main__':
 	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-folder', type=str, default=None, metavar='Path', help='Checkpoint/model path')
+	parser.add_argument('--to-plot', type=str, default=None, metavar='Path', help='Thing to plot: FID-c or steepest_dir_norm')
 	
 	args = parser.parse_args()
 
@@ -68,15 +69,23 @@ if __name__ == '__main__':
 		if (file_name != 'DCGAN') & (file_name != 'WGANGP'): 
 			ckpt = torch.load(file_id, map_location = lambda storage, loc: storage)
 			history = ckpt['history']
-			steep_dir = history['steepest_dir_norm']
-			plt.plot(steep_dir, label = models_dict[file_name])
+			steep_dir = history[args.to_plot]
+			if (args.to_plot == 'FID-c'):
+				plt.semilogy(steep_dir, label = models_dict[file_name])
+			else:
+				plt.plot(steep_dir, label = models_dict[file_name])
 
+	plt.xlabel('Epochs', fontsize = 15)
 
-	plt.xlabel('Epochs', fontsize = 12)
-	plt.ylabel('Common steepest direction norm', fontsize = 12)
-	plt.ylim(0, 3)
-	plt.legend()
-	plt.savefig('steep_best_cifar.pdf')
+	if (args.to_plot == 'FID-c'):
+		plt.ylabel('FID', fontsize = 15)
+	else:
+		plt.ylabel('Common steepest direction norm', fontsize = 15)
+		plt.ylim(0, 3)
+	
+	plt.legend(fontsize = 15)
+	to_save = args.to_plot + 'best_cifar' + '.pdf'
+	plt.savefig(to_save)
 	plt.show()
 	plt.close()
 

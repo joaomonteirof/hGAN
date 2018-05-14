@@ -470,7 +470,7 @@ class TrainLoop(object):
 			except TypeError:
 				grad_sum = float(weight_grad[0]) * weight_grad[1]
 
-		return float(grad_sum.norm(2).data[0]) / len(self.disc_list)
+		return float(grad_sum.norm(2).data[0])
 
 	def get_gen_grads(self, loss_):
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())

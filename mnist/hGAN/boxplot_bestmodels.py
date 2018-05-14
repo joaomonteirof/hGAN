@@ -14,6 +14,7 @@ import torch.utils.data
 
 import pandas as pd
 import seaborn as sns
+import pickle
 
 from common.generators import Generator_mnist
 from common.utils import *
@@ -29,6 +30,7 @@ if __name__ == '__main__':
 	parser.add_argument('--no-plots', action='store_true', default=False, help='Disables plot of train/test losses')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
+	parser.add_argument('--out-file', type=str, default='./boxplot_data.p', metavar='Path', help='file for dumping boxplot data')
 	parser.add_argument('--model-mnist', choices=['cnn', 'mlp'], default='cnn', help='model for FID computation on Cifar. (Default=cnn)')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
@@ -110,3 +112,7 @@ if __name__ == '__main__':
 	plt.axhline(np.mean(fid_random), color='k', linestyle='dashed', linewidth=1)
 	plt.savefig('FID_best_models_mnist.pdf')
 	plt.show()
+
+	pfile = open(args.out_file, "wb")
+	pickle.dump(fid_dict, pfile)
+	pfile.close()

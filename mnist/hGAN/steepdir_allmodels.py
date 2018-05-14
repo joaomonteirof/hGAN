@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 	folders = glob.glob(args.cp_folder + '*/')
 
-	labels_dict={'hyper': 'HV', 'gman': 'GMAN', 'vanilla': 'Vanilla', 'mgd': 'MGD'}
+	labels_dict={'hyper': 'HV', 'gman': 'GMAN', 'vanilla': 'AVG', 'mgd': 'MGD'}
 
 	for dir_ in folders:
 

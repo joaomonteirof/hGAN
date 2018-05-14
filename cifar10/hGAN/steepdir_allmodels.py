@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
 	folders = glob.glob(args.cp_folder + '*/')
 
-	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'Van-8', 'vanilla16': 'Van-16', 'vanilla24': 'Van-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24'}
+	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24'}
 
 	files_list = glob.glob(args.cp_folder + 'G_*.pt')
 	files_list.sort()

@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
 		file_name = file_id.split('/')[-1].split('_')[1]
 
-		if (file_name != 'DCGAN' && file_name != 'WGANGP'): 
+		if (file_name != 'DCGAN' & file_name != 'WGANGP'): 
 			ckpt = torch.load(file_id, map_location = lambda storage, loc: storage)
 			history = ckpt['history']
 			steep_dir = history['steepest_dir_norm']

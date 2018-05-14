@@ -22,11 +22,10 @@ from common.metrics import compute_fid
 
 if __name__ == '__main__':
 
-	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-folder', type=str, default=None, metavar='Path', help='Checkpoint/model path')
-	parser.add_argument('--ntests', type=int, default=5, metavar='N', help='number of samples to generate (default: 4)')
-	parser.add_argument('--nsamples', type=int, default=15000, metavar='Path', help='number of samples per replication')
+	parser.add_argument('--ntests', type=int, default=30, metavar='N', help='number of samples to generate (default: 4)')
+	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--no-plots', action='store_true', default=False, help='Disables plot of train/test losses')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
@@ -48,7 +47,10 @@ if __name__ == '__main__':
 	if args.cuda:
 		fid_model = fid_model.cuda()
 
-	disc_list = [8, 16, 24]
+	mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
+	fid_model.load_state_dict(mod_state['model_state'])
+
+	models_dict = {'hyper': 'HV', 'vanilla': 'AVG', 'gman': 'GMAN', 'mgd': 'MGD'}
 
 	fid_dict = {}
 
@@ -58,39 +60,53 @@ if __name__ == '__main__':
 
 	m, C = statistics['m'], statistics['C']
 
-	for disc in disc_list:
+	if args.cp_folder is None:
+		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-		if args.cp_folder is None:
-			raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
+	files_list = glob.glob(args.cp_folder + 'G_*.pt')
+	files_list.sort()
 
-		cp_folder_disc = args.cp_folder + str(disc) + '/'
+	for file_id in files_list:
 
-		print(cp_folder_disc)
+		file_name = file_id.split('/')[-1].split('_')[1]
 
-		files_list = glob.glob(cp_folder_disc + 'G_hyper_*_50ep_*.pt')
-		files_list.sort()
+		print(file_name)		
 
+		key = models_dict[file_name]
+
+		generator = Generator_mnist().eval()
+		gen_state = torch.load(file_id, map_location = lambda storage, loc: storage)
+		generator.load_state_dict(gen_state['model_state'])
+
+		if args.cuda:
+			generator = generator.cuda()
+		
 		fid = []
 
-		for file_id in files_list:
+		for i in range(args.ntests):
+			fid.append(compute_fid(generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))
 
-			generator = Generator_mnist().eval()
-			gen_state = torch.load(file_id, map_location=lambda storage, loc: storage)
-			generator.load_state_dict(gen_state['model_state'])
+		fid_dict[key] = fid
 
-			if args.cuda:
-				generator = generator.cuda()
-				fid_model = fid_model.cuda()
-
-			for i in range(args.ntests):
-				fid.append(compute_fid(generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))
-
-		fid_dict[disc] = fid
+	
+	# Random generator
+	random_generator = Generator_mnist().eval()
+	
+	if args.cuda:
+		random_generator = random_generator.cuda()
+	
+	fid_random = []
+	for i in range(args.ntests):
+			fid_random.append(compute_fid(random_generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))
+	
 
 	df = pd.DataFrame(fid_dict)
 	df.head()
-	box = sns.boxplot(data = df, palette = "Set3", width = 0.4, linewidth = 1.0, showfliers = False)
-	box.set_xlabel('Number of discriminators', fontsize = 12)
+	order_plot = ['AVG', 'GMAN', 'HV', 'MGD']
+	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
+	box.set_xlabel('Model', fontsize = 12)
 	box.set_ylabel('FID', fontsize = 12)	
-	plt.savefig('FID_hyper_manyslacks.pdf')
+	box.set_yscale('log')
+	plt.axhline(np.mean(fid_random), color='k', linestyle='dashed', linewidth=1)
+	plt.savefig('FID_best_models_mnist.pdf')
 	plt.show()

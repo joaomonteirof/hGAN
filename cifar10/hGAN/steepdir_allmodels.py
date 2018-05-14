@@ -20,6 +20,9 @@ from common.utils import *
 from common.models_fid import *
 from common.metrics import compute_fid
 
+from pylab import rcParams
+rcParams['figure.figsize'] = 15, 10
+
 def plot_FID_alldisc(fid1, fid2, fid3, hyper):		
 
 	plt.plot(fid1, 'blue', label = '8 discriminators')
@@ -62,7 +65,7 @@ if __name__ == '__main__':
 
 		file_name = file_id.split('/')[-1].split('_')[1]
 
-		if (file_name != 'DCGAN' & file_name != 'WGANGP'): 
+		if (file_name != 'DCGAN') & (file_name != 'WGANGP'): 
 			ckpt = torch.load(file_id, map_location = lambda storage, loc: storage)
 			history = ckpt['history']
 			steep_dir = history['steepest_dir_norm']
@@ -71,7 +74,7 @@ if __name__ == '__main__':
 
 	plt.xlabel('Epochs', fontsize = 12)
 	plt.ylabel('Common steepest direction norm', fontsize = 12)
-	plt.ylim(0, 0.4)
+	plt.ylim(0, 3)
 	plt.legend()
 	plt.savefig('steep_best_cifar.pdf')
 	plt.show()

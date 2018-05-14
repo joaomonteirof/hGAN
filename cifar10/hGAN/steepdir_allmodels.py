@@ -53,25 +53,27 @@ if __name__ == '__main__':
 
 	folders = glob.glob(args.cp_folder + '*/')
 
-	labels_dict={'hyper': 'HV', 'gman': 'GMAN', 'vanilla': 'Vanilla', 'mgd': 'MGD'}
+	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'Van-8', 'vanilla16': 'Van-16', 'vanilla24': 'Van-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24'}
 
-	for dir_ in folders:
+	files_list = glob.glob(args.cp_folder + 'G_*.pt')
+	files_list.sort()
 
-		file_ = glob.glob(dir_ + '/G_*_8_100ep.pt')	
+	for file_id in files_list:
 
-		if file_ != []:
-			ckpt = torch.load(file_[0], map_location = lambda storage, loc: storage)
+		file_name = file_id.split('/')[-1].split('_')[1]
+
+		if (file_name != 'DCGAN' && file_name != 'WGANGP'): 
+			ckpt = torch.load(file_id, map_location = lambda storage, loc: storage)
 			history = ckpt['history']
 			steep_dir = history['steepest_dir_norm']
-			label_ = file_[0].split('/')[-1].split('_')[1]
-			plt.plot(steep_dir, label = labels_dict[label_])
+			plt.plot(steep_dir, label = models_dict[file_name])
 
 
 	plt.xlabel('Epochs', fontsize = 12)
 	plt.ylabel('Common steepest direction norm', fontsize = 12)
 	plt.ylim(0, 0.4)
 	plt.legend()
-	plt.savefig('steep_mnist.pdf')
+	plt.savefig('steep_best_cifar.pdf')
 	plt.show()
 	plt.close()
 

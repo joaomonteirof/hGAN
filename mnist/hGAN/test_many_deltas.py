@@ -36,6 +36,18 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
+	if args.model_mnist == 'cnn':
+		fid_model = cnn().eval()
+
+	elif args.model_mnist == 'mlp':
+		fid_model = mlp().eval()
+
+	mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
+	fid_model.load_state_dict(mod_state['model_state'])
+
+	if args.cuda:
+		fid_model = fid_model.cuda()
+
 	disc_list = [8, 16, 24]
 
 	fid_dict = {}
@@ -47,8 +59,6 @@ if __name__ == '__main__':
 	m, C = statistics['m'], statistics['C']
 
 	for disc in disc_list:
-
-		fid_list = []
 
 		if args.cp_folder is None:
 			raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
@@ -68,15 +78,6 @@ if __name__ == '__main__':
 			gen_state = torch.load(file_id, map_location=lambda storage, loc: storage)
 			generator.load_state_dict(gen_state['model_state'])
 
-			if args.model_mnist == 'cnn':
-				fid_model = cnn().eval()
-
-			elif args.model_mnist == 'mlp':
-				fid_model = mlp().eval()
-
-			mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
-			fid_model.load_state_dict(mod_state['model_state'])
-
 			if args.cuda:
 				generator = generator.cuda()
 				fid_model = fid_model.cuda()
@@ -88,6 +89,8 @@ if __name__ == '__main__':
 
 	df = pd.DataFrame(fid_dict)
 	df.head()
-	sns.boxplot(data = df, palette = "Set3", width = 0.4, linewidth = 1.0, showfliers = False).set(xlabel = 'Number of discriminators', ylabel = 'FID')	
+	box = sns.boxplot(data = df, palette = "Set3", width = 0.4, linewidth = 1.0, showfliers = False)
+	box.set_xlabel('Number of discriminators', fontsize = 12)
+	box.set_ylabel('FID', fontsize = 12)	
 	plt.savefig('FID_hyper_manyslacks.pdf')
 	plt.show()

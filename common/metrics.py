@@ -10,6 +10,54 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 from torchvision.models.inception import inception_v3
 import scipy.linalg as sla
+from skimage.measure import compare_ssim
+import itertools
+
+
+def compute_diversity_mssim(samples, mnist=True):
+	l = list(range(sample.size(0)))
+	pairs = list(itertools.product(l, l))
+
+	mssim = []
+
+	if mnist:
+		im1, im2 = im1.squeeze(), im2.squeeze()
+		mssim.append( compare_ssim(im1, im2) )
+	else:
+		im1, im2 = np.rollaxis(im1, 0, 2), np.rollaxis(im2, 0, 2)
+		mssim.append( compare_ssim(im1, im2, multichannel = True) )
+
+	return np.mean(mssim)
+
+def get_gen_samples(model, batch_size, nsamples, cuda, mnist=True):
+
+	model.eval()
+
+	if nsamples % batch_size == 0: 
+		n_batches = nsamples//batch_size
+	else: n_batches = nsamples//batch_size + 1
+
+	out_samples = None
+
+	for i in range(n_batches):
+
+		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+		if cuda:
+			z_ = z_.cuda()
+
+		z_ = Variable(z_)
+
+		if mnist:
+			x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
+		else:
+			x_gen = model.forward(z_)
+
+		if out_samples is not None:
+			out_samples = np.concatenate( [out_samples, x_gen.cpu().data.numpy()], axis=0 )
+		else:
+			out_samples = x_gen.cpu().data.numpy()
+
+	return out_samples
 
 def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, inception=False, mnist=True):
 

@@ -19,7 +19,10 @@ import pickle
 from common.generators import Generator
 from common.utils import *
 from common.models_fid import *
-from common.metrics import compute_fid
+from common.metrics import compute_fid, compute_fid_real_data
+import torch.utils.data
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
 
 if __name__ == '__main__':
 
@@ -28,12 +31,13 @@ if __name__ == '__main__':
 	parser.add_argument('--cp-folder', type=str, default=None, metavar='Path', help='Checkpoint/model path')
 	parser.add_argument('--ntests', type=int, default=5, metavar='N', help='number of samples to generate (default: 4)')
 	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
-	parser.add_argument('--no-plots', action='store_true', default=False, help='Disables plot of train/test losses')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
+	parser.add_argument('--data-path', type=str, default='../data/', metavar='Path', help='Path to data')
 	parser.add_argument('--out-file', type=str, default='./boxplot_data.p', metavar='Path', help='file for dumping boxplot data')
 	parser.add_argument('--model-cifar', choices=['resnet', 'vgg', 'inception'], default='resnet', help='model for FID computation on Cifar. (Default=Resnet)')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
+	parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
@@ -98,8 +102,15 @@ if __name__ == '__main__':
 	
 	fid_random = []
 	for i in range(args.ntests):
-			fid_random.append(compute_fid(random_generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
-	
+		fid_random.append(compute_fid(random_generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
+
+	# Real data
+	transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+	trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
+	train_loader = iter(torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers))
+	fid_real = []
+	for i in 
+		fid_real.append(compute_fid_real_data(train_loader, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
 
 	df = pd.DataFrame(fid_dict)
 	df.head()
@@ -110,6 +121,7 @@ if __name__ == '__main__':
 	box.set_ylabel('FID', fontsize = 12)	
 	box.set_yscale('log')
 	plt.axhline(np.mean(fid_random), color='k', linestyle='dashed', linewidth=1)
+	plt.axhline(np.mean(fid_real), color='b', linestyle='dashed', linewidth=1)
 	plt.savefig('FID_best_models.pdf')
 	plt.show()
 

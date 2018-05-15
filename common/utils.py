@@ -12,6 +12,7 @@ import scipy.linalg as sla
 from torch.autograd import Variable
 from torchvision.transforms import transforms
 
+from PIL import ImageEnhance
 
 def save_testdata_statistics(model, data_loader, cuda_mode):
 	for batch in data_loader:
@@ -35,10 +36,13 @@ def save_testdata_statistics(model, data_loader, cuda_mode):
 	pfile.close()
 
 
-def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', nc=3, im_size=64, fig_size=(5, 5)):
+def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', nc=3, im_size=64, fig_size=(5, 5), enhance=True):
 	generator.eval()
 
 	n_tests = fig_size[0] * fig_size[1]
+
+	to_pil = transforms.ToPILImage()
+	to_tensor = transforms.ToTensor()
 
 	noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
@@ -55,8 +59,15 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 	for ax, img in zip(axes.flatten(), gen_image):
 		ax.axis('off')
 		ax.set_adjustable('box-forced')
+
+		img = img.cpu().data
+
+		if enhance:
+			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(10.0)
+			img = to_tensor(img_E)
+
 		# Scale to 0-255
-		img = (((img - img.min()) * 255) / (img.max() - img.min())).cpu().data.numpy().transpose(1, 2, 0).astype(np.uint8).squeeze()
+		img = (((img - img.min()) * 255) / (img.max() - img.min())).numpy().transpose(1, 2, 0).astype(np.uint8).squeeze()
 		# ax.imshow(img.cpu().data.view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
 
 		if nc == 1:
@@ -126,7 +137,7 @@ def plot_learningcurves(history, *keys):
 	plt.show()
 
 
-def test_model(model, n_tests, cuda_mode):
+def test_model(model, n_tests, cuda_mode, enhance=True):
 	model.eval()
 
 	to_pil = transforms.ToPILImage()
@@ -146,7 +157,11 @@ def test_model(model, n_tests, cuda_mode):
 		if len(sample.size())<3:
 			sample = sample.view(1, 28, 28)
 
-		sample = to_pil(sample.cpu())
+		if enhance:
+			sample = ImageEnhance.Sharpness( to_pil(sample.cpu()) ).enhance(10.0)
+		else:
+			sample = to_pil(sample.cpu())
+
 		sample.save('sample_{}.png'.format(i + 1))
 
 def plot_toy_data(x, centers, toy_dataset):

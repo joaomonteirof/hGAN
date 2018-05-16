@@ -63,7 +63,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		img = img.cpu().data
 
 		if enhance:
-			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(10.0)
+			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(2.0)
 			img = to_tensor(img_E)
 
 		# Scale to 0-255
@@ -158,7 +158,7 @@ def test_model(model, n_tests, cuda_mode, enhance=True):
 			sample = sample.view(1, 28, 28)
 
 		if enhance:
-			sample = ImageEnhance.Sharpness( to_pil(sample.cpu()) ).enhance(10.0)
+			sample = ImageEnhance.Sharpness( to_pil(sample.cpu()) ).enhance(2.0)
 		else:
 			sample = to_pil(sample.cpu())
 

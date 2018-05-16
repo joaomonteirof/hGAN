@@ -19,6 +19,7 @@ from common.generators import Generator_mnist
 from common.utils import *
 from common.models_fid import *
 from common.metrics import compute_fid
+from scipy.interpolate import spline
 
 def plot_FID_alldisc(fid1, fid2, fid3, hyper):		
 
@@ -53,7 +54,9 @@ if __name__ == '__main__':
 
 	folders = glob.glob(args.cp_folder + '*/')
 
-	labels_dict={'hyper': 'HV', 'gman': 'GMAN', 'vanilla': 'AVG', 'mgd': 'MGD'}
+	labels_dict = {'hyper': 'HV', 'gman': 'GMAN', 'vanilla': 'AVG', 'mgd': 'MGD'}
+	markers_dict = {'hyper': ':', 'gman': '--', 'vanilla': '-.', 'mgd': '-'}
+	color = iter([plt.get_cmap('nipy_spectral')(1. * i/6) for i in range(6)])
 
 	for dir_ in folders:
 
@@ -64,13 +67,26 @@ if __name__ == '__main__':
 			history = ckpt['history']
 			steep_dir = history['steepest_dir_norm']
 			label_ = file_[0].split('/')[-1].split('_')[1]
-			plt.plot(steep_dir, label = labels_dict[label_])
+			steep_dir_ = [i * 8 for i in steep_dir]
+			x = range(len(steep_dir_))
+			x_smooth1 = np.linspace(0, len(steep_dir_)-1, 25)
+			y_smooth1 = spline(x, steep_dir_, x_smooth1)
+			x_smooth2 = np.linspace(0, len(steep_dir_)-1, 1000)
+			y_smooth2 = spline(x, steep_dir_, x_smooth2)
+			c = next(color)
+			plt.plot(x_smooth1, y_smooth1, color = c, label = labels_dict[label_], linestyle = markers_dict[label_])
+			plt.plot(x_smooth2, y_smooth2, alpha = 0.2, color = c, linestyle = markers_dict[label_])
 
 
-	plt.xlabel('Epochs', fontsize = 12)
-	plt.ylabel('Common steepest direction norm', fontsize = 12)
-	plt.ylim(0, 0.4)
+			#plt.plot(steep_dir_, label = labels_dict[label_], linestyle = markers_dict[label_])
+
+
+	plt.xlabel('Epochs', fontsize = 15)
+	plt.ylabel('Common steepest direction norm', fontsize = 15)
+	plt.tick_params(labelsize = 15)
+	plt.ylim(0, 2.4)
 	plt.legend()
+	plt.grid(True, alpha = 0.3, linestyle = '--')
 	plt.savefig('steep_mnist.pdf')
 	plt.show()
 	plt.close()

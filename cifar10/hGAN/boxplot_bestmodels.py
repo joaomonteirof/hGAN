@@ -23,14 +23,18 @@ from common.metrics import compute_fid, compute_fid_real_data
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+import PIL.Image as Image
+
+from pylab import rcParams
+rcParams['figure.figsize'] = 15, 10
 
 if __name__ == '__main__':
 
 	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-folder', type=str, default=None, metavar='Path', help='Checkpoint/model path')
-	parser.add_argument('--ntests', type=int, default=5, metavar='N', help='number of samples to generate (default: 4)')
-	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
+	parser.add_argument('--ntests', type=int, default=1, metavar='N', help='number of samples to generate (default: 4)')
+	parser.add_argument('--nsamples', type=int, default=2, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
 	parser.add_argument('--data-path', type=str, default='../data/', metavar='Path', help='Path to data')
@@ -55,7 +59,7 @@ if __name__ == '__main__':
 	mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
 	fid_model.load_state_dict(mod_state['model_state'])
 
-	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'Van-8', 'vanilla16': 'Van-16', 'vanilla24': 'Van-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGAN-GP': 'WGAN-GP'}
+	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
 
 	fid_dict = {}
 
@@ -104,24 +108,28 @@ if __name__ == '__main__':
 	for i in range(args.ntests):
 		fid_random.append(compute_fid(random_generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
 
+	
 	# Real data
 	transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 	trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
-	train_loader = iter(torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers))
-	fid_real = []
-	for i in 
-		fid_real.append(compute_fid_real_data(train_loader, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
+	train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
+	fid_real = compute_fid_real_data(train_loader, fid_model, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False)
 
+	
 	df = pd.DataFrame(fid_dict)
 	df.head()
-	#order_plot = ['DCGAN', 'WGANGP', 'Van-8', 'GMAN-8', 'HV-8', 'Van-16', 'GMAN-16', 'HV-16', 'Van-24', 'GMAN-24', 'HV-24']
-	order_plot = ['Van-8', 'GMAN-8', 'HV-8', 'Van-16', 'GMAN-16', 'Van-24', 'GMAN-24', 'HV-24']
+	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
+	#order_plot = ['AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
 	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
-	box.set_xlabel('Model', fontsize = 12)
-	box.set_ylabel('FID', fontsize = 12)	
+	box.set_xlabel('Model', fontsize = 15)
+	box.set_ylabel('FID', fontsize = 15)	
 	box.set_yscale('log')
-	plt.axhline(np.mean(fid_random), color='k', linestyle='dashed', linewidth=1)
-	plt.axhline(np.mean(fid_real), color='b', linestyle='dashed', linewidth=1)
+	plt.grid(True, alpha = 0.3, linestyle = '--')
+	plt.axhline(np.mean(fid_random), color='r', linestyle = 'dashed', linewidth = 1)
+	plt.axhline(fid_real, color='b', linestyle='dashed', linewidth=1)
+	plt.axvline(1.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
+	plt.axvline(4.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
+	plt.axvline(7.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	plt.savefig('FID_best_models.pdf')
 	plt.show()
 

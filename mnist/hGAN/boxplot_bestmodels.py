@@ -23,6 +23,7 @@ from common.metrics import compute_fid, compute_fid_real_data
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+import PIL.Image as Image
 
 if __name__ == '__main__':
 
@@ -72,6 +73,7 @@ if __name__ == '__main__':
 	files_list = glob.glob(args.cp_folder + 'G_*.pt')
 	files_list.sort()
 
+	
 	for file_id in files_list:
 
 		file_name = file_id.split('/')[-1].split('_')[1]
@@ -104,14 +106,12 @@ if __name__ == '__main__':
 	fid_random = []
 	for i in range(args.ntests):
 			fid_random.append(compute_fid(random_generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))
-
+	
 	# Real data
 	transform = transforms.Compose([transforms.Resize((28, 28), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-	trainset = datasets.MNIST(root=args.data_path, train=True, download=True, transform=transform)
-	train_loader = iter(torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers))
-	fid_real = []
-	for i in 
-		fid_real.append(compute_fid_real_data(train_loader, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = False, mnist = True))
+	trainset = datasets.MNIST(root=args.data_path, train=False, download=True, transform=transform)
+	train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
+	fid_real = compute_fid_real_data(train_loader, fid_model, m, C, args.cuda, inception = False, mnist = True)
 
 	df = pd.DataFrame(fid_dict)
 	df.head()
@@ -120,8 +120,9 @@ if __name__ == '__main__':
 	box.set_xlabel('Model', fontsize = 12)
 	box.set_ylabel('FID', fontsize = 12)	
 	box.set_yscale('log')
-	plt.axhline(np.mean(fid_random), color='k', linestyle='dashed', linewidth=1)
-	plt.axhline(np.mean(fid_real), color='b', linestyle='dashed', linewidth=1)
+	plt.axhline(np.mean(fid_random), color='r', linestyle='dashed', linewidth=1)
+	plt.axhline(fid_real, color='b', linestyle='dashed', linewidth=1)
+	plt.grid(True, alpha = 0.3, linestyle = '--')
 	plt.savefig('FID_best_models_mnist.pdf')
 	plt.show()
 

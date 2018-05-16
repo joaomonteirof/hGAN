@@ -106,24 +106,18 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, i
 
 	return fid
 
-def compute_fid_real_data(data_loader, fid_model_, nsamples, m_data, C_data, cuda, inception=False, mnist=True):
+def compute_fid_real_data(data_loader, fid_model_, m_data, C_data, cuda, inception=False, mnist=True):
 
-	model.eval()
 	fid_model_.eval()
-
-	if nsamples % batch_size == 0: 
-		n_batches = nsamples//batch_size
-	else: n_batches = nsamples//batch_size + 1
 
 	if inception:
 		up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
 
 	logits = None
 
-	for i in range(n_batches):
+	for batch in data_loader:
 
-		batch = next(data_loader)[0]
-		x_gen = batch[min(batch_size, nsamples - batch_size*i), :, :, :]
+		x_gen, _ = batch
 
 		if cuda:
 			x_gen = x_gen.cuda()
@@ -131,7 +125,7 @@ def compute_fid_real_data(data_loader, fid_model_, nsamples, m_data, C_data, cud
 		x_gen = Variable(x_gen)
 
 		if mnist:
-			x_gen = x_gen.view(z_.size(0), 1, 28, 28)
+			x_gen = x_gen.view(x_gen.size(0), 1, 28, 28)
 
 		if inception:
 			x_gen = up(x_gen)
@@ -140,9 +134,9 @@ def compute_fid_real_data(data_loader, fid_model_, nsamples, m_data, C_data, cud
 			new_logits = fid_model_.forward(x_gen).cpu().data.numpy()
 
 		if logits is not None:
-			logits = np.concatenate( [logits, fid_model_.forward(x_gen).cpu().data.numpy()], axis=0 )
+			logits = np.concatenate( [logits, new_logits], axis=0 )
 		else:
-			logits = fid_model_.forward(x_gen).cpu().data.numpy()
+			logits = new_logits
 
 	logits = np.asarray(logits)
 
@@ -150,6 +144,8 @@ def compute_fid_real_data(data_loader, fid_model_, nsamples, m_data, C_data, cud
 	C_gen = np.cov(logits, rowvar=False)
 
 	fid = ((m_data - m_gen) ** 2).sum() + np.matrix.trace(C_data + C_gen - 2 * sla.sqrtm(np.matmul(C_data, C_gen)))
+
+	print(fid)
 
 	return fid
 

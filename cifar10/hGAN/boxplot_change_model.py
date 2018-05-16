@@ -32,8 +32,8 @@ if __name__ == '__main__':
 	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Checkpoint/model path')
-	parser.add_argument('--ntests', type=int, default=1, metavar='N', help='number of samples to generate (default: 4)')
-	parser.add_argument('--nsamples', type=int, default=2, metavar='Path', help='number of samples per replication')
+	parser.add_argument('--ntests', type=int, default=15, metavar='N', help='number of samples to generate (default: 4)')
+	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
 	parser.add_argument('--data-path', type=str, default='../data/', metavar='Path', help='Path to data')
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 	if args.sub_key is None:
 		raise ValueError('There is no key to substitute. Use arg --sub-key to indicate the key!')
 
-	print(file_name)		
+	print(args.sub_key, args.cp_path)		
 
 	generator = Generator(100, [1024, 512, 256, 128], 3).eval()
 	gen_state = torch.load(args.cp_path, map_location = lambda storage, loc: storage)
@@ -97,7 +97,6 @@ if __name__ == '__main__':
 	df = pd.DataFrame(fid_dict)
 	df.head()
 	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
-	#order_plot = ['AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
 	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
 	box.set_xlabel('Model', fontsize = 15)
 	box.set_ylabel('FID', fontsize = 15)	
@@ -105,6 +104,8 @@ if __name__ == '__main__':
 	plt.grid(True, alpha = 0.3, linestyle = '--')
 	plt.axhline(fid_dict['random'], color='r', linestyle = 'dashed', linewidth = 1)
 	plt.axhline(fid_dict['real'], color='b', linestyle='dashed', linewidth=1)
+	#plt.axhline(89.24368468, color='r', linestyle = 'dashed', linewidth = 1)
+	#plt.axhline(0.035210, color='b', linestyle='dashed', linewidth=1)
 	plt.axvline(1.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	plt.axvline(4.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	plt.axvline(7.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)

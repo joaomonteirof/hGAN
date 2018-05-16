@@ -53,9 +53,10 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 	gen_image = generator(noise).view(-1, nc, im_size, im_size)
 	gen_image = denorm(gen_image)
 
-	n_rows = np.sqrt(noise.size()[0]).astype(np.int32)
-	n_cols = np.sqrt(noise.size()[0]).astype(np.int32)
-	fig, axes = plt.subplots(n_rows, n_cols, figsize=fig_size)
+	#n_rows = np.sqrt(noise.size()[0]).astype(np.int32)
+	#n_cols = np.sqrt(noise.size()[0]).astype(np.int32)
+	n_cols, n_rows = fig_size
+	fig, axes = plt.subplots(n_cols, n_rows, figsize=(n_rows, n_cols))
 	for ax, img in zip(axes.flatten(), gen_image):
 		ax.axis('off')
 		ax.set_adjustable('box-forced')
@@ -76,8 +77,8 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 			ax.imshow(img, cmap=None, aspect='equal')	
 
 	plt.subplots_adjust(wspace=0, hspace=0)
-	title = 'Samples'
-	fig.text(0.5, 0.04, title, ha='center')
+	#title = 'Samples'
+	#fig.text(0.5, 0.04, title, ha='center')
 
 	# save figure
 

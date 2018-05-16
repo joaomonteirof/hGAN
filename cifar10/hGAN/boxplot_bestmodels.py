@@ -33,8 +33,8 @@ if __name__ == '__main__':
 	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--cp-folder', type=str, default=None, metavar='Path', help='Checkpoint/model path')
-	parser.add_argument('--ntests', type=int, default=1, metavar='N', help='number of samples to generate (default: 4)')
-	parser.add_argument('--nsamples', type=int, default=2, metavar='Path', help='number of samples per replication')
+	parser.add_argument('--ntests', type=int, default=15, metavar='N', help='number of samples to generate (default: 4)')
+	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--fid-model-path', type=str, default=None, metavar='Path', help='Path to fid model')
 	parser.add_argument('--data-stat-path', type=str, default='../test_data_statistics.p', metavar='Path', help='Path to file containing test data statistics')
 	parser.add_argument('--data-path', type=str, default='../data/', metavar='Path', help='Path to data')
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
 	if args.cp_folder is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
-
+	
 	files_list = glob.glob(args.cp_folder + 'G_*.pt')
 	files_list.sort()
 
@@ -114,12 +114,10 @@ if __name__ == '__main__':
 	trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
 	train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 	fid_real = compute_fid_real_data(train_loader, fid_model, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False)
-
 	
 	df = pd.DataFrame(fid_dict)
 	df.head()
 	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
-	#order_plot = ['AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
 	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
 	box.set_xlabel('Model', fontsize = 15)
 	box.set_ylabel('FID', fontsize = 15)	
@@ -139,3 +137,4 @@ if __name__ == '__main__':
 	pfile = open(args.out_file, "wb")
 	pickle.dump(fid_dict, pfile)
 	pfile.close()
+	

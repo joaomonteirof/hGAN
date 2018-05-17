@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 2)))
 print(f'Running from package root directory {sys.path[0]}')
 
 import PIL.Image as Image
@@ -20,6 +20,7 @@ from common.generators import Generator
 from common.generators import Generator_stacked_mnist
 from common.discriminators import Discriminator_stacked_mnist
 from train_loop import TrainLoop
+from data_load import Loader
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
@@ -44,24 +45,18 @@ parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
-if args.fid_model_path is None:
-	print('The path for a pretrained classifier is expected to calculate FID-c. Use --fid-model-path to specify the path')
-	exit(1)
-
 torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-transform = transforms.Compose([transforms.Resize((28, 28), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
-trainset = datasets.MNIST(root=args.data_path, train=True, download=True, transform=transform)
+trainset = Loader(args.data_path)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
-generator = Generator_stackded_mnist().train()
+generator = Generator_stacked_mnist().train()
 
 disc_list = []
 for i in range(args.ndiscriminators):
-	disc = Discriminator_stackded_mnist(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+	disc = Discriminator_stacked_mnist(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
 
 if args.cuda:

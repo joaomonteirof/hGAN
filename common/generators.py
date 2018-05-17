@@ -75,7 +75,7 @@ class Generator_stacked_mnist(torch.nn.Module):
 		for i in range(3):
 			# Deconvolutional layer
 			if i == 0:
-				deconv = nn.ConvTranspose2d(2*2*512, num_filters[i], kernel_size=4, stride=2, padding=1)
+				deconv = nn.ConvTranspose2d(512, num_filters[i], kernel_size=4, stride=2, padding=1)
 			elif i == 2:
 				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=2)
 			else:
@@ -108,8 +108,10 @@ class Generator_stacked_mnist(torch.nn.Module):
 		self.output_layer.add_module('act', torch.nn.Tanh())
 
 	def forward(self, x):
+
 		x = x.view(x.size(0), -1)
 		x = self.linear(x)
+
 		h = self.hidden_layer(x.view(x.size(0), 512, 2, 2))
 		out = self.output_layer(h)
 		return out

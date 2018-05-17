@@ -23,7 +23,7 @@ class Loader(Dataset):
 
 		img = self.open_file['data'][index]
 
-		return torch.from_numpy(img).float().unsqueeze(0)
+		return torch.from_numpy(img).float()
 
 	def __len__(self):
 		return self.length

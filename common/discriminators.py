@@ -67,11 +67,11 @@ class Discriminator_stacked_mnist(torch.nn.Module):
 		for i in range(3):
 			# Convolutional layer
 			if i == 0:
-				deconv = nn.ConvTranspose2d(3, num_filters[i], kernel_size=4, stride=2, padding=2)
+				conv = nn.Conv2d(3, num_filters[i], kernel_size=4, stride=2, padding=2)
 			elif i == 2:
-				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
+				conv = nn.Conv2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
 			else:
-				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=2)
+				conv = nn.Conv2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=2)
 
 			conv_name = 'conv' + str(i + 1)
 			self.hidden_layer.add_module(conv_name, conv)
@@ -92,7 +92,7 @@ class Discriminator_stacked_mnist(torch.nn.Module):
 		# Output layer
 		self.output_layer = torch.nn.Sequential()
 		# Convolutional layer
-		out = nn.Conv2d(num_filters[i], output_dim, kernel_size=4, stride=1, padding=1)
+		out = nn.Conv2d(num_filters[i], 1, kernel_size=4, stride=1, padding=1)
 		self.output_layer.add_module('out', out)
 		# Initializer
 		nn.init.normal(out.weight, mean=0.0, std=0.02)

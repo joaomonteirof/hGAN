@@ -25,9 +25,9 @@ if __name__ == '__main__':
 	# Testing settings
 	parser = argparse.ArgumentParser(description='Testing GANs under max hyper volume training')
 	parser.add_argument('--ntests', type=int, default=5, metavar='N', help='number of samples to generate (default: 4)')
-	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
+	parser.add_argument('--nsamples', type=int, default=1000, metavar='Path', help='number of samples per replication')
 	parser.add_argument('--data-path', type=str, default='../data/', metavar='Path', help='Path to data')
-	parser.add_argument('--out-file', type=str, default='./celeba_diversity.p', metavar='Path', help='file for dumping boxplot data')
+	parser.add_argument('--out-file', type=str, default='./celeba_real_diversity.p', metavar='Path', help='file for dumping boxplot data')
 	args = parser.parse_args()
 
 

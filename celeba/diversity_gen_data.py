@@ -25,7 +25,7 @@ if __name__ == '__main__':
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Checkpoint/model path')
 	parser.add_argument('--ntests', type=int, default=5, metavar='N', help='number of samples to generate (default: 4)')
 	parser.add_argument('--nsamples', type=int, default=10000, metavar='Path', help='number of samples per replication')
-	parser.add_argument('--data-stat-path', type=str, default='./celeba_diversity.p', metavar='Path', help='Path to file containing real data statistics')
+	parser.add_argument('--data-stat-path', type=str, default='./celeba_real_diversity.p', metavar='Path', help='Path to file containing real data statistics')
 	parser.add_argument('--data-path', type=str, default='../data/', metavar='Path', help='Path to data')
 	parser.add_argument('--out-file', type=str, default='./gen_diversity.p', metavar='Path', help='file for dumping boxplot data')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
@@ -33,6 +33,12 @@ if __name__ == '__main__':
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
+
+	pfile = open('celeba_real_diversity.p', 'rb')
+	real_dict = pickle.load(pfile)
+	pfile.close()
+	real_mean = np.mean(real_dict['mssim'])
+	print(real_mean)
 
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
@@ -45,9 +51,9 @@ if __name__ == '__main__':
 
 	for i in range(args.ntests):
 		samples = get_gen_samples(generator, batch_size=args.batch_size, nsamples=args.nsamples, cuda=args.cuda, mnist=False)
-		mssim['mssim'].append(compute_diversity_mssim(samples, real = False, mnist=False))
-
-	print(mssim)
+		curr_mssim = compute_diversity_mssim(samples, real = False, mnist=False) - real_mean
+		mssim['mssim'].append(curr_mssim)
+		print(curr_mssim)
 
 	pfile = open(args.out_file, "wb")
 	pickle.dump(mssim, pfile)

@@ -70,6 +70,7 @@ if __name__ == '__main__':
 	fid_dict = pickle.load(pfile)
 	pfile.close()
 
+	
 	m, C = statistics['m'], statistics['C']
 
 	if args.cp_path is None:
@@ -93,25 +94,28 @@ if __name__ == '__main__':
 		fid.append(compute_fid(generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
 
 	fid_dict[args.sub_key] = fid
+	
 
 	df = pd.DataFrame(fid_dict)
 	df.head()
 	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
 	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
-	box.set_xlabel('Model', fontsize = 15)
-	box.set_ylabel('FID', fontsize = 15)	
+	box.set_xlabel('Model', fontsize = 20)
+	box.set_ylabel('FID - CIFAR-10', fontsize = 20)	
 	box.set_yscale('log')
+	box.tick_params(labelsize = 15)
 	plt.grid(True, alpha = 0.3, linestyle = '--')
-	plt.axhline(fid_dict['random'], color='r', linestyle = 'dashed', linewidth = 1)
-	plt.axhline(fid_dict['real'], color='b', linestyle='dashed', linewidth=1)
-	#plt.axhline(89.24368468, color='r', linestyle = 'dashed', linewidth = 1)
+	#plt.axhline(fid_dict['random'], color='r', linestyle = 'dashed', linewidth = 1)
+	#plt.axhline(fid_dict['real'], color='b', linestyle='dashed', linewidth=1)
+	plt.axhline(89.24368468, color='r', linestyle = 'dashed', linewidth = 1)
 	#plt.axhline(0.035210, color='b', linestyle='dashed', linewidth=1)
 	plt.axvline(1.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	plt.axvline(4.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	plt.axvline(7.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	plt.savefig('FID_best_models.pdf')
 	plt.show()
-
+	
 	pfile = open(args.out_file, "wb")
 	pickle.dump(fid_dict, pfile)
 	pfile.close()
+	

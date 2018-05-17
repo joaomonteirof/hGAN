@@ -118,7 +118,7 @@ if __name__ == '__main__':
 	order_plot = ['AVG', 'GMAN', 'HV', 'MGD']
 	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
 	box.set_xlabel('Model', fontsize = 12)
-	box.set_ylabel('FID', fontsize = 12)	
+	box.set_ylabel('FID - MNIST', fontsize = 12)	
 	box.set_yscale('log')
 	plt.axhline(np.mean(fid_random), color='r', linestyle='dashed', linewidth=1)
 	plt.axhline(fid_real, color='b', linestyle='dashed', linewidth=1)

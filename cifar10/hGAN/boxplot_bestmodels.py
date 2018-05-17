@@ -120,7 +120,7 @@ if __name__ == '__main__':
 	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
 	box = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot)
 	box.set_xlabel('Model', fontsize = 15)
-	box.set_ylabel('FID', fontsize = 15)	
+	box.set_ylabel('FID - CIFAR10', fontsize = 15)	
 	box.set_yscale('log')
 	plt.grid(True, alpha = 0.3, linestyle = '--')
 	plt.axhline(np.mean(fid_random), color='r', linestyle = 'dashed', linewidth = 1)

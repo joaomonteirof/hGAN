@@ -64,7 +64,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		img = img.cpu().data
 
 		if enhance:
-			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(2.0)
+			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(1.2)
 			img = to_tensor(img_E)
 
 		# Scale to 0-255
@@ -84,7 +84,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 
 	if not os.path.exists(save_dir):
 		os.mkdir(save_dir)
-	save_fn = save_dir + prefix + '_' + cp_name + '.png'
+	save_fn = save_dir + prefix + '_' + cp_name + '.pdf'
 	plt.savefig(save_fn)
 
 	plt.close()
@@ -159,11 +159,11 @@ def test_model(model, n_tests, cuda_mode, enhance=True):
 			sample = sample.view(1, 28, 28)
 
 		if enhance:
-			sample = ImageEnhance.Sharpness( to_pil(sample.cpu()) ).enhance(2.0)
+			sample = ImageEnhance.Sharpness( to_pil(sample.cpu()) ).enhance(1.2)
 		else:
 			sample = to_pil(sample.cpu())
 
-		sample.save('sample_{}.png'.format(i + 1))
+		sample.save('sample_{}.pdf'.format(i + 1))
 
 def plot_toy_data(x, centers, toy_dataset):
 	
@@ -211,7 +211,7 @@ def save_samples_toy_data(x, centers, save_name, toy_dataset):
 
 	# save figure
 
-	save_name = save_name + '.png'
+	save_name = save_name + '.pdf'
 	plt.savefig(save_name)
 
 	plt.close()
@@ -263,7 +263,7 @@ def save_samples_toy_data_gen(generator, cp_name, save_name, n_samples, toy_data
 
 	if not os.path.exists(save_dir):
 		os.mkdir(save_dir)
-	save_fn = save_dir + 'toy_data_' + save_name + '_' + cp_name + '.png'
+	save_fn = save_dir + 'toy_data_' + save_name + '_' + cp_name + '.pdf'
 	plt.savefig(save_fn)
 
 	plt.close()

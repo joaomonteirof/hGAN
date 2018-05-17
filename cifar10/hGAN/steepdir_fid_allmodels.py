@@ -110,7 +110,7 @@ if __name__ == '__main__':
 		plt.ylabel('FID', fontsize = 25)
 		plt.ylim(0, 15)
 	else:
-		plt.ylabel('Common steepest direction norm', fontsize = 25)
+		plt.ylabel('Update direction norm', fontsize = 25)
 		plt.ylim(0, 15)
 	
 	plt.legend(fontsize = 16)

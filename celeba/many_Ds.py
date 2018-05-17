@@ -46,4 +46,4 @@ if __name__ == '__main__':
 		ckpt = torch.load(file_, map_location=lambda storage, loc: storage)
 		model.load_state_dict(ckpt['model_state'])
 
-		save_samples(prefix='CELEBA_hGAN_VaryingD', generator=model, cp_name=file_.split('/')[-1].split('.')[0], cuda_mode=False, fig_size=(1,8))
+		save_samples(prefix='CELEBA_hGAN_VaryingD', generator=model, cp_name=file_.split('/')[-1].split('.')[0], cuda_mode=False, fig_size=(2,14))

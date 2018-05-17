@@ -5,7 +5,7 @@ import argparse
 import os
 import sys
 
-sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
+sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 2)))
 print(f'Running from package root directory {sys.path[0]}')
 
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	model = Generator_mnist()
+	model = Generator_stacked_mnist()
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])

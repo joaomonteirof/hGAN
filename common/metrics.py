@@ -13,6 +13,59 @@ import scipy.linalg as sla
 from skimage.measure import compare_ssim
 import itertools
 
+def compute_freqs(model, classifier, batch_size, nsamples, cuda):
+
+	model.eval()
+	classifier.eval()
+
+	counter = np.zeros(1000)
+
+	if nsamples % batch_size == 0: 
+		n_batches = nsamples//batch_size
+	else: n_batches = nsamples//batch_size + 1
+
+	for i in range(n_batches):
+
+		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+		if cuda:
+			z_ = z_.cuda()
+
+		z_ = Variable(z_)
+
+		x_gen = model.forward(z_)
+
+		x_gen_1, x_gen_2, x_gen_3 = x_gen[:, 0, :, :].unsqueeze(1), x_gen[:, 1, :, :].unsqueeze(1), x_gen[:, 2, :, :].unsqueeze(1)
+
+		logits_1, logits_2, logits_3 = classifier.forward(x_gen_1), classifier.forward(x_gen_2), classifier.forward(x_gen_3)
+
+		pred_1, pred_2, pred_3 = logits_1.data.max(1)[1], logits_2.data.max(1)[1], logits_3.data.max(1)[1]
+
+		for j in range(z_.size(0)):
+			counter[100*pred_1[j]+10*pred_2[j]+pred_3[j]]+=1.
+
+	return np.count_nonzero(counter), counter
+
+def compute_freqs_real_data(data_loader, classifier, cuda):
+
+	classifier.eval()
+
+	counter = np.zeros(1000)
+
+	for batch in data_loader:
+
+		if cuda:
+			batch = batch.cuda()
+		batch = Variable(batch)
+
+		x_gen_1, x_gen_2, x_gen_3 = batch[:, 0, :, :].unsqueeze(1), batch[:, 1, :, :].unsqueeze(1), batch[:, 2, :, :].unsqueeze(1)
+
+		logits_1, logits_2, logits_3 = classifier.forward(x_gen_1), classifier.forward(x_gen_2), classifier.forward(x_gen_3)
+
+		pred_1, pred_2, pred_3 = logits_1.data.max(1)[1], logits_2.data.max(1)[1], logits_3.data.max(1)[1]
+
+		for j in range(batch.size(0)):
+			counter[100*pred_1[j]+10*pred_2[j]+pred_3[j]]+=1.
+	return counter
 
 def compute_diversity_mssim(samples, real = True, mnist=True):
 	l = list(range(len(samples)))

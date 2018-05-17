@@ -16,7 +16,7 @@ import itertools
 
 def compute_diversity_mssim(samples, real = True, mnist=True):
 	l = list(range(len(samples)))
-	pairs = list(itertools.product(l, l))
+	pairs = itertools.combinations(l, 2)
 	
 	mssim = []
 

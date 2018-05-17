@@ -18,6 +18,7 @@ from common.metrics import compute_diversity_mssim
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+import PIL.Image as Image
 
 if __name__ == '__main__':
 
@@ -32,14 +33,16 @@ if __name__ == '__main__':
 
 	transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 	celebA_data = datasets.ImageFolder(args.data_path, transform=transform)
-	train_loader = iter(torch.utils.data.DataLoader(celebA_data, batch_size=args.n_samples, shuffle=True, num_workers=args.workers))
+	train_loader = iter(torch.utils.data.DataLoader(celebA_data, batch_size=args.nsamples, shuffle=True))
 
 	mssim = {'mssim':[]}
 
 	for i in range(args.ntests):
-		samples = next(train_loader)
-		mssim['mssim'].append(compute_diversity_mssim(samples))
+		samples = next(train_loader)[0]
+		mssim['mssim'].append(compute_diversity_mssim(samples, mnist = False))
+
+	print(mssim)
 
 	pfile = open(args.out_file, "wb")
-	pickle.dump(fid_dict, pfile)
+	pickle.dump(mssim, pfile)
 	pfile.close()

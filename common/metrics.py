@@ -15,17 +15,22 @@ import itertools
 
 
 def compute_diversity_mssim(samples, mnist=True):
-	l = list(range(sample.size(0)))
+	l = list(range(len(samples)))
 	pairs = list(itertools.product(l, l))
-
+	
 	mssim = []
 
-	if mnist:
-		im1, im2 = im1.squeeze(), im2.squeeze()
-		mssim.append( compare_ssim(im1, im2) )
-	else:
-		im1, im2 = np.rollaxis(im1, 0, 2), np.rollaxis(im2, 0, 2)
-		mssim.append( compare_ssim(im1, im2, multichannel = True) )
+	for pair in pairs:
+
+		im1 = samples[pair[0]].cpu().numpy()
+		im2 = samples[pair[1]].cpu().numpy()
+
+		if mnist:
+			im1, im2 = im1.squeeze(), im2.squeeze()
+			mssim.append( compare_ssim(im1, im2) )
+		else:
+			im1, im2 = np.rollaxis(im1, 0, 3), np.rollaxis(im2, 0, 3)
+			mssim.append(compare_ssim(im1, im2, multichannel = True))
 
 	return np.mean(mssim)
 

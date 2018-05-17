@@ -266,25 +266,9 @@ class TrainLoop(object):
 	def valid(self):
 
 		self.model.eval()
-
-		if self.cuda_mode:
-			z_ = self.fixed_noise.cuda()
-		else:
-			z_ = self.fixed_noise
-
-		z_ = Variable(z_)
-
-		x_gen = self.model.forward(z_)
-
-		logits = self.fid_model.forward(x_gen.cpu().view(x_gen.size(0), 1, 28, 28)).data.numpy()
-
-		m = logits.mean(0)
-		C = np.cov(logits, rowvar=False)
-
-		fid = ((self.m - m) ** 2).sum() + np.matrix.trace(C + self.C - 2 * sla.sqrtm(np.matmul(C, self.C)))
 		steepest_dir_norm = self.compute_steepest_direction_norm()
 
-		return fid, steepest_dir_norm
+		return steepest_dir_norm
 
 	def checkpointing(self):
 

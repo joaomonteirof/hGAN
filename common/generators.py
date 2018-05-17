@@ -46,6 +46,73 @@ class Generator(torch.nn.Module):
 		out = self.output_layer(h)
 		return out
 
+class Generator_stacked_mnist(torch.nn.Module):
+	def __init__(self):
+		super(Generator_stacked_mnist, self).__init__()
+
+		#linear layer
+		self.linear = torch.nn.Sequential()
+
+		linear = nn.Linear(100, 2*2*512)
+
+		self.linear.add_module('linear', linear)
+
+		# Initializer
+		nn.init.normal(linear.weight, mean=0.0, std=0.02)
+		nn.init.constant(linear.bias, 0.0)
+
+		# Batch normalization
+		bn_name = 'bn0'
+		self.linear.add_module(bn_name, torch.nn.BatchNorm1d(2*2*512))
+
+		# Activation
+		act_name = 'act0'
+		self.linear.add_module(act_name, torch.nn.ReLU())
+
+		# Hidden layers
+		num_filters = [256, 128, 64]
+		self.hidden_layer = torch.nn.Sequential()
+		for i in range(3):
+			# Deconvolutional layer
+			if i == 0:
+				deconv = nn.ConvTranspose2d(2*2*512, num_filters[i], kernel_size=4, stride=2, padding=1)
+			elif i == 2:
+				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=2)
+			else:
+				deconv = nn.ConvTranspose2d(num_filters[i - 1], num_filters[i], kernel_size=4, stride=2, padding=1)
+
+			deconv_name = 'deconv' + str(i + 1)
+			self.hidden_layer.add_module(deconv_name, deconv)
+
+			# Initializer
+			nn.init.normal(deconv.weight, mean=0.0, std=0.02)
+			nn.init.constant(deconv.bias, 0.0)
+
+			# Batch normalization
+			bn_name = 'bn' + str(i + 1)
+			self.hidden_layer.add_module(bn_name, torch.nn.BatchNorm2d(num_filters[i]))
+
+			# Activation
+			act_name = 'act' + str(i + 1)
+			self.hidden_layer.add_module(act_name, torch.nn.ReLU())
+
+		# Output layer
+		self.output_layer = torch.nn.Sequential()
+		# Deconvolutional layer
+		out = torch.nn.ConvTranspose2d(64, 3, kernel_size=4, stride=2, padding=1)
+		self.output_layer.add_module('out', out)
+		# Initializer
+		nn.init.normal(out.weight, mean=0.0, std=0.02)
+		nn.init.constant(out.bias, 0.0)
+		# Activation
+		self.output_layer.add_module('act', torch.nn.Tanh())
+
+	def forward(self, x):
+		x = x.view(x.size(0), -1)
+		x = self.linear(x)
+		h = self.hidden_layer(x.view(x.size(0), 512, 2, 2))
+		out = self.output_layer(h)
+		return out
 
 # Toy data model
 class Generator_toy(torch.nn.Module):

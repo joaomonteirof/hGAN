@@ -107,10 +107,10 @@ if __name__ == '__main__':
 	plt.xlabel('Epochs', fontsize = 25)
 
 	if (args.to_plot == 'FID-c'):
-		plt.ylabel('FID', fontsize = 25)
+		plt.ylabel('FID - CIFAR10', fontsize = 25)
 		plt.ylim(0, 15)
 	else:
-		plt.ylabel('Update direction norm', fontsize = 25)
+		plt.ylabel('Update direction norm - CIFAR10', fontsize = 25)
 		plt.ylim(0, 15)
 	
 	plt.legend(fontsize = 16)

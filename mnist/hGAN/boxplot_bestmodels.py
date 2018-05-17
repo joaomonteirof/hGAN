@@ -121,7 +121,7 @@ if __name__ == '__main__':
 	box.set_ylabel('FID - MNIST', fontsize = 12)	
 	box.set_yscale('log')
 	plt.axhline(np.mean(fid_random), color='r', linestyle='dashed', linewidth=1)
-	plt.axhline(fid_real, color='b', linestyle='dashed', linewidth=1)
+	#plt.axhline(fid_real, color='b', linestyle='dashed', linewidth=1)
 	plt.grid(True, alpha = 0.3, linestyle = '--')
 	plt.savefig('FID_best_models_mnist.pdf')
 	plt.show()

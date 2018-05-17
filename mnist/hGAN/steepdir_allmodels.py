@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
 
 	plt.xlabel('Epochs', fontsize = 15)
-	plt.ylabel('Update direction norm', fontsize = 15)
+	plt.ylabel('Update direction norm - MNIST', fontsize = 15)
 	plt.tick_params(labelsize = 15)
 	plt.ylim(0, 2.4)
 	plt.legend()

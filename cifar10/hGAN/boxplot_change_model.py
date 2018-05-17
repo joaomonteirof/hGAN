@@ -47,6 +47,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
+	
 	if args.model_cifar == 'resnet':
 		fid_model = ResNet18().eval()
 	elif args.model_cifar == 'vgg':

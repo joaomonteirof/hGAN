@@ -44,9 +44,11 @@ if __name__ == '__main__':
 	mssim = {'mssim':[]}
 
 	for i in range(args.ntests):
-		samples = get_gen_samples(generator, batch_size=args.batch_size, nsamples=args.nsamples, cuda=args.cuda)
-		mssim['mssim'].append(compute_diversity_mssim(samples))
+		samples = get_gen_samples(generator, batch_size=args.batch_size, nsamples=args.nsamples, cuda=args.cuda, mnist=False)
+		mssim['mssim'].append(compute_diversity_mssim(samples, real = False, mnist=False))
+
+	print(mssim)
 
 	pfile = open(args.out_file, "wb")
-	pickle.dump(fid_dict, pfile)
+	pickle.dump(mssim, pfile)
 	pfile.close()

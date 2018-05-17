@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
 	for i in range(args.ntests):
 		samples = next(train_loader)[0]
-		mssim['mssim'].append(compute_diversity_mssim(samples, mnist = False))
+		mssim['mssim'].append(compute_diversity_mssim(samples, real = True, mnist = False))
 
 	print(mssim)
 

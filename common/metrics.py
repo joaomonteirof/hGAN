@@ -14,7 +14,7 @@ from skimage.measure import compare_ssim
 import itertools
 
 
-def compute_diversity_mssim(samples, mnist=True):
+def compute_diversity_mssim(samples, real = True, mnist=True):
 	l = list(range(len(samples)))
 	pairs = list(itertools.product(l, l))
 	
@@ -22,9 +22,14 @@ def compute_diversity_mssim(samples, mnist=True):
 
 	for pair in pairs:
 
-		im1 = samples[pair[0]].cpu().numpy()
-		im2 = samples[pair[1]].cpu().numpy()
+		if real:
 
+			im1 = samples[pair[0]].cpu().numpy()
+			im2 = samples[pair[1]].cpu().numpy()
+		else:
+			im1 = samples[pair[0]]
+			im2 = samples[pair[1]]
+			
 		if mnist:
 			im1, im2 = im1.squeeze(), im2.squeeze()
 			mssim.append( compare_ssim(im1, im2) )
@@ -49,6 +54,7 @@ def get_gen_samples(model, batch_size, nsamples, cuda, mnist=True):
 		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
 		if cuda:
 			z_ = z_.cuda()
+			model = model.cuda()
 
 		z_ = Variable(z_)
 
@@ -58,7 +64,7 @@ def get_gen_samples(model, batch_size, nsamples, cuda, mnist=True):
 			x_gen = model.forward(z_)
 
 		if out_samples is not None:
-			out_samples = np.concatenate( [out_samples, x_gen.cpu().data.numpy()], axis=0 )
+			out_samples = np.concatenate( [out_samples, x_gen.cpu().data.numpy()], axis=0)
 		else:
 			out_samples = x_gen.cpu().data.numpy()
 

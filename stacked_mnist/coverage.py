@@ -41,7 +41,9 @@ if __name__ == '__main__':
 	classifier_state = torch.load(args.classifier_path, map_location=lambda storage, loc: storage)
 	classifier.load_state_dict(classifier_state['model_state'])
 
-	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
+	#models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
+
+	models_dict = {'hyper8': 'HV-8', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
 
 	cov_dict = {}
 	kl_dict = {}
@@ -57,6 +59,8 @@ if __name__ == '__main__':
 
 	files_list = glob.glob(args.cp_folder + 'G_*.pt')
 	files_list.sort()
+
+	print(files_list)
 
 	for file_id in files_list:
 
@@ -75,8 +79,8 @@ if __name__ == '__main__':
 
 		coverage, KL = [], []
 
-		for i in range(args.ntests):
-			cov, freqs = compute_freqs(generator, classifier, args.nsamples, args.batch_size)
+		for i in range(args.n_tests):
+			cov, freqs = compute_freqs(generator, classifier, args.n_samples, args.batch_size, cuda=args.cuda)
 			coverage.append(cov)
 			freqs/=freqs.sum()
 			KL.append(compute_KL(freqs, statistics))

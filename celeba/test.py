@@ -8,7 +8,7 @@ print(f'Running from package root directory {sys.path[0]}')
 
 import argparse
 
-from generators import Generator
+from common.generators import Generator
 import matplotlib.pyplot as plt
 import torch.utils.data
 
@@ -60,4 +60,4 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'disc_loss_minibatch')
 
 	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
-	save_samples(prefix='CELEBA_hGAN', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda)
+	save_samples(prefix='CELEBA', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda, fig_size=(8, 8))

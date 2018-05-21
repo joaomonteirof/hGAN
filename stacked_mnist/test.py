@@ -48,4 +48,4 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'steepest_dir_norm')
 
 	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
-	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], prefix='stacked_mnist', fig_size=(10, 10), nc=3, im_size=28, cuda_mode=args.cuda)
+	save_samples(generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], prefix='stacked_mnist', fig_size=(8, 14), nc=3, im_size=28, cuda_mode=args.cuda)

@@ -62,7 +62,9 @@ if __name__ == '__main__':
 	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24'}
 	markers_dict = {'HV': '-', 'GMAN': '--', 'AVG': '-.'}
 
-	color = iter([plt.get_cmap('nipy_spectral')(1. * i/6) for i in range(6)])
+	#color = iter([plt.get_cmap('nipy_spectral')(1. * i/6) for i in range(6)])
+
+	color = iter(['darkgreen', 'mediumseagreen', 'darkorchid', 'magenta', 'midnightblue', 'deepskyblue'])
 
 
 	#color = iter(cm.rainbow(np.linspace(0, 1, 6)))
@@ -107,13 +109,13 @@ if __name__ == '__main__':
 	plt.xlabel('Epochs', fontsize = 25)
 
 	if (args.to_plot == 'FID-c'):
-		plt.ylabel('FID - CIFAR10', fontsize = 25)
+		plt.ylabel('FID - CIFAR-10', fontsize = 25)
 		plt.ylim(0, 15)
 	else:
-		plt.ylabel('Update direction norm - CIFAR10', fontsize = 25)
+		plt.ylabel('Update direction norm - CIFAR-10', fontsize = 25)
 		plt.ylim(0, 15)
 	
-	plt.legend(fontsize = 16)
+	plt.legend(fontsize = 19)
 	plt.tick_params(labelsize = 25)
 	plt.grid(True, alpha = 0.3, linestyle = '--')
 	to_save = args.to_plot + 'best_cifar' + '.pdf'

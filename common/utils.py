@@ -15,7 +15,7 @@ from torchvision.transforms import transforms
 from PIL import ImageEnhance
 
 def compute_KL(p, q):
-	return np.sum(np.where(p!=0, p*np.log(p/(q+1e-15)), 0))
+	return np.sum(np.where(p!=0, p*np.log(p/(q+1e-10)), 0))
 
 def save_testdata_statistics(model, data_loader, cuda_mode):
 	for batch in data_loader:
@@ -67,7 +67,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 		img = img.cpu().data
 
 		if enhance:
-			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(1.2)
+			img_E = ImageEnhance.Sharpness( to_pil(img) ).enhance(1.)
 			img = to_tensor(img_E)
 
 		# Scale to 0-255

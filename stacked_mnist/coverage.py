@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	parser.add_argument('--data-stat-path', type=str, default='./test_data_coverage.p', metavar='Path', help='Path to precomputed test data statistics fo KL div computation')
 	parser.add_argument('--out-file', type=str, default='./stacked_mnist', metavar='Path', help='files for dumping coverage data')
 	parser.add_argument('--n-tests', type=int, default=4, metavar='N', help='number of replications (default: 4)')
-	parser.add_argument('--n-samples', type=int, default=1000, metavar='N', help='number of samples for each  (default: 4)')
+	parser.add_argument('--n-samples', type=int, default=10000, metavar='N', help='number of samples for each  (default: 4)')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()
@@ -41,9 +41,9 @@ if __name__ == '__main__':
 	classifier_state = torch.load(args.classifier_path, map_location=lambda storage, loc: storage)
 	classifier.load_state_dict(classifier_state['model_state'])
 
-	#models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
+	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
 
-	models_dict = {'hyper8': 'HV-8', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
+	#models_dict = {'hyper8': 'HV-8', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
 
 	cov_dict = {}
 	kl_dict = {}
@@ -80,14 +80,15 @@ if __name__ == '__main__':
 		coverage, KL = [], []
 
 		for i in range(args.n_tests):
-			cov, freqs = compute_freqs(generator, classifier, args.n_samples, args.batch_size, cuda=args.cuda)
+			cov, freqs = compute_freqs(generator, classifier, args.batch_size, args.n_samples, cuda=args.cuda)
 			coverage.append(cov)
 			freqs/=freqs.sum()
 			KL.append(compute_KL(freqs, statistics))
 
 		cov_dict[key] = coverage
 		kl_dict[key] = KL
-		print('results for' + file_name+ '- coverage: {}+-{}, KL: {}+-{}'.format(np.mean(coverage), np.std(coverage), np.mean(KL), np.std(KL)))
+
+		print('results for ' + file_name+ ' - coverage: {}+-{}, KL: {}+-{}'.format(np.mean(coverage), np.std(coverage), np.mean(KL), np.std(KL)))
 
 	pfile = open(args.out_file+'_coverage.p', "wb")
 	pickle.dump(cov_dict, pfile)

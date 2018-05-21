@@ -209,8 +209,6 @@ def compute_fid_real_data(data_loader, fid_model_, m_data, C_data, cuda, incepti
 
 	fid = ((m_data - m_gen) ** 2).sum() + np.matrix.trace(C_data + C_gen - 2 * sla.sqrtm(np.matmul(C_data, C_gen)))
 
-	print(fid)
-
 	return fid
 
 def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, splits=1):

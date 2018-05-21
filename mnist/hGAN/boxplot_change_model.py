@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
 	df = pd.DataFrame(fid_dict)
 	df.head()
-	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
+	order_plot = ['AVG', 'GMAN', 'HV', 'MGD']
 
 	gs = gridspec.GridSpec(2, 1, height_ratios=[1, 5])
 
@@ -113,8 +113,8 @@ if __name__ == '__main__':
 	ax = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot, ax=ax1)
 	ax = sns.boxplot(data = df, palette = "Set3", width = 0.2, linewidth = 1.0, showfliers = False, order = order_plot, ax=ax2)
 
-	ax2.set_ylim(0, 8)  # outliers only
-	ax1.set_ylim(80, 100)  # most of the data
+	ax2.set_ylim(0, 20)  # outliers only
+	ax1.set_ylim(2400, 2590)  # most of the data
 
 	ax1.spines['bottom'].set_visible(False)
 	ax2.spines['top'].set_visible(False)
@@ -122,14 +122,12 @@ if __name__ == '__main__':
 	ax1.tick_params(labeltop='off')  # don't put tick labels at the top
 	ax2.xaxis.tick_bottom()
 
-	ax1.axhline(89.24368468, color='r', linestyle = 'dashed', linewidth = 1.2)
-	#ax1.axhline(0.035210, color='b', linestyle='dashed', linewidth=1)
+	ax1.axhline(2509.2195, color='r', linestyle = 'dashed', linewidth = 1.2)
 	ax1.axvline(1.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	ax1.axvline(4.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	ax1.axvline(7.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 
-	#ax2.axhline(89.24368468, color='r', linestyle = 'dashed', linewidth = 1)
-	ax2.axhline(0.035210, color='b', linestyle='dashed', linewidth=1.2)
+	ax2.axhline(5.618e-09, color='b', linestyle='dashed', linewidth=1.2)
 	ax2.axvline(1.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	ax2.axvline(4.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
 	ax2.axvline(7.5, color = 'grey', alpha = 0.5, linestyle = 'dashed', linewidth = 1)
@@ -138,7 +136,7 @@ if __name__ == '__main__':
 	ax2.grid(True, alpha = 0.3, linestyle = '--')
 
 	ax2.set_xlabel('Model', fontsize = 25)
-	ax2.set_ylabel('                    FID - CIFAR-10', fontsize = 25)	
+	ax2.set_ylabel('                    FID - MNIST', fontsize = 25)	
 	ax1.tick_params(labelsize = 17, top=False)
 	ax2.tick_params(labelsize = 17)
 
@@ -152,7 +150,7 @@ if __name__ == '__main__':
 	ax2.plot((-d, +d), (1, 1), **kwargs)  # bottom-left diagonal
 	ax2.plot((1 - d, 1 + d), (1, 1), **kwargs)  # bottom-right diagonal
 
-	plt.savefig('FID_best_models_cut.pdf')
+	plt.savefig('FID_best_models_mnist_cut.pdf')
 	plt.show()
 	
 	pfile = open(args.out_file, "wb")

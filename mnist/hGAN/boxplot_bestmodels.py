@@ -42,6 +42,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
+	
 	if args.model_mnist == 'cnn':
 		fid_model = cnn().eval()
 
@@ -57,6 +58,8 @@ if __name__ == '__main__':
 	mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
 	fid_model.load_state_dict(mod_state['model_state'])
 
+
+	
 	models_dict = {'hyper': 'HV', 'vanilla': 'AVG', 'gman': 'GMAN', 'mgd': 'MGD'}
 
 	fid_dict = {}
@@ -66,6 +69,7 @@ if __name__ == '__main__':
 	pfile.close()
 
 	m, C = statistics['m'], statistics['C']
+
 
 	if args.cp_folder is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
@@ -96,7 +100,7 @@ if __name__ == '__main__':
 
 		fid_dict[key] = fid
 
-	
+
 	# Random generator
 	random_generator = Generator_mnist().eval()
 	
@@ -112,6 +116,11 @@ if __name__ == '__main__':
 	trainset = datasets.MNIST(root=args.data_path, train=False, download=True, transform=transform)
 	train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 	fid_real = compute_fid_real_data(train_loader, fid_model, m, C, args.cuda, inception = False, mnist = True)
+
+
+	print(np.mean(fid_random))
+	print(fid_real)
+
 
 	df = pd.DataFrame(fid_dict)
 	df.head()

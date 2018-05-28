@@ -3,6 +3,9 @@
 *.png
 *.gif
 *.jpeg
+*.JPEG
+*.jpg
+*.txt
 *.p
 *.pt
 t10k-images-idx3-ubyte

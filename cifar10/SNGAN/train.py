@@ -66,7 +66,7 @@ if args.cuda:
 if not os.path.isfile('../test_data_statistics.p'):
 	testset = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=transform)
 	test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
-	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
+	save_testdata_statistics(fid_model, test_loader, downsample_=False, cuda_mode=args.cuda)
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 

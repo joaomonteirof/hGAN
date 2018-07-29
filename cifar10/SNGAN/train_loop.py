@@ -41,7 +41,7 @@ class TrainLoop(object):
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
 		else:
-			self.fixed_noise = torch.randn(1000, 128).view(-1, 128, 1, 1)
+			self.fixed_noise = torch.randn(1000, 128)
 
 	def train(self, n_epochs=1, save_every=1):
 
@@ -125,7 +125,7 @@ class TrainLoop(object):
 
 		self.model.train()
 
-		z_ = torch.randn(x.size(0), 128).view(-1, 128, 1, 1)
+		z_ = torch.randn(x.size(0), 128)
 
 		if self.cuda_mode:
 			z_ = z_.cuda()

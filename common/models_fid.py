@@ -187,7 +187,7 @@ class cnn(nn.Module):
 		self.fc1 = nn.Linear(320, 50)
 		self.fc2 = nn.Linear(50, 10)
 
-	def forward(self, x, pre_softmax=False):
+	def forward(self, x, downsample_=False, pre_softmax=False):
 		x = F.relu(F.max_pool2d(self.conv1(x), 2))
 		x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
 		x = x.view(-1, 320)
@@ -217,7 +217,7 @@ class mlp(nn.Module):
 		self.fc2 = nn.Linear(320, 50)
 		self.fc3 = nn.Linear(50, 10)
 
-	def forward(self, x, pre_softmax = False):
+	def forward(self, x, pre_softmax = False, downsample_=False):
 		x = x.view(x.size(0), -1)
 		x = F.relu(self.fc1(x))
 		x = F.dropout(x, training=self.training)

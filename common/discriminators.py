@@ -73,7 +73,7 @@ class Discriminator_SN_noproj(nn.Module):
 	def make_layer(self, in_plane, out_plane):
 		return nn.Sequential( SpectralNorm( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
 			nn.LeakyReLU(0.1),
-			SpectralNorm(nn.Conv2d(out_plane, out_plane, 4, 2, 1), self.args),
+			SpectralNorm(nn.Conv2d(out_plane, out_plane, 4, 2, 1) ),
 			nn.LeakyReLU(0.1) )
 
 	def forward(self, x):
@@ -107,7 +107,7 @@ class Discriminator_SN(nn.Module):
 	def make_layer(self, in_plane, out_plane):
 		return nn.Sequential( SpectralNorm( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
 			nn.LeakyReLU(0.1),
-			SpectralNorm(nn.Conv2d(out_plane, out_plane, 4, 2, 1), self.args),
+			SpectralNorm(nn.Conv2d(out_plane, out_plane, 4, 2, 1) ),
 			nn.LeakyReLU(0.1) )
 
 	def forward(self, x):

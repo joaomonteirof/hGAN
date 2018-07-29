@@ -17,14 +17,14 @@ from PIL import ImageEnhance
 def compute_KL(p, q):
 	return np.sum(np.where(p!=0, p*np.log(p/(q+1e-10)), 0))
 
-def save_testdata_statistics(model, data_loader, cuda_mode):
+def save_testdata_statistics(model, data_loader, downsample_, cuda_mode):
 	for batch in data_loader:
 
 		x, y = batch
 
 		x = torch.autograd.Variable(x)
 
-		out = model.forward(x).data.cpu().numpy()
+		out = model.forward(x, downsample_).data.cpu().numpy()
 
 		try:
 			logits = np.concatenate([logits, out], 0)

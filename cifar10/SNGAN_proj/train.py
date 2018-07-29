@@ -65,7 +65,7 @@ if not os.path.isfile('../test_data_statistics.p'):
 	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
 
 
-generator = Generator_SN.train()
+generator = Generator_SN().train()
 disc_list = []
 for i in range(args.ndiscriminators):
 	disc = Discriminator_SN(optim.Adam, args.lr, (args.beta1, args.beta2)).train()

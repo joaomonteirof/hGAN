@@ -93,14 +93,14 @@ class Discriminator_SN(nn.Module):
 		m_g = 4
 		ch = 512
 
-		self.projection = nn.utils.weight_norm(nn.Conv2d(input_dim, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
+		self.projection = nn.utils.weight_norm(nn.Conv2d(3, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
 		self.projection.weight_g.data.fill_(1)
 
-		self.layer1 = self.make_layer(3, ch//8)
+		self.layer1 = self.make_layer(1, ch//8)
 		self.layer2 = self.make_layer(ch//8, ch//4)
 		self.layer3 = self.make_layer(ch//4, ch//2)
 		self.layer4 = SpectralNorm(nn.Conv2d(ch//2, ch, 3, 1, 1) )
-		self.linear = SpectralNorm(nn.Linear(ch*m_g*m_g, 1) )
+		self.linear = SpectralNorm(nn.Linear(int(ch*m_g*m_g/4), 1) )
 
 		self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
 
@@ -111,6 +111,7 @@ class Discriminator_SN(nn.Module):
 			nn.LeakyReLU(0.1) )
 
 	def forward(self, x):
+
 		p_x = self.projection(x)
 		out = self.layer1(p_x)
 		out = self.layer2(out)

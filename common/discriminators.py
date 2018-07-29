@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+from common.spectralnorm import SpectralNorm
 
 # Discriminator model
 class Discriminator(torch.nn.Module):
@@ -53,6 +53,73 @@ class Discriminator(torch.nn.Module):
 		h = self.hidden_layer(p_x)
 		out = self.output_layer(h)
 		return out
+
+
+class Discriminator_SN_noproj(nn.Module):
+	def __init__(self, optimizer, lr, betas):
+		super().__init__()
+
+		m_g = 4
+		ch = 512
+
+		self.layer1 = self.make_layer(3, ch//8)
+		self.layer2 = self.make_layer(ch//8, ch//4)
+		self.layer3 = self.make_layer(ch//4, ch//2)
+		self.layer4 = SpectralNorm(nn.Conv2d(ch//2, ch, 3, 1, 1) )
+		self.linear = SpectralNorm(nn.Linear(ch*m_g*m_g, 1) )
+
+		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+	def make_layer(self, in_plane, out_plane):
+		return nn.Sequential( SpectralNorm( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
+			nn.LeakyReLU(0.1),
+			SpectralNorm(nn.Conv2d(out_plane, out_plane, 4, 2, 1), self.args),
+			nn.LeakyReLU(0.1) )
+
+	def forward(self, x):
+		out = self.layer1(x)
+		out = self.layer2(out)
+		out = self.layer3(out)
+		out = self.layer4(out)
+		out = out.view(out.size(0), -1)
+		out = self.linear(out)
+
+		return out.squeeze()
+
+class Discriminator_SN(nn.Module):
+	def __init__(self, optimizer, lr, betas):
+		super().__init__()
+
+		m_g = 4
+		ch = 512
+
+		self.projection = nn.utils.weight_norm(nn.Conv2d(input_dim, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
+		self.projection.weight_g.data.fill_(1)
+
+		self.layer1 = self.make_layer(3, ch//8)
+		self.layer2 = self.make_layer(ch//8, ch//4)
+		self.layer3 = self.make_layer(ch//4, ch//2)
+		self.layer4 = SpectralNorm(nn.Conv2d(ch//2, ch, 3, 1, 1) )
+		self.linear = SpectralNorm(nn.Linear(ch*m_g*m_g, 1) )
+
+		self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+
+	def make_layer(self, in_plane, out_plane):
+		return nn.Sequential( SpectralNorm( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
+			nn.LeakyReLU(0.1),
+			SpectralNorm(nn.Conv2d(out_plane, out_plane, 4, 2, 1), self.args),
+			nn.LeakyReLU(0.1) )
+
+	def forward(self, x):
+		p_x = self.projection(x)
+		out = self.layer1(p_x)
+		out = self.layer2(out)
+		out = self.layer3(out)
+		out = self.layer4(out)
+		out = out.view(out.size(0), -1)
+		out = self.linear(out)
+
+		return out.squeeze()
 
 class Discriminator_stacked_mnist(torch.nn.Module):
 	def __init__(self, optimizer, lr, betas, batch_norm=False):

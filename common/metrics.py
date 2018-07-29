@@ -132,9 +132,6 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, i
 		n_batches = nsamples//batch_size
 	else: n_batches = nsamples//batch_size + 1
 
-	if inception:
-		up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
-
 	logits = None
 
 	for i in range(n_batches):
@@ -151,8 +148,7 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, i
 			x_gen = model.forward(z_)
 
 		if inception:
-			x_gen = up(x_gen)
-			new_logits = F.softmax(fid_model_.forward(x_gen), dim=1).data.cpu().numpy()
+			new_logits = fid_model_(x_gen)[0].view(z_.size(0), -1).data.cpu().numpy()
 		else:
 			new_logits = fid_model_.forward(x_gen).cpu().data.numpy()
 

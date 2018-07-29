@@ -36,7 +36,7 @@ if __name__ == '__main__':
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-folder to indicate the path!')
 	if args.classifier_path is None:
 		raise ValueError('There is no classifier path. Use arg --classifier-path to indicate the path!')
-	
+
 	classifier = cnn().eval()
 	classifier_state = torch.load(args.classifier_path, map_location=lambda storage, loc: storage)
 	classifier.load_state_dict(classifier_state['model_state'])
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
 		file_name = file_id.split('/')[-1].split('_')[1]
 
-		print(file_name)		
+		print(file_name)
 
 		key = models_dict[file_name]
 

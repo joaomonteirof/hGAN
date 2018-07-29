@@ -46,6 +46,40 @@ class Generator(torch.nn.Module):
 		out = self.output_layer(h)
 		return out
 
+class Generator_SN(nn.Module):
+	def __init__(self):
+		super().__init__()
+		self.z_dim = 128
+		self.m_g = 4
+		self.ch = 512
+
+		self.linear = nn.Linear(self.z_dim, self.m_g*self.m_g*self.ch)
+		self.activation = nn.ReLU()
+		self.deconv = nn.Sequential(
+
+			nn.ConvTranspose2d(self.ch, self.ch//2, 4, 2, 1),
+			nn.BatchNorm2d(self.ch//2),
+			nn.ReLU(),
+
+			nn.ConvTranspose2d(self.ch//2, self.ch//4, 4, 2, 1),
+			nn.BatchNorm2d(self.ch//4),
+			nn.ReLU(),
+
+			nn.ConvTranspose2d(self.ch//4, self.ch//8, 4, 2, 1),
+			nn.BatchNorm2d(self.ch//8),
+			nn.ReLU(),
+
+			nn.ConvTranspose2d(self.ch//8, 3, 3, 1, 1),
+			nn.Tanh()
+		)
+
+	def forward(self, z):
+		out = self.activation(self.linear(z))
+		out = out.view(-1, self.ch, self.m_g, self.m_g)
+		out = self.deconv(out)
+
+		return out
+
 class Generator_stacked_mnist(torch.nn.Module):
 	def __init__(self):
 		super(Generator_stacked_mnist, self).__init__()

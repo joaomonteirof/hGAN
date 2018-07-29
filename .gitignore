@@ -14,3 +14,8 @@ train-images-idx3-ubyte
 train-labels-idx1-ubyte
 *.pdf
 *.hdf
+*.tar
+*.gz
+*tar.gz
+*.npz
+*cifar-10-batches-py

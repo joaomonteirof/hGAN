@@ -84,7 +84,7 @@ class Discriminator_SN_noproj(nn.Module):
 		out = out.view(out.size(0), -1)
 		out = self.linear(out)
 
-		return out.squeeze()
+		return torch.sigmoid(out.squeeze())
 
 class Discriminator_SN(nn.Module):
 	def __init__(self, optimizer, lr, betas):
@@ -120,7 +120,7 @@ class Discriminator_SN(nn.Module):
 		out = out.view(out.size(0), -1)
 		out = self.linear(out)
 
-		return out.squeeze()
+		return torch.sigmoid(out.squeeze())
 
 class Discriminator_stacked_mnist(torch.nn.Module):
 	def __init__(self, optimizer, lr, betas, batch_norm=False):

@@ -103,7 +103,7 @@ class TrainLoop(object):
 
 		for i in range(self.its_disc):
 
-			z_ = torch.randn(x.size(0), 128).view(-1, 128, 1, 1)
+			z_ = torch.randn(x.size(0), 128)
 
 			if self.cuda_mode:
 				z_ = z_.cuda()

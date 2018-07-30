@@ -62,7 +62,7 @@ fid_model.load_state_dict(mod_state['model_state'])
 if not os.path.isfile('../test_data_statistics.p'):
 	testset = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=transform)
 	test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
-	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
+	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda, downsample_=False)
 
 
 generator = Generator_SN().train()

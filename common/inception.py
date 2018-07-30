@@ -102,7 +102,7 @@ class InceptionV3(nn.Module):
 		for param in self.parameters():
 			param.requires_grad = requires_grad
 
-	def forward(self, inp):
+	def forward(self, inp, downsample_=False):
 		"""Get Inception feature maps
 		Parameters
 		----------

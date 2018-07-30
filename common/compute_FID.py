@@ -46,13 +46,14 @@ if __name__ == '__main__':
 	if args.dataset == 'cifar10':
 		if args.model_cifar=='resnet':
 			fid_model = ResNet18().eval()
+			mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
+			fid_model.load_state_dict(mod_state['model_state'])
 		elif args.model_cifar=='vgg':
 			fid_model = VGG().eval()
+			mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
+			fid_model.load_state_dict(mod_state['model_state'])
 		elif args.model_cifar=='inception':
 			fid_model = InceptionV3([3])
-
-		mod_state = torch.load(args.fid_model_path, map_location=lambda storage, loc: storage)
-		fid_model.load_state_dict(mod_state['model_state'])
 
 		generator = Generator(100, [1024, 512, 256, 128], 3).eval()
 		gen_state = torch.load(args.model_path, map_location=lambda storage, loc: storage)

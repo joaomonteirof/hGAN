@@ -93,7 +93,7 @@ if __name__ == '__main__':
 		if args.dataset == 'cifar10':
 			transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 			testset = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=transform)
-			test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
+			test_loader = torch.utils.data.DataLoader(testset, batch_size=512, shuffle=False, num_workers=args.workers)
 
 		elif args.dataset == 'mnist':
 			transform = transforms.Compose([transforms.Resize((28, 28), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -107,6 +107,12 @@ if __name__ == '__main__':
 
 		save_testdata_statistics(fid_model, test_loader, downsample_=True, cuda_mode=args.cuda)
 
+		pfile = open(args.data_stat_path, 'rb')
+		statistics = pickle.load(pfile)
+		pfile.close()
+
+		m, C = statistics['m'], statistics['C']
+
 	if args.cuda:
 		generator = generator.cuda()
 		fid_model = fid_model.cuda()
@@ -115,7 +121,7 @@ if __name__ == '__main__':
 
 	for i in range(args.ntests):
 		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = True if args.dataset == 'mnist' else False))
-
+		print(fid[-1])
 	fid = np.asarray(fid)
 	print(fid)
 

@@ -18,11 +18,17 @@ def compute_KL(p, q):
 	return np.sum(np.where(p!=0, p*np.log(p/(q+1e-10)), 0))
 
 def save_testdata_statistics(model, data_loader, cuda_mode, downsample_ = True):
+
+	if cuda_mode:
+		model = model.cuda()
+
 	for batch in data_loader:
 
 		x, y = batch
-
 		x = torch.autograd.Variable(x)
+
+		if cuda_mode:
+			x = x.cuda()
 
 		out = model.forward(x, downsample_).data.cpu().numpy()
 
@@ -30,6 +36,9 @@ def save_testdata_statistics(model, data_loader, cuda_mode, downsample_ = True):
 			logits = np.concatenate([logits, out], 0)
 		except NameError:
 			logits = out
+
+	if cuda_mode:
+		model = model.cpu()
 
 	m = logits.mean(0)
 	C = np.cov(logits, rowvar=False)

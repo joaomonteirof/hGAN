@@ -117,7 +117,8 @@ class TrainLoop(object):
 			self.disc.optimizer.zero_grad()
 			d_real = self.disc.forward(x).squeeze().mean()
 			d_fake = self.disc.forward(out_d).squeeze().mean()
-			loss_disc = d_fake - d_real
+			loss_disc = F.binary_cross_entropy(d_real, y_real_) + F.binary_cross_entropy(d_fake, y_fake_)
+			self.disc.optimizer.zero_grad()
 			loss_disc.backward()
 			self.disc.optimizer.step()
 

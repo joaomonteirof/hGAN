@@ -104,7 +104,7 @@ if __name__ == '__main__':
 			testset = datasets.ImageFolder(args.data_path, transform=transform)
 			test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 
-		save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
+		save_testdata_statistics(fid_model, test_loader, downsample_=True, cuda_mode=args.cuda)
 
 	if args.cuda:
 		generator = generator.cuda()

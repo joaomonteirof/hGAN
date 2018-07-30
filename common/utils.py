@@ -17,7 +17,7 @@ from PIL import ImageEnhance
 def compute_KL(p, q):
 	return np.sum(np.where(p!=0, p*np.log(p/(q+1e-10)), 0))
 
-def save_testdata_statistics(model, data_loader, downsample_, cuda_mode):
+def save_testdata_statistics(model, data_loader, cuda_mode, downsample_ = True):
 	for batch in data_loader:
 
 		x, y = batch

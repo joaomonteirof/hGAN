@@ -134,4 +134,4 @@ class InceptionV3(nn.Module):
 			if idx == self.last_needed_block:
 				break
 
-		return outp
+		return outp[0]

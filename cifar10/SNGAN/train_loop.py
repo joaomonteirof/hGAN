@@ -152,9 +152,9 @@ class TrainLoop(object):
 
 		z_ = Variable(z_)
 
-		x_gen = self.model.forward(z_, downsample_=False)
+		x_gen = self.model.forward(z_)
 
-		logits = self.fid_model.forward(x_gen.cpu()).data.numpy()
+		logits = self.fid_model.forward(x_gen.cpu(), downsample_=False).data.numpy()
 
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)

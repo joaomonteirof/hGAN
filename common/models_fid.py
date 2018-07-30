@@ -15,8 +15,13 @@ class VGG(nn.Module):
 		self.features = self._make_layers(cfg[vgg_name])
 		self.classifier = nn.Linear(512, 10)
 		self.soft = soft
+		self.downsample = nn.MaxPool2d(2)
 
-	def forward(self, x):
+	def forward(self, x, downsample_=True):
+
+		if downsample_:
+			x = self.downsample(x)
+
 		out = self.features(x)
 		out = out.view(out.size(0), -1)
 		out = self.classifier(out)
@@ -91,9 +96,6 @@ class Bottleneck(nn.Module):
 				nn.BatchNorm2d(self.expansion * planes))
 
 	def forward(self, x, downsample_=True):
-
-		if downsample_:
-			x = self.downsample(x)
 
 		out = F.relu(self.bn1(self.conv1(x)))
 		out = F.relu(self.bn2(self.conv2(out)))

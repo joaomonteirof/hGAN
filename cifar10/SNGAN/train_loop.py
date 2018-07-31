@@ -5,6 +5,7 @@ import numpy as np
 import scipy.linalg as sla
 import torch
 from torch.autograd import Variable
+import torch.nn.functional as F
 from tqdm import tqdm
 
 
@@ -19,8 +20,8 @@ class TrainLoop(object):
 			if not os.path.isdir(self.checkpoint_path):
 				os.mkdir(self.checkpoint_path)
 
-		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_WGANGP_{}ep.pt')
-		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_WGANGP_{}ep.pt')
+		self.save_epoch_fmt_gen = os.path.join(self.checkpoint_path, 'G_SNGAN_{}ep.pt')
+		self.save_epoch_fmt_disc = os.path.join(self.checkpoint_path, 'D_SNGAN_{}ep.pt')
 		self.cuda_mode = cuda
 		self.model = generator
 		self.fid_model = fid_model
@@ -115,9 +116,10 @@ class TrainLoop(object):
 			loss_d = 0
 
 			self.disc.optimizer.zero_grad()
-			d_real = self.disc.forward(x).squeeze().mean()
-			d_fake = self.disc.forward(out_d).squeeze().mean()
-			loss_disc = d_fake - d_real
+			d_real = self.disc.forward(x)
+			d_fake = self.disc.forward(out_d)
+			loss_disc = F.binary_cross_entropy(d_real, y_real_) + F.binary_cross_entropy(d_fake, y_fake_)
+			self.disc.optimizer.zero_grad()
 			loss_disc.backward()
 			self.disc.optimizer.step()
 

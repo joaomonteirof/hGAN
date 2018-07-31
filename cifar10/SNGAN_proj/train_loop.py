@@ -123,8 +123,8 @@ class TrainLoop(object):
 		loss_d = 0
 
 		for disc in self.disc_list:
-			d_real = disc.forward(x).squeeze()
-			d_fake = disc.forward(out_d).squeeze()
+			d_real = disc.forward(x)
+			d_fake = disc.forward(out_d)
 			loss_disc = F.binary_cross_entropy(d_real, y_real_) + F.binary_cross_entropy(d_fake, y_fake_)
 			disc.optimizer.zero_grad()
 			loss_disc.backward()
@@ -155,7 +155,7 @@ class TrainLoop(object):
 			prob_list = []
 
 			for disc in self.disc_list:
-				losses_list_var.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
+				losses_list_var.append(F.binary_cross_entropy(disc.forward(out), y_real_))
 				losses_list_float.append(losses_list_var[-1].data[0])
 
 			self.update_nadir_point(losses_list_float)

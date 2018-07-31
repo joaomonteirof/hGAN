@@ -48,7 +48,7 @@ def save_testdata_statistics(model, data_loader, cuda_mode, downsample_ = True):
 	pfile.close()
 
 
-def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', nc=3, im_size=64, fig_size=(5, 5), enhance=True):
+def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, prefix: str, save_dir='./', nc=3, im_size=64, fig_size=(5, 5), enhance=True, SNGAN=False):
 	generator.eval()
 
 	n_tests = fig_size[0] * fig_size[1]
@@ -56,7 +56,10 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 	to_pil = transforms.ToPILImage()
 	to_tensor = transforms.ToTensor()
 
-	noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
+	if SNGAN:
+		noise = torch.randn(n_tests, 128)
+	else:
+		noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
 	if cuda_mode:
 		noise = noise.cuda()
@@ -150,13 +153,16 @@ def plot_learningcurves(history, *keys):
 	plt.show()
 
 
-def test_model(model, n_tests, cuda_mode, enhance=True):
+def test_model(model, n_tests, cuda_mode, enhance=True, SNGAN=False):
 	model.eval()
 
 	to_pil = transforms.ToPILImage()
 	to_tensor = transforms.ToTensor()
 
-	z_ = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
+	if SNGAN:
+		z_ = torch.randn(n_tests, 128)
+	else:
+		z_ = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
 	if cuda_mode:
 		z_ = z_.cuda()

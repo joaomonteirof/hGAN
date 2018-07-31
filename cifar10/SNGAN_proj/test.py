@@ -7,7 +7,7 @@ import numpy as np
 sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
-from common.generators import Generator
+from common.generators import Generator_SN
 import argparse
 import matplotlib.pyplot as plt
 import torch.utils.data
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	model = Generator(100, [1024, 512, 256, 128], 3)
+	model = Generator_SN()
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])
@@ -53,8 +53,8 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'FID-c')
 		#plot_learningcurves(history, 'steepest_dir_norm')
 
-	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
-	save_samples(prefix='CIFAR10_hGAN', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda, fig_size=(10, 10))
+	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda, SNGAN=True)
+	save_samples(prefix='CIFAR10_SNGAN_proj', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda, im_size=32, SNGAN=True)
 
 	if args.inception:
 		print(inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10))

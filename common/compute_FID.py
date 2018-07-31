@@ -36,6 +36,7 @@ if __name__ == '__main__':
 	parser.add_argument('--dataset', choices=['cifar10', 'mnist', 'celeba'], default='cifar10', help='cifar10, mnist, or celeba')
 	parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
+	parser.add_argument('--sngan', action='store_true', default=False, help='Enables computing FID for SNGAN')
 	args = parser.parse_args()
 	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 	args.bsize = min(args.batch_size, args.nsamples)
@@ -55,7 +56,11 @@ if __name__ == '__main__':
 		elif args.model_cifar=='inception':
 			fid_model = InceptionV3([3])
 
-		generator = Generator(100, [1024, 512, 256, 128], 3).eval()
+		if args.sngan:
+			generator = Generator_SN()
+		else:
+			generator = Generator(100, [1024, 512, 256, 128], 3).eval()
+
 		gen_state = torch.load(args.model_path, map_location=lambda storage, loc: storage)
 		generator.load_state_dict(gen_state['model_state'])
 
@@ -76,6 +81,7 @@ if __name__ == '__main__':
 			fid_model = InceptionV3([3])
 
 			generator = Generator(100, [1024, 512, 256, 128], 3).eval()
+
 			gen_state = torch.load(args.model_path, map_location=lambda storage, loc: storage)
 			generator.load_state_dict(gen_state['model_state'])
 
@@ -120,7 +126,9 @@ if __name__ == '__main__':
 	fid = []
 
 	for i in range(args.ntests):
-		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = True if args.dataset == 'mnist' else False))
+
+		fid.append(compute_fid(generator, fid_model, args.bsize, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = True if args.dataset == 'mnist' else False, SNGAN=args.sngan))
+
 		print(fid[-1])
 	fid = np.asarray(fid)
 	print(fid)

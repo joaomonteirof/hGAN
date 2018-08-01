@@ -241,9 +241,8 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 
 	def get_pred(N_s):
 
-
 		if SNGAN:
-			z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 128)
+			z_ = torch.randn(N_s, 128)
 		else:	
 			z_ = torch.randn(N_s, 100).view(-1, 100, 1, 1)
 

@@ -56,4 +56,4 @@ if __name__ == '__main__':
 	save_samples(prefix='CIFAR10_SNGAN', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda, im_size=32, SNGAN=True)
 
 	if args.inception:
-		print(inception_score(model, N=args.n_inception, cuda=args.cuda, resize=True, splits=10))
+		print(inception_score(model, batch_size = 4, N=args.n_inception, cuda=args.cuda, resize=True, splits=10, SNGAN=True))

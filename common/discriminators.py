@@ -122,6 +122,44 @@ class Discriminator_SN(nn.Module):
 
 		return torch.sigmoid(out.squeeze())
 
+class Discriminator_cifar32(nn.Module):
+	def __init__(self, optimizer, lr, betas):
+		super().__init__()
+
+		m_g = 4
+		ch = 512
+
+		self.projection = nn.utils.weight_norm(nn.Conv2d(3, 1, kernel_size=7, stride=1, padding=3, bias=False), name="weight")
+		self.projection.weight_g.data.fill_(1)
+
+		self.layer1 = self.make_layer(1, ch//8)
+		self.layer2 = self.make_layer(ch//8, ch//4)
+		self.layer3 = self.make_layer(ch//4, ch//2)
+		self.layer4 = nn.Sequential( nn.Conv2d(ch//2, ch, 3, 1, 1), nn.BatchNorm2d(ch), nn.LeakyReLU(0.1) )
+		self.linear = nn.Sequential(nn.Linear(int(ch*m_g*m_g), 1), nn.Sigmoid() )
+
+		self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+
+	def make_layer(self, in_plane, out_plane):
+		return nn.Sequential( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
+			nn.BatchNorm2d(out_plane),
+			nn.LeakyReLU(0.1),
+			nn.Conv2d(out_plane, out_plane, 4, 2, 1),
+			nn.BatchNorm2d(out_plane),
+			nn.LeakyReLU(0.1) )
+
+	def forward(self, x):
+
+		p_x = self.projection(x)
+		out = self.layer1(p_x)
+		out = self.layer2(out)
+		out = self.layer3(out)
+		out = self.layer4(out)
+		out = out.view(out.size(0), -1)
+		out = self.linear(out)
+
+		return torch.sigmoid(out.squeeze())
+
 class Discriminator_stacked_mnist(torch.nn.Module):
 	def __init__(self, optimizer, lr, betas, batch_norm=False):
 		super(Discriminator_stacked_mnist, self).__init__()

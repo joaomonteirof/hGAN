@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.realpath(__file__ + ('/..' * 3)))
 print(f'Running from package root directory {sys.path[0]}')
 
 from common.models_fid import ResNet18
-from common.discriminators import Discriminator_SN
+from common.discriminators import Discriminator_cifar32
 from common.utils import save_testdata_statistics
 from common.generators import Generator_SN
 import argparse

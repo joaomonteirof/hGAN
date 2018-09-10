@@ -136,12 +136,12 @@ class Discriminator_cifar32(nn.Module):
 		self.layer2 = self.make_layer(ch//8, ch//4)
 		self.layer3 = self.make_layer(ch//4, ch//2)
 		self.layer4 = nn.Sequential( nn.Conv2d(ch//2, ch, 3, 1, 1), nn.BatchNorm2d(ch), nn.LeakyReLU(0.1) )
-		self.linear = nn.Sequential(nn.Linear(int(ch*m_g*m_g), 1), nn.Sigmoid() )
+		self.linear = nn.Sequential( nn.Linear(int(ch*m_g*m_g), 1), nn.Sigmoid() )
 
 		self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
 
 	def make_layer(self, in_plane, out_plane):
-		return nn.Sequential( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
+		return nn.Sequential( nn.Conv2d(in_plane, out_plane, 3, 1, 1),
 			nn.BatchNorm2d(out_plane),
 			nn.LeakyReLU(0.1),
 			nn.Conv2d(out_plane, out_plane, 4, 2, 1),

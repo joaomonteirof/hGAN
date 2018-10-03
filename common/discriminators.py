@@ -87,7 +87,7 @@ class Discriminator_SN_noproj(nn.Module):
 		return torch.sigmoid(out.squeeze())
 
 class Discriminator_SN(nn.Module):
-	def __init__(self, optimizer, lr, betas):
+	def __init__(self, optimizer, optimizer_name, lr, betas):
 		super().__init__()
 
 		m_g = 4
@@ -102,7 +102,13 @@ class Discriminator_SN(nn.Module):
 		self.layer4 = SpectralNorm(nn.Conv2d(ch//2, ch, 3, 1, 1) )
 		self.linear = SpectralNorm(nn.Linear(ch*m_g*m_g, 1, 1) )
 
-		self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+		if optimizer_name == 'adam':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+		elif optimizer_name == 'amsgrad':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas, amsgrad = True)
+		elif optimizer_name == 'rmsprop':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, alpha = betas[0])
+
 
 	def make_layer(self, in_plane, out_plane):
 		return nn.Sequential( SpectralNorm( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),

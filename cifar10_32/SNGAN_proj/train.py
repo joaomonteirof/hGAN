@@ -68,9 +68,6 @@ if not os.path.isfile('../test_data_statistics.p'):
 
 generator = Generator_SN().train()
 disc_list = []
-for i in range(args.ndiscriminators):
-	disc = Discriminator_SN(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
-	disc_list.append(disc)
 
 for i in range(args.ndiscriminators):
 	if args.optimizer == 'adam':

@@ -56,7 +56,7 @@ class Discriminator(torch.nn.Module):
 
 
 class Discriminator_SN_noproj(nn.Module):
-	def __init__(self, optimizer, lr, betas):
+	def __init__(self, optimizer, optimizer_name, lr, betas):
 		super().__init__()
 
 		m_g = 4
@@ -69,6 +69,13 @@ class Discriminator_SN_noproj(nn.Module):
 		self.linear = SpectralNorm(nn.Linear(ch*m_g*m_g, 1) )
 
 		self.optimizer = optimizer(self.parameters(), lr=lr, betas=betas)
+
+		if optimizer_name == 'adam':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+		elif optimizer_name == 'amsgrad':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas, amsgrad = True)
+		elif optimizer_name == 'rmsprop':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, alpha = betas[0])
 
 	def make_layer(self, in_plane, out_plane):
 		return nn.Sequential( SpectralNorm( nn.Conv2d(in_plane, out_plane, 3, 1, 1) ),
@@ -167,7 +174,7 @@ class Discriminator_cifar32(nn.Module):
 		return torch.sigmoid(out.squeeze())
 
 class Discriminator_stacked_mnist(torch.nn.Module):
-	def __init__(self, optimizer, lr, betas, batch_norm=False):
+	def __init__(self, optimizer, optimizer_name, lr, betas, batch_norm=False):
 		super(Discriminator_stacked_mnist, self).__init__()
 
 		self.projection = nn.utils.weight_norm(nn.Conv2d(3, 3, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
@@ -212,7 +219,12 @@ class Discriminator_stacked_mnist(torch.nn.Module):
 		# Activation
 		self.output_layer.add_module('act', nn.Sigmoid())
 
-		self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, betas=betas)
+		if optimizer_name == 'adam':
+			self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, betas=betas)
+		elif optimizer_name == 'amsgrad':
+			self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, betas=betas, amsgrad = True)
+		elif optimizer_name == 'rmsprop':
+			self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, alpha = betas[0])
 
 	def forward(self, x):
 		p_x = self.projection(x)

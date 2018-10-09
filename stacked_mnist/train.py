@@ -27,7 +27,7 @@ parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='inp
 parser.add_argument('--epochs', type=int, default=50, metavar='N', help='number of epochs to train (default: 50)')
 parser.add_argument('--lr', type=float, default=0.0002, metavar='LR', help='learning rate (default: 0.0002)')
 parser.add_argument('--mgd-lr', type=float, default=0.01, metavar='LR', help='learning rate for mgd (default: 0.01)')
-parser.add_argument('--beta1', type=float, default=0.5, metavar='lambda', help='Adam beta param (default: 0.5)')
+parser.add_argument('--beta1', type=float, default=0.5, metavar='lambda', help='Adam beta param (default: 0.5), or alpha param for RMSprop')
 parser.add_argument('--beta2', type=float, default=0.999, metavar='lambda', help='Adam beta param (default: 0.999)')
 parser.add_argument('--ndiscriminators', type=int, default=8, help='Number of discriminators. Default=8')
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
@@ -42,6 +42,7 @@ parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='U
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 parser.add_argument('--sgd', action='store_true', default=False, help='enables SGD - *MGD only* ')
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
+parser.add_argument('--optimizer', choices=['adam', 'amsgrad', 'rmsprop'], default='adam', help='Select optimizer (Default is adam).')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -55,9 +56,16 @@ train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size,
 generator = Generator_stacked_mnist().train()
 
 disc_list = []
+
 for i in range(args.ndiscriminators):
-	disc = Discriminator_stacked_mnist(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+	if args.optimizer == 'adam':
+		disc = Discriminator_stacked_mnist(optim.Adam, args.optimizer, args.lr, (args.beta1, args.beta2)).train()
+	elif args.optimizer == 'amsgrad':	
+		disc = Discriminator_stacked_mnist(optim.Adam, args.optimizer, args.lr, (args.beta1, args.beta2), amsgrad = True).train()
+	elif args.optimizer == 'rmsprop':
+		disc = Discriminator_stacked_mnist(optim.RMSprop, args.optimizer, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
+
 
 if args.cuda:
 	generator = generator.cuda()
@@ -66,11 +74,15 @@ if args.cuda:
 	torch.backends.cudnn.benchmark=True
 
 if args.train_mode == 'mgd' and args.sgd:
-	optimizer = optim.SGD(generator.parameters(), lr=args.mgd_lr)
-else:
-	optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
+	optimizer_g = optim.SGD(generator.parameters(), lr=args.mgd_lr)
+elif args.optimizer == 'adam':
+	optimizer_g = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
+elif args.optimizer == 'amsgrad':
+	optimizer_g = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2), amsgrad = True)
+elif args.optimizer == 'rmsprop':
+	optimizer_g = optim.RMSprop(generator.parameters(), lr=args.lr, alpha = args.beta1)
 
-trainer = TrainLoop(generator, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
+trainer = TrainLoop(generator, disc_list, optimizer_g, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {}'.format(args.train_mode))

@@ -237,7 +237,7 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 	# Load inception model
 	inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
 	inception_model.eval()
-	up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
+	up = nn.functional.interpolate
 
 	def get_pred(N_s):
 
@@ -254,7 +254,7 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 		x = model.forward(z_)
 
 		if resize:
-			x = up(x)
+			x = up(x, size=(299, 299), mode='bilinear', align_corners=True).type(dtype)
 		x = inception_model(x)
 		return F.softmax(x, dim=1).data.cpu().numpy()
 

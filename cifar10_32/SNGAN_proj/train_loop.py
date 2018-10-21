@@ -8,6 +8,7 @@ from torch.autograd import Variable
 from tqdm import tqdm
 
 from common.MGD_utils import *
+from common.metrics import inception_score
 
 
 class TrainLoop(object):
@@ -34,7 +35,7 @@ class TrainLoop(object):
 		self.disc_list = disc_list
 		self.optimizer = optimizer
 		self.train_loader = train_loader
-		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': [], 'steepest_dir_norm': []}
+		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': [], 'IS': []}
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.alpha = alpha
@@ -77,14 +78,14 @@ class TrainLoop(object):
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
-			fid_c, st_dir_norm = self.valid()
+			fid_c, IS_ = self.valid()
 
 			self.history['gen_loss'].append(gen_loss / (t + 1))
 			self.history['disc_loss'].append(disc_loss / (t + 1))
 			self.history['FID-c'].append(fid_c)
-			self.history['steepest_dir_norm'].append(st_dir_norm)
+			self.history['IS'].append(IS_)
 
-			print('Best FID so far is: {}'.format(np.min(self.history['FID-c'])))
+			print('Best FID ans IS so far are: {}, {}'.format(np.min(self.history['FID-c']), np.max(self.history['IS'])))
 
 			self.cur_epoch += 1
 
@@ -283,6 +284,8 @@ class TrainLoop(object):
 
 		self.model.eval()
 
+		is_, _ = inception_score(model=self.model, N=10000, splits=10, cuda=self.cuda_mode, resize=True, SNGAN=True)
+
 		if self.cuda_mode:
 			z_ = self.fixed_noise.cuda()
 		else:
@@ -298,9 +301,8 @@ class TrainLoop(object):
 		C = np.cov(logits, rowvar=False)
 
 		fid = ((self.m - m) ** 2).sum() + np.matrix.trace(C + self.C - 2 * sla.sqrtm(np.matmul(C, self.C)))
-		steepest_dir_norm = self.compute_steepest_direction_norm()
 
-		return fid, steepest_dir_norm
+		return fid, is_
 
 	def checkpointing(self):
 

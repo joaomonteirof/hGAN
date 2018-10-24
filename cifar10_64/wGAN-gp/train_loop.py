@@ -58,7 +58,7 @@ class TrainLoop(object):
 			gen_loss = 0.0
 			disc_loss = 0.0
 			for t, batch in train_iter:
-				new_gen_loss, new_disc_loss = self.train_step(batch)
+				new_gen_loss, new_disc_loss = self.train_step(batch, t)
 				gen_loss += new_gen_loss
 				disc_loss += new_disc_loss
 				self.total_iters += 1
@@ -85,7 +85,7 @@ class TrainLoop(object):
 		print('Saving final model...')
 		self.checkpointing()
 
-	def train_step(self, batch):
+	def train_step(self, batch, curr_it):
 
 		## Train each D
 
@@ -102,29 +102,7 @@ class TrainLoop(object):
 		y_real_ = Variable(y_real_)
 		y_fake_ = Variable(y_fake_)
 
-		for i in range(self.its_disc):
-
-			z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
-
-			if self.cuda_mode:
-				z_ = z_.cuda()
-
-			z_ = Variable(z_)
-
-			out_d = self.model.forward(z_).detach()
-
-			loss_d = 0
-
-			self.disc.optimizer.zero_grad()
-			d_real = self.disc.forward(x).squeeze().mean()
-			d_fake = self.disc.forward(out_d).squeeze().mean()
-			loss_disc = d_fake - d_real + self.calc_gradient_penalty(x, out_d)
-			loss_disc.backward()
-			self.disc.optimizer.step()
-
-		## Train G
-
-		self.model.train()
+		#for i in range(self.its_disc):
 
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
 
@@ -132,13 +110,37 @@ class TrainLoop(object):
 			z_ = z_.cuda()
 
 		z_ = Variable(z_)
-		out = self.model.forward(z_)
 
-		loss_G = -self.disc.forward(out).mean()
+		out_d = self.model.forward(z_).detach()
 
-		self.optimizer.zero_grad()
-		loss_G.backward()
-		self.optimizer.step()
+		loss_d = 0
+
+		self.disc.optimizer.zero_grad()
+		d_real = self.disc.forward(x).squeeze().mean()
+		d_fake = self.disc.forward(out_d).squeeze().mean()
+		loss_disc = d_fake - d_real + self.calc_gradient_penalty(x, out_d)
+		loss_disc.backward()
+		self.disc.optimizer.step()
+
+		## Train G
+
+		if (curr_it % self.its_disc == 0):
+
+			self.model.train()
+
+			z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
+
+			if self.cuda_mode:
+				z_ = z_.cuda()
+
+			z_ = Variable(z_)
+			out = self.model.forward(z_)
+
+			loss_G = -self.disc.forward(out).mean()
+
+			self.optimizer.zero_grad()
+			loss_G.backward()
+			self.optimizer.step()
 
 		return loss_G.data[0], loss_disc.data[0]
 

@@ -123,7 +123,7 @@ class TrainLoop(object):
 		self.disc.optimizer.step()
 
 		## Train G
-
+		loss_G = 0
 		if (curr_it % self.its_disc == 0):
 
 			self.model.train()

@@ -268,7 +268,7 @@ class TrainLoop(object):
 
 	def valid(self):
 
-		cov, _ = compute_freqs(self.model, self.classifier, 256, args.n_samples, cuda=self.cuda_mode)
+		cov, _ = compute_freqs(self.model, self.classifier, 256, 26000, cuda=self.cuda_mode)
 
 		return cov
 

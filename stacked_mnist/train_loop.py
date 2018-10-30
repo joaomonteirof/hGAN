@@ -10,11 +10,11 @@ from torch.autograd import Variable
 from tqdm import tqdm
 
 from common.MGD_utils import *
-
+from common.metrics import compute_freqs
 
 class TrainLoop(object):
 
-	def __init__(self, generator, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
+	def __init__(self, generator, disc_list, optimizer, train_loader, classifier, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -35,7 +35,7 @@ class TrainLoop(object):
 		self.disc_list = disc_list
 		self.optimizer = optimizer
 		self.train_loader = train_loader
-		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'steepest_dir_norm': []}
+		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'coverage': []}
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.alpha = alpha
@@ -45,6 +45,7 @@ class TrainLoop(object):
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
+		self.classifier = classifier
 
 		if checkpoint_epoch is not None:
 			self.load_checkpoint(checkpoint_epoch)
@@ -67,11 +68,13 @@ class TrainLoop(object):
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
-			st_dir_norm = self.valid()
+			coverage = self.valid()
 
 			self.history['gen_loss'].append(gen_loss / (t + 1))
 			self.history['disc_loss'].append(disc_loss / (t + 1))
-			self.history['steepest_dir_norm'].append(st_dir_norm)
+			self.history['coverage'].append(coverage)
+
+			print('Best coverage so far is: {}'.format(np.min(self.history['coverage'])))
 
 			self.cur_epoch += 1
 
@@ -265,10 +268,9 @@ class TrainLoop(object):
 
 	def valid(self):
 
-		self.model.eval()
-		steepest_dir_norm = self.compute_steepest_direction_norm()
+		cov, _ = compute_freqs(self.model, self.classifier, 256, args.n_samples, cuda=self.cuda_mode)
 
-		return steepest_dir_norm
+		return cov
 
 	def checkpointing(self):
 

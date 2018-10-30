@@ -16,6 +16,7 @@ import torchvision.transforms as transforms
 from common.discriminators import *
 from common.utils import save_testdata_statistics
 from common.generators import Generator
+from common.models_fid import cnn
 
 from common.generators import Generator_stacked_mnist
 from common.discriminators import Discriminator_stacked_mnist
@@ -32,6 +33,7 @@ parser.add_argument('--beta2', type=float, default=0.999, metavar='lambda', help
 parser.add_argument('--ndiscriminators', type=int, default=8, help='Number of discriminators. Default=8')
 parser.add_argument('--checkpoint-epoch', type=int, default=None, metavar='N', help='epoch to load for checkpointing. If None, training starts from scratch')
 parser.add_argument('--checkpoint-path', type=str, default=None, metavar='Path', help='Path for checkpointing')
+parser.add_argument('--classifier-path', type=str, default=None, metavar='Path', help='Path to pretrained classifier on MNIST')
 parser.add_argument('--data-path', type=str, default='./train.hdf', metavar='Path', help='Path to hdf file containing stacked MNIST. Can be generated with gen_data.py')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
@@ -54,6 +56,9 @@ trainset = Loader(args.data_path)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)
 
 generator = Generator_stacked_mnist().train()
+classifier = cnn().eval()
+classifier_state = torch.load(args.classifier_path, map_location=lambda storage, loc: storage)
+classifier.load_state_dict(classifier_state['model_state'])
 
 disc_list = []
 
@@ -69,6 +74,7 @@ for i in range(args.ndiscriminators):
 
 if args.cuda:
 	generator = generator.cuda()
+	classifier = classifier.cuda()
 	for disc in disc_list:
 		disc = disc.cuda()
 	torch.backends.cudnn.benchmark=True
@@ -82,7 +88,7 @@ elif args.optimizer == 'amsgrad':
 elif args.optimizer == 'rmsprop':
 	optimizer_g = optim.RMSprop(generator.parameters(), lr=args.lr, alpha = args.beta1)
 
-trainer = TrainLoop(generator, disc_list, optimizer_g, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
+trainer = TrainLoop(generator, disc_list, optimizer_g, train_loader, classifier=classifier, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {}'.format(args.train_mode))

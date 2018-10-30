@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	parser.add_argument('--data-stat-path', type=str, default='./test_data_coverage.p', metavar='Path', help='Path to precomputed test data statistics fo KL div computation')
 	parser.add_argument('--out-file', type=str, default='./stacked_mnist', metavar='Path', help='files for dumping coverage data')
 	parser.add_argument('--n-tests', type=int, default=4, metavar='N', help='number of replications (default: 4)')
-	parser.add_argument('--n-samples', type=int, default=10000, metavar='N', help='number of samples for each  (default: 4)')
+	parser.add_argument('--n-samples', type=int, default=26000, metavar='N', help='number of samples for each  (default: 4)')
 	parser.add_argument('--batch-size', type=int, default=512, metavar='Path', help='batch size')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()

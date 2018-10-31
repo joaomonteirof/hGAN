@@ -36,8 +36,10 @@ parser.add_argument('--seed', type=int, default=1, metavar='S', help='random see
 parser.add_argument('--save-every', type=int, default=5, metavar='N', help='how many epochs to wait before logging training status. Default is 5')
 parser.add_argument('--train-mode', choices=['vanilla', 'hyper', 'gman', 'gman_grad', 'loss_delta', 'mgd'], default='vanilla', help='Salect train mode. Default is vanilla (simple average of Ds losses)')
 parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', help='factor for nadir-point update. Only used in hyper mode (default: 1.5)')
+parser.add_argument('--patience', type=int, default=5, help='Epochs to wait before reducing nadir slack. Only used if --adapt-slack=True. Default=5')
 parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
+parser.add_argument('--adapt-slack', action='store_true', default=False, help='Enables nadir slack schedule at train time')
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
 parser.add_argument('--optimizer', choices=['adam', 'amsgrad', 'rmsprop'], default='adam', help='Select optimizer (Default is adam).')
 args = parser.parse_args()
@@ -78,7 +80,6 @@ for i in range(args.ndiscriminators):
 		disc = Discriminator_SN(optim.RMSprop, args.optimizer, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
 
-
 if args.cuda:
 	generator = generator.cuda()
 	for disc in disc_list:
@@ -92,10 +93,12 @@ elif args.optimizer == 'amsgrad':
 elif args.optimizer == 'rmsprop':
 	optimizer_g = optim.RMSprop(generator.parameters(), lr=args.lr, alpha = args.beta1)
 
-trainer = TrainLoop(generator, fid_model, disc_list, optimizer_g, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
+trainer = TrainLoop(generator, fid_model, disc_list, optimizer_g, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, slack_adapt=args.adapt_slack, cuda=args.cuda, job_id=args.job_id)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {}'.format(args.train_mode))
 print('Number of discriminators is: {}'.format(len(disc_list)))
+print('Optimizer is: {}'.format(args.optimizer))
+print('Nadir adaptation is: {}'.format(args.adapt_slack))
 
-trainer.train(n_epochs=args.epochs, save_every=args.save_every)
+trainer.train(n_epochs=args.epochs, save_every=args.save_every, patience=args.patience)

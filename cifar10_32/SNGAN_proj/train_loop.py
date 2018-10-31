@@ -13,7 +13,7 @@ from common.metrics import inception_score
 
 class TrainLoop(object):
 
-	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
+	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, slack_adapt=False, cuda=True, job_id=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -45,6 +45,7 @@ class TrainLoop(object):
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
+		self.slack_adapt = slack_adapt
 
 		pfile = open('../test_data_statistics.p', 'rb')
 		statistics = pickle.load(pfile)
@@ -57,7 +58,9 @@ class TrainLoop(object):
 		else:
 			self.fixed_noise = torch.randn(1000, 128)
 
-	def train(self, n_epochs=1, save_every=1):
+	def train(self, n_epochs=1, save_every=1, patience=100):
+
+		epochs_without_improvement = 0
 
 		try:
 			best_fid = np.min(self.history['FID-c'])
@@ -92,8 +95,16 @@ class TrainLoop(object):
 			if self.history['FID-c'][-1] < best_fid:
 				best_fid = self.history['FID-c'][-1]
 				self.checkpointing()
+				epochs_without_improvement=0
 			elif self.cur_epoch % save_every == 0:
+				epochs_without_improvement+=1
 				self.checkpointing()
+			else:
+				epochs_without_improvement+=1
+
+			if epochs_without_improvement>=patience:
+				self.nadir_slack = np.max(self.nadir_slack*0.9, 1.01)
+				epochs_without_improvement=0
 
 		# saving final models
 		print('Saving final model...')

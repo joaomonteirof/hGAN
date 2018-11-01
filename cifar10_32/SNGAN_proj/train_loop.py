@@ -103,7 +103,7 @@ class TrainLoop(object):
 				epochs_without_improvement+=1
 
 			if epochs_without_improvement>=patience:
-				self.nadir_slack = np.maximum(self.nadir_slack*0.9, 1.01)
+				self.nadir_slack = np.maximum(self.nadir_slack*0.97, 1.05)
 				epochs_without_improvement=0
 				print('Nadir slack updated to {}'.format(self.nadir_slack))
 

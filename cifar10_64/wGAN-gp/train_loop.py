@@ -90,17 +90,6 @@ class TrainLoop(object):
 		## Train each D
 
 		x, _ = batch
-		y_real_ = torch.ones(x.size(0))
-		y_fake_ = torch.zeros(x.size(0))
-
-		if self.cuda_mode:
-			x = x.cuda()
-			y_real_ = y_real_.cuda()
-			y_fake_ = y_fake_.cuda()
-
-		x = Variable(x)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
 
 		#for i in range(self.its_disc):
 
@@ -142,7 +131,7 @@ class TrainLoop(object):
 			loss_G.backward()
 			self.optimizer.step()
 
-		return loss_G.data[0], loss_disc.data[0]
+		return loss_G.item(), loss_disc.item()
 
 	def valid(self):
 

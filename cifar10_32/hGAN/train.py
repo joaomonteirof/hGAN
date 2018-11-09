@@ -39,6 +39,7 @@ parser.add_argument('--nadir-slack', type=float, default=1.5, metavar='nadir', h
 parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='Used in GMAN and loss_del modes (default: 0.8)')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
+parser.add_argument('--optimizer', choices=['adam', 'amsgrad', 'rmsprop'], default='adam', help='Select optimizer (Default is adam).')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -68,7 +69,12 @@ if not os.path.isfile('../test_data_statistics.p'):
 generator = Generator_SN().train()
 disc_list = []
 for i in range(args.ndiscriminators):
-	disc = Discriminator_cifar32(optim.Adam, args.lr, (args.beta1, args.beta2)).train()
+	if args.optimizer == 'adam':
+		disc = Discriminator_cifar32(optim.Adam, args.optimizer, args.lr, (args.beta1, args.beta2)).train()
+	elif args.optimizer == 'amsgrad':	
+		disc = Discriminator_cifar32(optim.Adam, args.optimizer, args.lr, (args.beta1, args.beta2), amsgrad = True).train()
+	elif args.optimizer == 'rmsprop':
+		disc = Discriminator_cifar32(optim.RMSprop, args.optimizer, args.lr, (args.beta1, args.beta2)).train()
 	disc_list.append(disc)
 
 if args.cuda:
@@ -84,5 +90,6 @@ trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, na
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {}'.format(args.train_mode))
 print('Number of discriminators is: {}'.format(len(disc_list)))
+print('Optimizer is: {}'.format(args.optimizer))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

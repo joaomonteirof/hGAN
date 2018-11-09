@@ -183,7 +183,7 @@ class Discriminator_SN(nn.Module):
 		return torch.sigmoid(out.squeeze())
 
 class Discriminator_cifar32(nn.Module):
-	def __init__(self, optimizer, lr, betas):
+	def __init__(self, optimizer, optimizer_name, lr, betas):
 		super().__init__()
 
 		m_g = 4
@@ -195,18 +195,22 @@ class Discriminator_cifar32(nn.Module):
 		self.layer1 = self.make_layer(1, ch//8)
 		self.layer2 = self.make_layer(ch//8, ch//4)
 		self.layer3 = self.make_layer(ch//4, ch//2)
-		self.layer4 = nn.Sequential( nn.Conv2d(ch//2, ch, 3, 1, 1), nn.BatchNorm2d(ch), nn.LeakyReLU(0.1) )
-		self.linear = nn.Sequential( nn.Linear(ch*m_g*m_g, 1), nn.Sigmoid() )
+		self.layer4 = nn.Sequential( nn.Conv2d(ch//2, ch, 3, 1, 1), nn.LeakyReLU(0.2) )
+		self.linear = nn.Linear(ch*m_g*m_g, 1, 1)
 
-		self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+		if optimizer_name == 'adam':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas)
+		elif optimizer_name == 'amsgrad':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, betas=betas, amsgrad = True)
+		elif optimizer_name == 'rmsprop':
+			self.optimizer = optimizer(list(self.layer1.parameters()) + list(self.layer2.parameters()) + list(self.layer3.parameters()) + list(self.layer4.parameters()) + list(self.linear.parameters()), lr=lr, alpha = betas[0])
+
 
 	def make_layer(self, in_plane, out_plane):
 		return nn.Sequential( nn.Conv2d(in_plane, out_plane, 3, 1, 1),
-			nn.BatchNorm2d(out_plane),
-			nn.LeakyReLU(0.1),
+			nn.LeakyReLU(0.2),
 			nn.Conv2d(out_plane, out_plane, 4, 2, 1),
-			nn.BatchNorm2d(out_plane),
-			nn.LeakyReLU(0.1) )
+			nn.LeakyReLU(0.2) )
 
 	def forward(self, x):
 

@@ -19,8 +19,8 @@ class Generator(torch.nn.Module):
 			self.hidden_layer.add_module(deconv_name, deconv)
 
 			# Initializer
-			nn.init.normal(deconv.weight, mean=0.0, std=0.02)
-			nn.init.constant(deconv.bias, 0.0)
+			nn.init.normal_(deconv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(deconv.bias, 0.0)
 
 			# Batch normalization
 			bn_name = 'bn' + str(i + 1)
@@ -36,8 +36,8 @@ class Generator(torch.nn.Module):
 		out = torch.nn.ConvTranspose2d(num_filters[i], output_dim, kernel_size=4, stride=2, padding=1)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 		# Activation
 		self.output_layer.add_module('act', torch.nn.Tanh())
 
@@ -92,8 +92,8 @@ class Generator_stacked_mnist(torch.nn.Module):
 		self.linear.add_module('linear', linear)
 
 		# Initializer
-		nn.init.normal(linear.weight, mean=0.0, std=0.02)
-		nn.init.constant(linear.bias, 0.0)
+		nn.init.normal_(linear.weight, mean=0.0, std=0.02)
+		nn.init.constant_(linear.bias, 0.0)
 
 		# Batch normalization
 		bn_name = 'bn0'
@@ -119,8 +119,8 @@ class Generator_stacked_mnist(torch.nn.Module):
 			self.hidden_layer.add_module(deconv_name, deconv)
 
 			# Initializer
-			nn.init.normal(deconv.weight, mean=0.0, std=0.02)
-			nn.init.constant(deconv.bias, 0.0)
+			nn.init.normal_(deconv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(deconv.bias, 0.0)
 
 			# Batch normalization
 			bn_name = 'bn' + str(i + 1)
@@ -136,8 +136,8 @@ class Generator_stacked_mnist(torch.nn.Module):
 		out = torch.nn.ConvTranspose2d(64, 3, kernel_size=4, stride=2, padding=1)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 		# Activation
 		self.output_layer.add_module('act', torch.nn.Tanh())
 

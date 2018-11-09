@@ -125,7 +125,7 @@ class TrainLoop(object):
 		for disc in self.disc_list:
 			d_real = disc.forward(x).squeeze().mean()
 			d_fake = disc.forward(out_d).squeeze().mean()
-			loss_disc = d_fake - d_real + self.calc_gradient_penalty(x, out_d)
+			loss_disc = d_fake - d_real + self.calc_gradient_penalty(disc, x, out_d)
 			disc.optimizer.zero_grad()
 			loss_disc.backward()
 			disc.optimizer.step()
@@ -446,7 +446,7 @@ class TrainLoop(object):
 			norm += params_grads.norm(2).data[0] ** 2
 		return np.sqrt(norm)
 
-	def calc_gradient_penalty(self, real_data, fake_data):
+	def calc_gradient_penalty(self, disc, real_data, fake_data):
 		shape = [real_data.size(0)] + [1] * (real_data.dim() - 1)
 		alpha = torch.rand(shape)
 

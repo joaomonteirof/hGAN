@@ -141,7 +141,7 @@ class TrainLoop(object):
 		loss_G.backward()
 		self.optimizer.step()
 
-		return loss_G.data[0], loss_disc.data[0]
+		return loss_G.item(), loss_disc.item()
 
 	def valid(self):
 
@@ -207,7 +207,7 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm += params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).item()
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):

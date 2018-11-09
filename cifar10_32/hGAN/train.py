@@ -40,6 +40,7 @@ parser.add_argument('--alpha', type=float, default=0.8, metavar='alhpa', help='U
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 parser.add_argument('--job-id', type=str, default=None, help='Arbitrary id to be written on checkpoints')
 parser.add_argument('--optimizer', choices=['adam', 'amsgrad', 'rmsprop'], default='adam', help='Select optimizer (Default is adam).')
+parser.add_argument('--adapt-slack', action='store_true', default=False, help='Enables nadir slack schedule at train time')
 args = parser.parse_args()
 args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
 
@@ -85,11 +86,12 @@ if args.cuda:
 
 optimizer = optim.Adam(generator.parameters(), lr=args.lr, betas=(args.beta1, args.beta2))
 
-trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, cuda=args.cuda, job_id=args.job_id)
+trainer = TrainLoop(generator, fid_model, disc_list, optimizer, train_loader, nadir_slack=args.nadir_slack, alpha=args.alpha, train_mode=args.train_mode, checkpoint_path=args.checkpoint_path, checkpoint_epoch=args.checkpoint_epoch, slack_adapt=args.adapt_slack, cuda=args.cuda, job_id=args.job_id)
 
 print('Cuda Mode is: {}'.format(args.cuda))
 print('Train Mode is: {}'.format(args.train_mode))
 print('Number of discriminators is: {}'.format(len(disc_list)))
 print('Optimizer is: {}'.format(args.optimizer))
+print('Nadir adaptation is: {}'.format(args.adapt_slack))
 
 trainer.train(n_epochs=args.epochs, save_every=args.save_every)

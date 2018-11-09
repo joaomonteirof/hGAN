@@ -8,11 +8,12 @@ from torch.autograd import Variable
 from tqdm import tqdm
 
 from common.MGD_utils import *
+from common.metrics import inception_score
 
 
 class TrainLoop(object):
 
-	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
+	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, slack_adapt=False, cuda=True, job_id=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -34,7 +35,7 @@ class TrainLoop(object):
 		self.disc_list = disc_list
 		self.optimizer = optimizer
 		self.train_loader = train_loader
-		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': [], 'steepest_dir_norm': []}
+		self.history = {'gen_loss': [], 'gen_loss_minibatch': [], 'disc_loss': [], 'disc_loss_minibatch': [], 'FID-c': [], 'IS': []}
 		self.total_iters = 0
 		self.cur_epoch = 0
 		self.alpha = alpha
@@ -44,6 +45,7 @@ class TrainLoop(object):
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
+		self.slack_adapt = slack_adapt
 
 		pfile = open('../test_data_statistics.p', 'rb')
 		statistics = pickle.load(pfile)
@@ -56,7 +58,9 @@ class TrainLoop(object):
 		else:
 			self.fixed_noise = torch.randn(1000, 128)
 
-	def train(self, n_epochs=1, save_every=1):
+	def train(self, n_epochs=1, save_every=1, patience=100):
+
+		epochs_without_improvement = 0
 
 		try:
 			best_fid = np.min(self.history['FID-c'])
@@ -77,22 +81,31 @@ class TrainLoop(object):
 				self.history['gen_loss_minibatch'].append(new_gen_loss)
 				self.history['disc_loss_minibatch'].append(new_disc_loss)
 
-			fid_c, st_dir_norm = self.valid()
+			fid_c, IS_ = self.valid()
 
 			self.history['gen_loss'].append(gen_loss / (t + 1))
 			self.history['disc_loss'].append(disc_loss / (t + 1))
 			self.history['FID-c'].append(fid_c)
-			self.history['steepest_dir_norm'].append(st_dir_norm)
+			self.history['IS'].append(IS_)
 
-			print('Best FID so far is: {}'.format(np.min(self.history['FID-c'])))
+			print('Best FID ans IS so far are: {}, {}'.format(np.min(self.history['FID-c']), np.max(self.history['IS'])))
 
 			self.cur_epoch += 1
 
 			if self.history['FID-c'][-1] < best_fid:
 				best_fid = self.history['FID-c'][-1]
 				self.checkpointing()
+				epochs_without_improvement=0
 			elif self.cur_epoch % save_every == 0:
+				epochs_without_improvement+=1
 				self.checkpointing()
+			else:
+				epochs_without_improvement+=1
+
+			if epochs_without_improvement>=patience:
+				self.nadir_slack = np.minimum(self.nadir_slack*1.02, 2.5)
+				epochs_without_improvement=0
+				print('Nadir slack updated to {}'.format(self.nadir_slack))
 
 		# saving final models
 		print('Saving final model...')
@@ -130,7 +143,7 @@ class TrainLoop(object):
 			loss_disc.backward()
 			disc.optimizer.step()
 
-			loss_d += loss_disc.data[0]
+			loss_d += loss_disc.item()
 
 		loss_d /= len(self.disc_list)
 
@@ -156,7 +169,7 @@ class TrainLoop(object):
 
 			for disc in self.disc_list:
 				losses_list_var.append(F.binary_cross_entropy(disc.forward(out), y_real_))
-				losses_list_float.append(losses_list_var[-1].data[0])
+				losses_list_float.append(losses_list_var[-1].item())
 
 			self.update_nadir_point(losses_list_float)
 
@@ -176,7 +189,7 @@ class TrainLoop(object):
 
 			for disc in self.disc_list:
 				losses_list_var.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
-				losses_list_float.append(losses_list_var[-1].data[0])
+				losses_list_float.append(losses_list_var[-1].item())
 
 			losses = Variable(torch.FloatTensor(losses_list_float))
 			self.proba = torch.nn.functional.softmax(self.alpha * losses, dim=0).data.cpu().numpy()
@@ -277,11 +290,13 @@ class TrainLoop(object):
 
 			self.update_prob(outs_before, outs_after)
 
-		return loss_G.data[0], loss_d
+		return loss_G.item(), loss_d
 
 	def valid(self):
 
 		self.model.eval()
+
+		is_, _ = inception_score(model=self.model, N=10000, splits=10, cuda=self.cuda_mode, resize=True, SNGAN=True)
 
 		if self.cuda_mode:
 			z_ = self.fixed_noise.cuda()
@@ -298,9 +313,8 @@ class TrainLoop(object):
 		C = np.cov(logits, rowvar=False)
 
 		fid = ((self.m - m) ** 2).sum() + np.matrix.trace(C + self.C - 2 * sla.sqrtm(np.matmul(C, self.C)))
-		steepest_dir_norm = self.compute_steepest_direction_norm()
 
-		return fid, steepest_dir_norm
+		return fid, is_
 
 	def checkpointing(self):
 
@@ -351,7 +365,7 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm += params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).item()
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):
@@ -377,7 +391,7 @@ class TrainLoop(object):
 
 		for disc in self.disc_list:
 			d_out = disc.forward(out).squeeze()
-			disc_outs.append(F.binary_cross_entropy(d_out, y_real_).data[0])
+			disc_outs.append(F.binary_cross_entropy(d_out, y_real_).item())
 
 		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 
@@ -423,7 +437,7 @@ class TrainLoop(object):
 			except TypeError:
 				grad_sum = float(weight_grad[0]) * weight_grad[1]
 
-		return float(grad_sum.norm(2).data[0])
+		return float(grad_sum.norm(2).item())
 
 	def get_gen_grads(self, loss_):
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
@@ -442,5 +456,5 @@ class TrainLoop(object):
 		self.model.zero_grad()
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
 		for params_grads in grads:
-			norm += params_grads.norm(2).data[0] ** 2
+			norm += params_grads.norm(2).item() ** 2
 		return np.sqrt(norm)

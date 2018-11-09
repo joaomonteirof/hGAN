@@ -141,14 +141,13 @@ class TrainLoop(object):
 
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
 
-		loss_G = torch.zeros()
-
 		if self.cuda_mode:
 			z_ = z_.cuda()
-			loss_G = loss_G.cuda()
 
 		z_ = Variable(z_)
 		out = self.model.forward(z_)
+
+		loss_G = 0.0
 
 		if self.train_mode == 'hyper':
 
@@ -385,7 +384,7 @@ class TrainLoop(object):
 		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 
 	def update_nadir_point(self, losses_list):
-		self.nadir = np.maximum(float(np.max(losses_list) * self.nadir_slack + 1e-8), 0.0)
+		self.nadir = float(np.maximum(np.max(losses_list) * self.nadir_slack, 1e-6))
 
 	def update_prob(self, before, after):
 

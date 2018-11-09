@@ -141,13 +141,14 @@ class TrainLoop(object):
 
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
 
+		loss_G = torch.zeros()
+
 		if self.cuda_mode:
 			z_ = z_.cuda()
+			loss_G = loss_G.cuda()
 
 		z_ = Variable(z_)
 		out = self.model.forward(z_)
-
-		loss_G = 0
 
 		if self.train_mode == 'hyper':
 

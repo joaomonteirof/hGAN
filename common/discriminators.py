@@ -23,8 +23,8 @@ class Discriminator(torch.nn.Module):
 			self.hidden_layer.add_module(conv_name, conv)
 
 			# Initializer
-			nn.init.normal(conv.weight, mean=0.0, std=0.02)
-			nn.init.constant(conv.bias, 0.0)
+			nn.init.normal_(conv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(conv.bias, 0.0)
 
 			# Batch normalization
 			if i != 0 and batch_norm:
@@ -41,8 +41,8 @@ class Discriminator(torch.nn.Module):
 		out = nn.Conv2d(num_filters[i], output_dim, kernel_size=4, stride=1, padding=1)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 		# Activation
 		self.output_layer.add_module('act', nn.Sigmoid())
 
@@ -72,8 +72,8 @@ class Discriminator_noproj(torch.nn.Module):
 			self.hidden_layer.add_module(conv_name, conv)
 
 			# Initializer
-			nn.init.normal(conv.weight, mean=0.0, std=0.02)
-			nn.init.constant(conv.bias, 0.0)
+			nn.init.normal_(conv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(conv.bias, 0.0)
 
 			# Batch normalization
 			if i != 0 and batch_norm:
@@ -90,8 +90,8 @@ class Discriminator_noproj(torch.nn.Module):
 		out = nn.Conv2d(num_filters[i], output_dim, kernel_size=4, stride=1, padding=0)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 		# Activation
 		self.output_layer.add_module('act', nn.Sigmoid())
 
@@ -247,8 +247,8 @@ class Discriminator_stacked_mnist(torch.nn.Module):
 			self.hidden_layer.add_module(conv_name, conv)
 
 			# Initializer
-			nn.init.normal(conv.weight, mean=0.0, std=0.02)
-			nn.init.constant(conv.bias, 0.0)
+			nn.init.normal_(conv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(conv.bias, 0.0)
 
 			# Batch normalization
 			if i != 0 and batch_norm:
@@ -265,8 +265,8 @@ class Discriminator_stacked_mnist(torch.nn.Module):
 		out = nn.Conv2d(num_filters[i], 1, kernel_size=4, stride=1, padding=1)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 		# Activation
 		self.output_layer.add_module('act', nn.Sigmoid())
 
@@ -300,8 +300,8 @@ class Discriminator_wgan_noproj(torch.nn.Module):
 			self.hidden_layer.add_module(conv_name, conv)
 
 			# Initializer
-			nn.init.normal(conv.weight, mean=0.0, std=0.02)
-			nn.init.constant(conv.bias, 0.0)
+			nn.init.normal_(conv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(conv.bias, 0.0)
 
 			# Batch normalization
 			if i != 0 and batch_norm:
@@ -318,8 +318,8 @@ class Discriminator_wgan_noproj(torch.nn.Module):
 		out = nn.Conv2d(num_filters[i], output_dim, kernel_size=4, stride=1, padding=0)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 
 		self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, betas=betas)
 
@@ -348,8 +348,8 @@ class Discriminator_wgan(torch.nn.Module):
 			self.hidden_layer.add_module(conv_name, conv)
 
 			# Initializer
-			nn.init.normal(conv.weight, mean=0.0, std=0.02)
-			nn.init.constant(conv.bias, 0.0)
+			nn.init.normal_(conv.weight, mean=0.0, std=0.02)
+			nn.init.constant_(conv.bias, 0.0)
 
 			# Batch normalization
 			if i != 0 and batch_norm:
@@ -366,8 +366,8 @@ class Discriminator_wgan(torch.nn.Module):
 		out = nn.Conv2d(num_filters[i], output_dim, kernel_size=4, stride=1, padding=1)
 		self.output_layer.add_module('out', out)
 		# Initializer
-		nn.init.normal(out.weight, mean=0.0, std=0.02)
-		nn.init.constant(out.bias, 0.0)
+		nn.init.normal_(out.weight, mean=0.0, std=0.02)
+		nn.init.constant_(out.bias, 0.0)
 
 		self.optimizer = optimizer(list(self.hidden_layer.parameters()) + list(self.output_layer.parameters()), lr=lr, betas=betas)
 

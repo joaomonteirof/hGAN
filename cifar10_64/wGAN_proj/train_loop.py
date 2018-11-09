@@ -12,7 +12,7 @@ from common.MGD_utils import *
 
 class TrainLoop(object):
 
-	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
+	def __init__(self, generator, fid_model, disc_list, optimizer, train_loader, lambda_grad=args.lambda_grad, alpha=0.8, nadir_slack=1.1, train_mode='vanilla', checkpoint_path=None, checkpoint_epoch=None, cuda=True, job_id=None):
 		if checkpoint_path is None:
 			# Save to current directory
 			self.checkpoint_path = os.getcwd()
@@ -40,6 +40,7 @@ class TrainLoop(object):
 		self.alpha = alpha
 		self.nadir_slack = nadir_slack
 		self.train_mode = train_mode
+		self.lambda_grad = lambda_grad
 		self.constraints = make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba)

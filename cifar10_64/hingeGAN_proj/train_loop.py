@@ -115,8 +115,6 @@ class TrainLoop(object):
 
 		x = Variable(x)
 		z_ = Variable(z_)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
 
 		out_d = self.model.forward(z_).detach()
 
@@ -382,7 +380,7 @@ class TrainLoop(object):
 		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 
 	def update_nadir_point(self, losses_list):
-		self.nadir = float(np.max(losses_list) * self.nadir_slack + 1e-8)
+		self.nadir = float(np.maximum(np.max(losses_list) * self.nadir_slack, 1e-6))
 
 	def update_prob(self, before, after):
 

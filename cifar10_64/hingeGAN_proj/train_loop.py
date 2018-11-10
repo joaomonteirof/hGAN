@@ -247,8 +247,8 @@ class TrainLoop(object):
 			losses_list = []
 
 			for i, disc in enumerate(self.disc_list):
-				disc_out = disc.forward(out_probs).squeeze()
-				losses_list.append(float(self.proba[i]) * F.mse_loss(disc_out, y_real_))
+				disc_out = disc.forward(out_probs)
+				losses_list.append(float(self.proba[i]) * -disc_out.mean())
 				outs_before.append(disc_out.data.mean())
 
 			for loss_ in losses_list:
@@ -256,7 +256,7 @@ class TrainLoop(object):
 
 		elif self.train_mode == 'vanilla':
 			for disc in self.disc_list:
-				loss_G += F.mse_loss(disc.forward(out).squeeze(), y_real_)
+				loss_G += -disc.forward(out).mean()
 			self.proba = np.ones(len(self.disc_list)) * 1 / len(self.disc_list)
 
 		self.optimizer.zero_grad()

@@ -105,13 +105,11 @@ class TrainLoop(object):
 		x, _ = batch
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
 		margin = torch.ones(x.size(0))
-		zeros = torch.zeros(x.size(0))
 
 		if self.cuda_mode:
 			x = x.cuda()
 			z_ = z_.cuda()
 			margin = margin.cuda()
-			zeros = zeros.cuda()
 
 		x = Variable(x)
 		z_ = Variable(z_)

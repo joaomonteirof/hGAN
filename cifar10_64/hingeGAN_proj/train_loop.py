@@ -104,19 +104,17 @@ class TrainLoop(object):
 
 		x, _ = batch
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
-		y_real_ = torch.ones(x.size(0))
-		y_fake_ = torch.zeros(x.size(0))
+		margin = torch.ones(x.size(0))
+		zeros = torch.zeros(x.size(0))
 
 		if self.cuda_mode:
 			x = x.cuda()
 			z_ = z_.cuda()
-			y_real_ = y_real_.cuda()
-			y_fake_ = y_fake_.cuda()
+			margin = margin.cuda()
+			zeros = zeros.cuda()
 
 		x = Variable(x)
 		z_ = Variable(z_)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
 
 		out_d = self.model.forward(z_).detach()
 
@@ -125,7 +123,7 @@ class TrainLoop(object):
 		for disc in self.disc_list:
 			d_real = disc.forward(x).squeeze()
 			d_fake = disc.forward(out_d).squeeze()
-			loss_disc = (F.mse_loss(d_real, y_real_) + F.mse_loss(d_fake, y_fake_))/2.
+			loss_disc = torch.min(zeros, d_real-margin).mean() + torch.min(zeros, -d_fake-margin).mean()
 			disc.optimizer.zero_grad()
 			loss_disc.backward()
 			disc.optimizer.step()
@@ -155,7 +153,7 @@ class TrainLoop(object):
 			prob_list = []
 
 			for disc in self.disc_list:
-				losses_list_var.append(F.mse_loss(disc.forward(out).squeeze(), y_real_))
+				losses_list_var.append(-disc.forward(out).mean())
 				losses_list_float.append(losses_list_var[-1].item())
 
 			self.update_nadir_point(losses_list_float)
@@ -175,7 +173,7 @@ class TrainLoop(object):
 			losses_list_var = []
 
 			for disc in self.disc_list:
-				losses_list_var.append(F.mse_loss(disc.forward(out).squeeze(), y_real_))
+				losses_list_var.append(-disc.forward(out).mean())
 				losses_list_float.append(losses_list_var[-1].item())
 
 			losses = Variable(torch.FloatTensor(losses_list_float))
@@ -192,7 +190,7 @@ class TrainLoop(object):
 			losses_list = []
 
 			for disc in self.disc_list:
-				loss = F.mse_loss(disc.forward(self.model.forward(z_)).squeeze(), y_real_)
+				loss = -disc.forward(self.model.forward(z_)).mean()
 				grads_list.append(self.get_gen_grads_norm(loss))
 
 			grads = Variable(torch.FloatTensor(grads_list))
@@ -214,7 +212,7 @@ class TrainLoop(object):
 			losses_list = []
 
 			for disc in self.disc_list:
-				loss = F.mse_loss(disc.forward(self.model.forward(z_)).squeeze(), y_real_)
+				loss = -disc.forward(self.model.forward(z_)).mean()
 				grads_list.append(self.get_gen_grads(loss).cpu().data.numpy())
 
 			grads_list = np.asarray(grads_list).T
@@ -249,8 +247,8 @@ class TrainLoop(object):
 			losses_list = []
 
 			for i, disc in enumerate(self.disc_list):
-				disc_out = disc.forward(out_probs).squeeze()
-				losses_list.append(float(self.proba[i]) * F.mse_loss(disc_out, y_real_))
+				disc_out = disc.forward(out_probs)
+				losses_list.append(float(self.proba[i]) * -disc_out.mean())
 				outs_before.append(disc_out.data.mean())
 
 			for loss_ in losses_list:
@@ -258,7 +256,7 @@ class TrainLoop(object):
 
 		elif self.train_mode == 'vanilla':
 			for disc in self.disc_list:
-				loss_G += F.mse_loss(disc.forward(out).squeeze(), y_real_)
+				loss_G += -disc.forward(out).mean()
 			self.proba = np.ones(len(self.disc_list)) * 1 / len(self.disc_list)
 
 		self.optimizer.zero_grad()
@@ -382,7 +380,7 @@ class TrainLoop(object):
 		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 
 	def update_nadir_point(self, losses_list):
-		self.nadir = float(np.max(losses_list) * self.nadir_slack + 1e-8)
+		self.nadir = float(np.maximum(np.max(losses_list) * self.nadir_slack, 1e-6))
 
 	def update_prob(self, before, after):
 

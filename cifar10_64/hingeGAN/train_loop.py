@@ -90,19 +90,17 @@ class TrainLoop(object):
 
 		x, _ = batch
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
-		y_real_ = torch.ones(x.size(0))
-		y_fake_ = torch.zeros(x.size(0))
+		margin = torch.ones(x.size(0))
+		zeros = torch.zeros(x.size(0))
 
 		if self.cuda_mode:
 			x = x.cuda()
 			z_ = z_.cuda()
-			y_real_ = y_real_.cuda()
-			y_fake_ = y_fake_.cuda()
+			margin = margin.cuda()
+			zeros = zeros.cuda()
 
 		x = Variable(x)
 		z_ = Variable(z_)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
 
 		out_d = self.model.forward(z_).detach()
 
@@ -110,7 +108,7 @@ class TrainLoop(object):
 
 		d_real = self.disc.forward(x).squeeze()
 		d_fake = self.disc.forward(out_d).squeeze()
-		loss_disc = (F.mse_loss(d_real, y_real_) + F.mse_loss(d_fake, y_fake_))/2.
+		loss_disc = torch.min(zeros, d_real-margin).mean() + torch.min(zeros, -d_fake-margin).mean()
 		self.disc.optimizer.zero_grad()
 		loss_disc.backward()
 		self.disc.optimizer.step()
@@ -127,7 +125,7 @@ class TrainLoop(object):
 		z_ = Variable(z_)
 		out = self.model.forward(z_)
 
-		loss_G = F.mse_loss(self.disc.forward(out).squeeze(), y_real_)
+		loss_G = -self.disc.forward(out).mean()
 
 		self.optimizer.zero_grad()
 		loss_G.backward()

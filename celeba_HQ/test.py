@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
-	model = Generator(100, [1024, 512, 256, 128], 3)
+	model = Generator(100, [2048, 1024, 512, 256, 128], 3)
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])
@@ -60,4 +60,4 @@ if __name__ == '__main__':
 		plot_learningcurves(history, 'disc_loss_minibatch')
 
 	test_model(model=model, n_tests=args.n_tests, cuda_mode=args.cuda)
-	save_samples(prefix='CELEBA', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda, fig_size=(8, 8))
+	save_samples(prefix='CELEBA', generator=model, cp_name=args.cp_path.split('/')[-1].split('.')[0], cuda_mode=args.cuda, im_size = 128, fig_size=(2, 2))

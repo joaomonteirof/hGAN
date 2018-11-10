@@ -102,7 +102,7 @@ class TrainLoop(object):
 			else:
 				epochs_without_improvement+=1
 
-			if epochs_without_improvement>=patience:
+			if self.slack_adapt and epochs_without_improvement>=patience:
 				self.nadir_slack = np.minimum(self.nadir_slack*1.02, 2.5)
 				epochs_without_improvement=0
 				print('Nadir slack updated to {}'.format(self.nadir_slack))

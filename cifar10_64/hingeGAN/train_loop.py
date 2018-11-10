@@ -91,13 +91,11 @@ class TrainLoop(object):
 		x, _ = batch
 		z_ = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
 		margin = torch.ones(x.size(0))
-		zeros = torch.zeros(x.size(0))
 
 		if self.cuda_mode:
 			x = x.cuda()
 			z_ = z_.cuda()
 			margin = margin.cuda()
-			zeros = zeros.cuda()
 
 		x = Variable(x)
 		z_ = Variable(z_)
@@ -108,7 +106,7 @@ class TrainLoop(object):
 
 		d_real = self.disc.forward(x).squeeze()
 		d_fake = self.disc.forward(out_d).squeeze()
-		loss_disc = torch.min(zeros, d_real-margin).mean() + torch.min(zeros, -d_fake-margin).mean()
+		loss_disc = torch.nn.ReLU()(margin-d_real).mean() + torch.nn.ReLU()(margin+d_fake).mean()
 		self.disc.optimizer.zero_grad()
 		loss_disc.backward()
 		self.disc.optimizer.step()

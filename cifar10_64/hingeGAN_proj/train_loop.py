@@ -123,7 +123,7 @@ class TrainLoop(object):
 		for disc in self.disc_list:
 			d_real = disc.forward(x).squeeze()
 			d_fake = disc.forward(out_d).squeeze()
-			loss_disc = torch.min(zeros, d_real-margin).mean() + torch.min(zeros, -d_fake-margin).mean()
+			loss_disc = torch.nn.ReLU()(margin-d_real).mean() + torch.nn.ReLU()(margin+d_fake).mean()
 			disc.optimizer.zero_grad()
 			loss_disc.backward()
 			disc.optimizer.step()

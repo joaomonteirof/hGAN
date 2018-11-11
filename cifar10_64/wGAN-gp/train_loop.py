@@ -97,8 +97,7 @@ class TrainLoop(object):
 
 		if self.cuda_mode:
 			z_ = z_.cuda()
-
-		z_ = Variable(z_)
+			x = x.cuda()
 
 		out_d = self.model.forward(z_).detach()
 

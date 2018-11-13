@@ -57,7 +57,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 	to_tensor = transforms.ToTensor()
 
 	if SNGAN:
-		noise = torch.randn(n_tests, 128)
+		noise = torch.randn(n_tests, 128).view(-1, 128, 1, 1)
 	else:
 		noise = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 
@@ -160,7 +160,7 @@ def test_model(model, n_tests, cuda_mode, enhance=True, SNGAN=False):
 	to_tensor = transforms.ToTensor()
 
 	if SNGAN:
-		z_ = torch.randn(n_tests, 128)
+		z_ = torch.randn(n_tests, 128).view(-1, 128, 1, 1)
 	else:
 		z_ = torch.randn(n_tests, 100).view(-1, 100, 1, 1)
 

@@ -53,12 +53,29 @@ if __name__ == '__main__':
 	elif args.model_cifar == 'inception':
 		fid_model = inception_v3(pretrained=True, transform_input=False).eval()
 
+	print(args.cuda)
+
 	if args.cuda:
 		fid_model = fid_model.cuda()
 
 	mod_state = torch.load(args.fid_model_path, map_location = lambda storage, loc: storage)
 	fid_model.load_state_dict(mod_state['model_state'])
 
+	if args.cuda:
+		fid_model = fid_model.cuda()
+
+	transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+	testset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
+	test_loader = torch.utils.data.DataLoader(testset, batch_size=1000, shuffle=False, num_workers=args.workers)
+	save_testdata_statistics(fid_model, test_loader, cuda_mode=args.cuda)
+
+	pfile = open('../train_data_statistics_vgg.p', 'rb')
+	statistics = pickle.load(pfile)
+	pfile.close()
+
+	m, C = statistics['m'], statistics['C']
+
+	'''
 	models_dict = {'hyper8': 'HV-8', 'hyper16': 'HV-16', 'hyper24': 'HV-24', 'vanilla8': 'AVG-8', 'vanilla16': 'AVG-16', 'vanilla24': 'AVG-24', 'gman8': 'GMAN-8', 'gman16': 'GMAN-16', 'gman24': 'GMAN-24', 'DCGAN': 'DCGAN', 'WGANGP': 'WGAN-GP'}
 
 	fid_dict = {}
@@ -69,6 +86,7 @@ if __name__ == '__main__':
 
 	m, C = statistics['m'], statistics['C']
 
+	
 	if args.cp_folder is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 	
@@ -108,13 +126,15 @@ if __name__ == '__main__':
 	for i in range(args.ntests):
 		fid_random.append(compute_fid(random_generator, fid_model, args.batch_size, args.nsamples, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False))
 
-	
+	'''
 	# Real data
 	transform = transforms.Compose([transforms.Resize((64, 64), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-	trainset = datasets.CIFAR10(root=args.data_path, train=True, download=True, transform=transform)
+	trainset = datasets.CIFAR10(root=args.data_path, train=False, download=True, transform=transform)
 	train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers)
 	fid_real = compute_fid_real_data(train_loader, fid_model, m, C, args.cuda, inception = True if args.model_cifar == 'inception' else False, mnist = False)
-	
+
+	print(fid_real)
+	'''
 	df = pd.DataFrame(fid_dict)
 	df.head()
 	order_plot = ['DCGAN', 'WGAN-GP', 'AVG-8', 'GMAN-8', 'HV-8', 'AVG-16', 'GMAN-16', 'HV-16', 'AVG-24', 'GMAN-24', 'HV-24']
@@ -137,4 +157,5 @@ if __name__ == '__main__':
 	pfile = open(args.out_file, "wb")
 	pickle.dump(fid_dict, pfile)
 	pfile.close()
+	'''
 	

@@ -17,7 +17,7 @@ import torch.optim as optim
 
 generator = Generator_res().train()
 
-disc = Discriminator_res(optim.Adam, 0.1, (0.1, 0.1)).train()
+disc = Discriminator_res(optim.RMSprop, 0.1, 0.1).train()
 
 z = torch.rand(2, 128)
 

@@ -74,7 +74,7 @@ class TrainLoop(object):
 		## Train each D
 
 		x, _ = batch
-		z_ = torch.randn(x.size(0), 128).view(-1, 128, 1, 1)
+		z_ = torch.randn(x.size(0), 128)
 		y_real_ = torch.ones(x.size(0))
 		y_fake_ = torch.zeros(x.size(0))
 
@@ -104,7 +104,7 @@ class TrainLoop(object):
 
 		self.model.train()
 
-		z_ = torch.randn(x.size(0), 128).view(-1, 128, 1, 1)
+		z_ = torch.randn(x.size(0), 128)
 
 		if self.cuda_mode:
 			z_ = z_.cuda()
@@ -202,7 +202,7 @@ class TrainLoop(object):
 
 		elif self.train_mode == 'loss_delta':
 
-			z_probs = torch.randn(x.size(0), 100).view(-1, 100, 1, 1)
+			z_probs = torch.randn(x.size(0), 128)
 
 			if self.cuda_mode:
 				z_probs = z_probs.cuda()

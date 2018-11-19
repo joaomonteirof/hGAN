@@ -17,7 +17,7 @@ import torchvision.transforms as transforms
 from train_loop import TrainLoop
 
 # Training settings
-from common.generators import Generator, Generator
+from common.generators import Generator, Generator_res
 
 parser = argparse.ArgumentParser(description='Hyper volume training of GANs')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')

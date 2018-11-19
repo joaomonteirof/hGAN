@@ -92,12 +92,18 @@ class TrainLoop(object):
 			d_real = disc.forward(x).squeeze()
 			d_fake = disc.forward(out_d).squeeze()
 			loss_disc = F.binary_cross_entropy(d_real, y_real_) + F.binary_cross_entropy(d_fake, y_fake_)
+
 			if self.cuda_mode:
 				disc.module.optimizer.zero_grad()
 			else:
 				disc.optimizer.zero_grad()
+
 			loss_disc.backward()
-			disc.optimizer.step()
+
+			if self.cuda_mode:
+				disc.module.optimizer.step()
+			else:
+				disc.optimizer.step()
 
 			loss_d += loss_disc.item()
 

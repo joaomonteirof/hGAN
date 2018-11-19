@@ -728,7 +728,7 @@ class Discriminator_mnist_wgan(nn.Module):
 		return out
 
 class Discriminator_res(nn.Module):
-	def __init__(self, optimizer, lr, betas, z_dim=128, size=256, nfilter=64):
+	def __init__(self, optimizer, lr, alpha, z_dim=128, size=256, nfilter=64):
 		super().__init__()
 
 		self.projection = nn.utils.weight_norm(nn.Conv2d(3, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
@@ -760,7 +760,7 @@ class Discriminator_res(nn.Module):
 
 		self.fc = nn.Linear(16*nf*s0*s0, 1)
 
-		self.optimizer = optimizer(list(self.conv_img.parameters()) + list(self.resnet_0_0.parameters()) + list(self.resnet_0_1.parameters()) + list(self.resnet_1_0.parameters()) + list(self.resnet_1_1.parameters()) + list(self.resnet_2_0.parameters()) + list(self.resnet_2_1.parameters()) + list(self.resnet_3_0.parameters()) + list(self.resnet_3_1.parameters()) + list(self.resnet_4_0.parameters()) + list(self.resnet_4_1.parameters()) + list(self.resnet_5_0.parameters()) + list(self.resnet_5_1.parameters()) + list(self.fc.parameters()), lr=lr, betas=betas)
+		self.optimizer = optimizer(list(self.conv_img.parameters()) + list(self.resnet_0_0.parameters()) + list(self.resnet_0_1.parameters()) + list(self.resnet_1_0.parameters()) + list(self.resnet_1_1.parameters()) + list(self.resnet_2_0.parameters()) + list(self.resnet_2_1.parameters()) + list(self.resnet_3_0.parameters()) + list(self.resnet_3_1.parameters()) + list(self.resnet_4_0.parameters()) + list(self.resnet_4_1.parameters()) + list(self.resnet_5_0.parameters()) + list(self.resnet_5_1.parameters()) + list(self.fc.parameters()), lr=lr, alpha=alpha)
 
 
 	def forward(self, x):

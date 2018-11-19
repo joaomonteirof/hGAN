@@ -52,7 +52,7 @@ train_loader = torch.utils.data.DataLoader(cats_data, batch_size=args.batch_size
 #generator = Generator(128, [1024, 512, 256, 128, 64, 32], 3).train()
 
 if args.cuda:
-	generator = ntorch.nn.DataParallel(Generator_res().train(), device_ids=list(range(args.ngpus)))
+	generator = torch.nn.DataParallel(Generator_res().train(), device_ids=list(range(args.ngpus)))
 else:
 	generator = Generator_res().train()
 
@@ -60,7 +60,7 @@ disc_list = []
 for i in range(args.ndiscriminators):
 	#disc = Discriminator(3, [32, 64, 128, 256, 512, 1024], 1, optim.Adam, args.lr, (args.beta1, args.beta2)).train()
 	if args.cuda:
-		disc = torch.utils.data.DataLoader(Discriminator_res(optim.RMSprop, args.lr, args.beta2).train(), device_ids=list(range(args.ngpus)))
+		disc = torch.nn.DataParallel(Discriminator_res(optim.RMSprop, args.lr, args.beta2).train(), device_ids=list(range(args.ngpus)))
 	else:
 		disc = Discriminator_res(optim.RMSprop, args.lr, args.beta2).train()
 	disc_list.append(disc)

@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from common.utils import ResnetBlock
 from common.spectralnorm import SpectralNorm
 
 # Discriminator model
@@ -724,3 +726,74 @@ class Discriminator_mnist_wgan(nn.Module):
 	def forward(self, x):
 		out = self.hidden_layer(x.view(x.size(0), 784))
 		return out
+
+class Discriminator_res(nn.Module):
+	def __init__(self, optimizer, lr, betas, z_dim=128, size=256, nfilter=64):
+		super().__init__()
+
+		self.projection = nn.utils.weight_norm(nn.Conv2d(3, 1, kernel_size=8, stride=2, padding=3, bias=False), name="weight")
+		self.projection.weight_g.data.fill_(1)
+
+		s0 = self.s0 = size // 32
+		nf = self.nf = nfilter
+
+		# Submodules
+		self.conv_img = nn.Conv2d(1, 1*nf, 3, padding=1)
+
+		self.resnet_0_0 = ResnetBlock(1*nf, 1*nf)
+		self.resnet_0_1 = ResnetBlock(1*nf, 2*nf)
+
+		self.resnet_1_0 = ResnetBlock(2*nf, 2*nf)
+		self.resnet_1_1 = ResnetBlock(2*nf, 4*nf)
+
+		self.resnet_2_0 = ResnetBlock(4*nf, 4*nf)
+		self.resnet_2_1 = ResnetBlock(4*nf, 8*nf)
+
+		self.resnet_3_0 = ResnetBlock(8*nf, 8*nf)
+		self.resnet_3_1 = ResnetBlock(8*nf, 16*nf)
+
+		self.resnet_4_0 = ResnetBlock(16*nf, 16*nf)
+		self.resnet_4_1 = ResnetBlock(16*nf, 16*nf)
+
+		self.resnet_5_0 = ResnetBlock(16*nf, 16*nf)
+		self.resnet_5_1 = ResnetBlock(16*nf, 16*nf)
+
+		self.fc = nn.Linear(16*nf*s0*s0, 1)
+
+		self.optimizer = optimizer(list(self.conv_img.parameters()) + list(self.resnet_0_0.parameters()) + list(self.resnet_0_1.parameters()) + list(self.resnet_1_0.parameters()) + list(self.resnet_1_1.parameters()) + list(self.resnet_2_0.parameters()) + list(self.resnet_2_1.parameters()) + list(self.resnet_3_0.parameters()) + list(self.resnet_3_1.parameters()) + list(self.resnet_4_0.parameters()) + list(self.resnet_4_1.parameters()) + list(self.resnet_5_0.parameters()) + list(self.resnet_5_1.parameters()) + list(self.fc.parameters()), lr=lr, betas=betas)
+
+
+	def forward(self, x):
+		batch_size = x.size(0)
+
+		p_x = self.projection(x)
+
+		out = self.conv_img(p_x)
+
+		out = self.resnet_0_0(out)
+		out = self.resnet_0_1(out)
+
+		out = F.avg_pool2d(out, 3, stride=2, padding=1)
+		out = self.resnet_1_0(out)
+		out = self.resnet_1_1(out)
+
+		out = F.avg_pool2d(out, 3, stride=2, padding=1)
+		out = self.resnet_2_0(out)
+		out = self.resnet_2_1(out)
+
+		out = F.avg_pool2d(out, 3, stride=2, padding=1)
+		out = self.resnet_3_0(out)
+		out = self.resnet_3_1(out)
+
+		out = F.avg_pool2d(out, 3, stride=2, padding=1)
+		out = self.resnet_4_0(out)
+		out = self.resnet_4_1(out)
+
+		#out = F.avg_pool2d(out, 3, stride=2, padding=1)
+		out = self.resnet_5_0(out)
+		out = self.resnet_5_1(out)
+
+		out = out.view(batch_size, 16*self.nf*self.s0*self.s0)
+		out = self.fc(F.leaky_relu(out, 2e-1))
+
+		return nn.Sigmoid()(out)

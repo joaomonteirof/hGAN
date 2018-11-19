@@ -6,6 +6,8 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.utils.data
 from scipy.stats import chi2
 import scipy.linalg as sla
@@ -338,3 +340,38 @@ def metrics_toy_data(x, centers, cov, toy_dataset, slack = 3.0):
 	fd_all = fd / len(np.unique(closest_center))
 
 	return fd_all, quality_samples, quality_modes
+
+class ResnetBlock(nn.Module):
+	def __init__(self, fin, fout, fhidden=None, is_bias=True):
+		super().__init__()
+		# Attributes
+		self.is_bias = is_bias
+		self.learned_shortcut = (fin != fout)
+		self.fin = fin
+		self.fout = fout
+		if fhidden is None:
+			self.fhidden = min(fin, fout)
+		else:
+			self.fhidden = fhidden
+
+		# Submodules
+		self.conv_0 = nn.Conv2d(self.fin, self.fhidden, 3, stride=1, padding=1)
+		self.conv_1 = nn.Conv2d(self.fhidden, self.fout, 3, stride=1, padding=1, bias=is_bias)
+		if self.learned_shortcut:
+			self.conv_s = nn.Conv2d(self.fin, self.fout, 1, stride=1, padding=0, bias=False)
+
+
+	def forward(self, x):
+		x_s = self._shortcut(x)
+		dx = self.conv_0(F.leaky_relu(x, 2e-1))
+		dx = self.conv_1(F.leaky_relu(dx, 2e-1))
+		out = x_s + 0.1*dx
+
+		return out
+
+	def _shortcut(self, x):
+		if self.learned_shortcut:
+			x_s = self.conv_s(x)
+		else:
+			x_s = x
+		return x_s

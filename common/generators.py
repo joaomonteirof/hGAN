@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-
+import torch.nn.functional as F
+from common.utils import ResnetBlock
 
 class Generator(torch.nn.Module):
 	def __init__(self, input_dim, num_filters, output_dim):
@@ -148,6 +149,71 @@ class Generator_stacked_mnist(torch.nn.Module):
 
 		h = self.hidden_layer(x.view(x.size(0), 512, 2, 2))
 		out = self.output_layer(h)
+		return out
+
+class Generator_res(nn.Module):
+	def __init__(self, z_dim=128, size=256, nfilter=64):
+		super().__init__()
+		s0 = self.s0 = size // 32
+		nf = self.nf = nfilter
+		self.z_dim = z_dim
+
+		# Submodules
+		self.fc = nn.Linear(z_dim, 16*nf*s0*s0)
+
+		self.resnet_0_0 = ResnetBlock(16*nf, 16*nf)
+		self.resnet_0_1 = ResnetBlock(16*nf, 16*nf)
+
+		self.resnet_1_0 = ResnetBlock(16*nf, 16*nf)
+		self.resnet_1_1 = ResnetBlock(16*nf, 16*nf)
+
+		self.resnet_2_0 = ResnetBlock(16*nf, 8*nf)
+		self.resnet_2_1 = ResnetBlock(8*nf, 8*nf)
+
+		self.resnet_3_0 = ResnetBlock(8*nf, 4*nf)
+		self.resnet_3_1 = ResnetBlock(4*nf, 4*nf)
+
+		self.resnet_4_0 = ResnetBlock(4*nf, 2*nf)
+		self.resnet_4_1 = ResnetBlock(2*nf, 2*nf)
+
+		self.resnet_5_0 = ResnetBlock(2*nf, 1*nf)
+		self.resnet_5_1 = ResnetBlock(1*nf, 1*nf)
+
+		self.conv_img = nn.Conv2d(nf, 3, 3, padding=1)
+
+	def forward(self, z):
+
+		batch_size = z.size(0)
+
+		out = self.fc(z)
+		out = out.view(batch_size, 16*self.nf, self.s0, self.s0)
+
+		out = self.resnet_0_0(out)
+		out = self.resnet_0_1(out)
+
+		out = F.interpolate(out, scale_factor=2)
+		out = self.resnet_1_0(out)
+		out = self.resnet_1_1(out)
+
+		out = F.interpolate(out, scale_factor=2)
+		out = self.resnet_2_0(out)
+		out = self.resnet_2_1(out)
+
+		out = F.interpolate(out, scale_factor=2)
+		out = self.resnet_3_0(out)
+		out = self.resnet_3_1(out)
+
+		out = F.interpolate(out, scale_factor=2)
+		out = self.resnet_4_0(out)
+		out = self.resnet_4_1(out)
+
+		out = F.interpolate(out, scale_factor=2)
+		out = self.resnet_5_0(out)
+		out = self.resnet_5_1(out)
+
+		out = self.conv_img(F.leaky_relu(out, 2e-1))
+		out = torch.tanh(out)
+
 		return out
 
 # Toy data model

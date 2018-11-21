@@ -267,10 +267,16 @@ class TrainLoop(object):
 				'cur_epoch': self.cur_epoch}
 		torch.save(ckpt, self.save_epoch_fmt_gen.format(self.cur_epoch))
 
-		for i, disc in enumerate(self.disc_list):
-			ckpt = {'model_state': disc.state_dict(),
-					'optimizer_state': disc.optimizer.state_dict()}
-			torch.save(ckpt, self.save_epoch_fmt_disc.format(i + 1))
+		if self.cuda_mode:
+			for i, disc in enumerate(self.disc_list):
+				ckpt = {'model_state': disc.state_dict(),
+						'optimizer_state': disc.module.optimizer.state_dict()}
+				torch.save(ckpt, self.save_epoch_fmt_disc.format(i + 1))
+		else:
+			for i, disc in enumerate(self.disc_list):
+				ckpt = {'model_state': disc.state_dict(),
+						'optimizer_state': disc.optimizer.state_dict()}
+				torch.save(ckpt, self.save_epoch_fmt_disc.format(i + 1))
 
 	def load_checkpoint(self, epoch):
 
@@ -293,8 +299,10 @@ class TrainLoop(object):
 			for i, disc in enumerate(self.disc_list):
 				ckpt = torch.load(self.save_epoch_fmt_disc.format(i + 1))
 				disc.load_state_dict(ckpt['model_state'])
-				disc.optimizer.load_state_dict(ckpt['optimizer_state'])
-
+				if self.cuda_mode:
+					disc.module.optimizer.load_state_dict(ckpt['optimizer_state'])
+				else:
+					disc.optimizer.load_state_dict(ckpt['optimizer_state'])
 		else:
 			print('No checkpoint found at: {}'.format(ckpt))
 

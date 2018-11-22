@@ -38,14 +38,14 @@ if __name__ == '__main__':
 	parser.add_argument('--ngpus', type=int, default=1, metavar='N', help='number of GPUs (default: 1)')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()
-	args.cuda = True if args.ngpus > 0 and torch.cuda.is_available() else False
+	args.cuda = True if args.ngpus > 0 and torch.cuda.is_available() and not args.no_cuda else False
 
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
 	#model = Generator(128, [1024, 512, 256, 128, 64, 32], 3)
 
-	if args.cuda:
+	if args.ngpus>1:
 		model = torch.nn.DataParallel(Generator_res().train(), device_ids=list(range(args.ngpus)))
 	else:
 		model = Generator_res().train()

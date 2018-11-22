@@ -8,6 +8,7 @@ print(f'Running from package root directory {sys.path[0]}')
 
 import argparse
 
+import torch
 from common.generators import Generator, Generator_res
 import matplotlib.pyplot as plt
 import torch.utils.data
@@ -34,15 +35,20 @@ if __name__ == '__main__':
 	parser.add_argument('--cp-path', type=str, default=None, metavar='Path', help='Checkpoint/model path')
 	parser.add_argument('--n-tests', type=int, default=4, metavar='N', help='number of samples to  (default: 64)')
 	parser.add_argument('--no-plots', action='store_true', default=False, help='Disables plot of train/test losses')
+	parser.add_argument('--ngpus', type=int, default=1, metavar='N', help='number of GPUs (default: 1)')
 	parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables GPU use')
 	args = parser.parse_args()
-	args.cuda = True if not args.no_cuda and torch.cuda.is_available() else False
+	args.cuda = True if args.ngpus > 0 and torch.cuda.is_available() else False
 
 	if args.cp_path is None:
 		raise ValueError('There is no checkpoint/model path. Use arg --cp-path to indicate the path!')
 
 	#model = Generator(128, [1024, 512, 256, 128, 64, 32], 3)
-	model = Generator_res().train()
+
+	if args.cuda:
+		model = torch.nn.DataParallel(Generator_res().train(), device_ids=list(range(args.ngpus)))
+	else:
+		model = Generator_res().train()
 
 	ckpt = torch.load(args.cp_path, map_location=lambda storage, loc: storage)
 	model.load_state_dict(ckpt['model_state'])

@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
 	#model = Generator(128, [1024, 512, 256, 128, 64, 32], 3)
 
-	if args.ngpus>1:
+	if args.ngpus>=1:
 		model = torch.nn.DataParallel(Generator_res().train(), device_ids=list(range(args.ngpus)))
 	else:
 		model = Generator_res().train()
@@ -55,6 +55,8 @@ if __name__ == '__main__':
 
 	if args.cuda:
 		model = model.cuda()
+	else:
+		model = model.module.cpu()
 
 	print('Cuda Mode is: {}'.format(args.cuda))
 

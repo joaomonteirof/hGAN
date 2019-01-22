@@ -8,7 +8,7 @@ Training the Generator with multi-objective training via hyper volume maximizati
 
 MNIST and Cifar-10 will be downloaded automatically
 
-Stacked MMNIST has to be built and dumped into an .hdf file prior to training. Download the data from [](https://ufile.io/k854s), or build it by running:
+Stacked MMNIST has to be built and dumped into an .hdf file prior to training. Download the data from [https://ufile.io/k854s](https://ufile.io/k854s), or build it by running:
 
 ```
 python gen_data.py --data-size 50000 --data-path /path/to/download/mnist --out-file /out/file/path
@@ -16,7 +16,7 @@ python gen_data.py --data-size 50000 --data-path /path/to/download/mnist --out-f
 
 CelebA: Download the [cropped and aligned version of CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and unzip it
 
-Cats dataset can be downloaded from: [](https://ufile.io/u6i98)
+Cats dataset can be downloaded from: [https://ufile.io/u6i98](https://ufile.io/u6i98)
 
 
 
@@ -63,6 +63,8 @@ optional arguments:
 ```
 
 ### Testing generators
+
+Download the pretrained classifier for evaluation at [https://ufile.io/8udto](https://ufile.io/8udto)
 
 ### Required args
 

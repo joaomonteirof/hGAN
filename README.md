@@ -1,14 +1,36 @@
 # Hyper Volume Generative Adversarial Network - hGAN
 
-Replication of [Stabilizing GAN Training with Multiple Random Projections](https://arxiv.org/abs/1705.07831) and extension including training with multi-objective training via hyper volume maximization
+Training the Generator with multi-objective training via hyper volume maximization
 
 ## To run
 
-Download the [cropped and aligned version of CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and unzip it
+### Data
+
+MNIST and Cifar-10 will be downloaded automatically
+
+Stacked MMNIST has to be built and dumped into an .hdf file prior to training. Download the data from [](https://ufile.io/k854s), or build it by running:
 
 ```
-python train.py --ndiscriminators 12
+python gen_data.py --data-size 50000 --data-path /path/to/download/mnist --out-file /out/file/path
 ```
+
+CelebA: Download the [cropped and aligned version of CelebA](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) and unzip it
+
+Cats dataset can be downloaded from: [](https://ufile.io/u6i98)
+
+
+
+### Training generators
+
+cd to the the folder corresponding to the desired dataset and run:
+
+```
+python train.py --help
+```
+
+to get the list of arguments.
+
+Example for CelebA:
 
 ```
 optional arguments:
@@ -28,21 +50,26 @@ optional arguments:
   --workers WORKERS     number of data loading workers
   --seed S              random seed (default: 1)
   --save-every N        how many epochs to wait before logging training
-                        status. Default is 5
-  --hyper-mode          enables training with hypervolume maximization
-  --nadir-factor nadir  Factor of the max disc loss to initialize nadir point
-                        (default: 50.0)
+                        status. Default is 3
+  --train-mode {vanilla,hyper,gman,gman_grad,loss_delta,mgd}
+                        Salect train mode. Default is vanilla (simple average
+                        of Ds losses)
+  --disc-mode {RP,MD}   Multiple identical Ds with random projections (RP) or
+                        Multiple distinct Ds without projection (MD)
+  --nadir-slack nadir   factor for nadir-point update. Only used in hyper mode
+                        (default: 1.5)
+  --alpha alhpa         Used in GMAN and loss_del modes (default: 0.8)
   --no-cuda             Disables GPU use
 ```
 
+### Testing generators
+
+### Required args
+
+For both cifar10_32 and 64, --fid-model-path has to be specified to allow for FID computation at train time. Download [the model used in our experiments](https://ufile.io/5ky3g)
+
+
 ## Tested with
 
-
 - Python 3.6
-- Pytorch 0.3.0
-
-## To do
-
-- Scheduler for the nadir point
-
-Collaborators: Isabela Albuquerque, Breandan Considine
+- Pytorch > 0.4.1

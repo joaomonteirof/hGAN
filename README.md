@@ -95,11 +95,11 @@ Example:
 python coverage.py --cp-folder Path --classifier-path Path --data-stat-path Path --out-file Path --n-tests 10 --n-samples 10000
 ```
 
-## TensorFlow implementation for computing Inception Score and FID
+## TensorFlow implementation for computing Inception Score and FID using author's original implementation
 
-Inception Score: [https://github.com/nnUyi/Inception-Score](https://github.com/nnUyi/Inception-Score)
+Inception Score: [https://github.com/openai/improved-gan/blob/master/inception_score/model.py](https://github.com/openai/improved-gan/blob/master/inception_score/model.py)
 
-FID: [author's original implementation](https://github.com/bioinf-jku/TTUR)
+FID: [https://github.com/bioinf-jku/TTUR](https://github.com/bioinf-jku/TTUR)
 
 ## Tested with
 

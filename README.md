@@ -88,7 +88,7 @@ to get the list of arguments.
 
 Download the pretrained classifier for evaluation at [https://ufile.io/8udto](https://ufile.io/8udto) 
  
-cd to common
+cd to common and run
 
 ```
 python compute_FID.py --help
@@ -116,6 +116,46 @@ Arguments:
   --no-cuda               Disables GPU use
   --sngan                 Enables computing FID for SNGAN
 
+```
+
+### Computing coverage for Stacked MNIST
+
+
+cd to stacked_mnist, download the pretrained classifier for evaluation at [https://ufile.io/8udto](https://ufile.io/8udto) (same as for FID). 
+First, compute coverage for real data (for calculating the KL divergence), by running:
+
+```
+python coverage_real_data.py --help
+```
+
+to get the list of arguments.
+
+```
+  --classifier-path Path   Path to pretrained classifier on MNIST
+  --data-path Path         Path to hdf file containing stacked MNIST
+  --out-file Path          Path to dump coverage for real data')
+  --batch-size N           Batch size (default: 512)
+  --workers WORKERS        Number of data loading workers
+  --no-cuda                Disables GPU use
+```
+
+To calculate the coverage, run:
+
+```
+python coverage.py --help
+```
+
+to get the list of arguments.
+
+```
+  --cp-folder Path       Checkpoints/models path
+  --classifier-path Path Path to pretrained classifier on MNIST
+  --data-stat-path Path  Path to precomputed test data statistics fo KL div computation
+  --out-file Path        Path for saving results
+  --n-tests N            Number of replications (default: 4)
+  --n-samples N          Number of samples for each replication (default: 26000)
+  --batch-size N         Batch size (default: 512)
+  --no-cuda              Disables GPU use
 ```
 
 ### TensorFlow implementation for computing Inception Score and FID

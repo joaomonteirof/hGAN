@@ -161,6 +161,7 @@ to get the list of arguments.
 ### TensorFlow implementation for computing Inception Score and FID
 
 Inception Score: [https://github.com/nnUyi/Inception-Score](https://github.com/nnUyi/Inception-Score)
+
 FID: [author's original implementation](https://github.com/bioinf-jku/TTUR)
 
 ## Tested with

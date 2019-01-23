@@ -79,7 +79,7 @@ cd to common and run
 python compute_FID.py --model-path Path --data-stat-path Path --data-path Path --fid-model-path Path --model-cifar resnet --nsamples 100000 --ntests 10 --dataset cifar10
 ```
 
-### Computing coverage for Stacked MNIST
+## Computing coverage for Stacked MNIST
 
 
 cd to stacked_mnist, download the pretrained classifier for evaluation at [https://ufile.io/8udto](https://ufile.io/8udto) (same as for FID). 
@@ -95,7 +95,7 @@ Example:
 python coverage.py --cp-folder Path --classifier-path Path --data-stat-path Path --out-file Path --n-tests 10 --n-samples 10000
 ```
 
-### TensorFlow implementation for computing Inception Score and FID
+## TensorFlow implementation for computing Inception Score and FID
 
 Inception Score: [https://github.com/nnUyi/Inception-Score](https://github.com/nnUyi/Inception-Score)
 

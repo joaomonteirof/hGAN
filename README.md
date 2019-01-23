@@ -67,55 +67,16 @@ optional arguments:
 For both cifar10_32 and 64, --fid-model-path has to be specified to allow for FID computation at train time. Download [the model used in our experiments](https://ufile.io/5ky3g)
 
 
-### Sampling from the generator
-
-cd to the the folder corresponding to the desired dataset and run:
-
-```
-python test.py --help
-```
-
-to get the list of arguments.
-
-```
-  --cp-path Path  Checkpoint/model path
-  --n-tests N     Number of samples to generate (default: 4)
-  --no-plots      Disables plot of train/test losses
-  --no-cuda       Disables GPU use
-```
-
-### Evaluating generators 
+## Computing FID with a pre-trained model 
 
 Download the pretrained classifier for evaluation at [https://ufile.io/8udto](https://ufile.io/8udto) 
+ 
+Example for calculating FID using a ResNet for a generator trained on CIFAR-10:
  
 cd to common and run
 
 ```
-python compute_FID.py --help
-```
-
-to get the list of arguments.
-
-
-```
-Arguments:
-  --model-path Path       Checkpoint/model path
-  --data-stat-path Path   Path to file containing test data statistics
-  --data-path Path        Path to data if data statistics are not provided
-  --fid-model-path Path   Path to fid model
-  --model-cifar {resnet,vgg,inception} 
-                          Model for FID computation on CIFAR-10 (default: ResNet)
-  --model-mnist {cnn,mlp} 
-                          Model for FID computation on Cifar (default: CNN)
-  --batch-size N          Batch size (default: 512)
-  --nsamples N            Number of samples per replication (default: 10000)
-  --ntests N              Number of replications (default: 3)
-  --dataset {cifar10,mnist,celeba} 
-                          cifar10, mnist, or celeba 
-  --workers WORKERS       Number of data loading workers
-  --no-cuda               Disables GPU use
-  --sngan                 Enables computing FID for SNGAN
-
+python compute_FID.py --model-path Path --data-stat-path Path --data-path Path --fid-model-path Path --model-cifar resnet --nsamples 100000 --ntests 10 --dataset cifar10
 ```
 
 ### Computing coverage for Stacked MNIST
@@ -125,37 +86,13 @@ cd to stacked_mnist, download the pretrained classifier for evaluation at [https
 First, compute coverage for real data (for calculating the KL divergence), by running:
 
 ```
-python coverage_real_data.py --help
+python coverage_real_data.py --classifier-path Path --data-path Path --out-file Path
 ```
 
-to get the list of arguments.
+Example:
 
 ```
-  --classifier-path Path   Path to pretrained classifier on MNIST
-  --data-path Path         Path to hdf file containing stacked MNIST
-  --out-file Path          Path to dump coverage for real data')
-  --batch-size N           Batch size (default: 512)
-  --workers WORKERS        Number of data loading workers
-  --no-cuda                Disables GPU use
-```
-
-To calculate the coverage, run:
-
-```
-python coverage.py --help
-```
-
-to get the list of arguments.
-
-```
-  --cp-folder Path       Checkpoints/models path
-  --classifier-path Path Path to pretrained classifier on MNIST
-  --data-stat-path Path  Path to precomputed test data statistics fo KL div computation
-  --out-file Path        Path for saving results
-  --n-tests N            Number of replications (default: 4)
-  --n-samples N          Number of samples for each replication (default: 26000)
-  --batch-size N         Batch size (default: 512)
-  --no-cuda              Disables GPU use
+python coverage.py --cp-folder Path --classifier-path Path --data-stat-path Path --out-file Path --n-tests 10 --n-samples 10000
 ```
 
 ### TensorFlow implementation for computing Inception Score and FID

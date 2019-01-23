@@ -78,10 +78,10 @@ python test.py --help
 to get the list of arguments.
 
 ```
---cp-path Path  Checkpoint/model path
---n-tests N     Number of samples to generate (default: 4)
---no-plots      Disables plot of train/test losses
---no-cuda       Disables GPU use
+  --cp-path Path  Checkpoint/model path
+  --n-tests N     Number of samples to generate (default: 4)
+  --no-plots      Disables plot of train/test losses
+  --no-cuda       Disables GPU use
 ```
 
 ### Evaluating generators 
@@ -99,22 +99,22 @@ to get the list of arguments.
 
 ```
 Arguments:
-	--model-path Path       Checkpoint/model path
-	--data-stat-path Path   Path to file containing test data statistics
-	--data-path	Path        Path to data if data statistics are not provided
-	--fid-model-path Path   Path to fid model
-	--model-cifar {resnet,vgg,inception} 
-                            Model for FID computation on CIFAR-10 (default: ResNet)
-	--model-mnist {cnn,mlp} 
-                            Model for FID computation on Cifar (default: CNN)
-	--batch-size N          Batch size (default: 512)
-	--nsamples N            Number of samples per replication (default: 10000)
-	--ntests N              Number of replications (default: 3)
-	--dataset {cifar10,mnist,celeba} 
-                            cifar10, mnist, or celeba 
-	--workers WORKERS       Number of data loading workers
-	--no-cuda               Disables GPU use
-	--sngan                 Enables computing FID for SNGAN
+  --model-path Path       Checkpoint/model path
+  --data-stat-path Path   Path to file containing test data statistics
+  --data-path Path        Path to data if data statistics are not provided
+  --fid-model-path Path   Path to fid model
+  --model-cifar {resnet,vgg,inception} 
+                          Model for FID computation on CIFAR-10 (default: ResNet)
+  --model-mnist {cnn,mlp} 
+                          Model for FID computation on Cifar (default: CNN)
+  --batch-size N          Batch size (default: 512)
+  --nsamples N            Number of samples per replication (default: 10000)
+  --ntests N              Number of replications (default: 3)
+  --dataset {cifar10,mnist,celeba} 
+                          cifar10, mnist, or celeba 
+  --workers WORKERS       Number of data loading workers
+  --no-cuda               Disables GPU use
+  --sngan                 Enables computing FID for SNGAN
 
 ```
 

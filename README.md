@@ -95,6 +95,14 @@ Example:
 python coverage.py --cp-folder Path --classifier-path Path --data-stat-path Path --out-file Path --n-tests 10 --n-samples 10000
 ```
 
+## Generating samples
+
+cd to common and run
+
+```
+python gen_samples.py --cp-path Path --nsamples 10000 --out-path Path
+```
+
 ## TensorFlow implementation for computing Inception Score and FID using author's original implementation
 
 Inception Score: [https://github.com/openai/improved-gan/blob/master/inception_score/model.py](https://github.com/openai/improved-gan/blob/master/inception_score/model.py)

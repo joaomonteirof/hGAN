@@ -6,7 +6,6 @@ import scipy.linalg as sla
 import torch
 import torch.nn.functional as F
 from scipy.optimize import minimize
-from torch.autograd import Variable
 from tqdm import tqdm
 
 from common.MGD_utils import *
@@ -115,11 +114,6 @@ class TrainLoop(object):
 			y_real_ = y_real_.cuda()
 			y_fake_ = y_fake_.cuda()
 
-		x = Variable(x)
-		z_ = Variable(z_)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
-
 		out_d = self.model.forward(z_).detach()
 
 		loss_d = 0
@@ -145,7 +139,6 @@ class TrainLoop(object):
 		if self.cuda_mode:
 			z_ = z_.cuda()
 
-		z_ = Variable(z_)
 		out = self.model.forward(z_)
 
 		loss_G = 0
@@ -180,7 +173,7 @@ class TrainLoop(object):
 				losses_list_var.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
 				losses_list_float.append(losses_list_var[-1].data[0])
 
-			losses = Variable(torch.FloatTensor(losses_list_float))
+			losses = torch.FloatTensor(losses_list_float)
 			self.proba = torch.nn.functional.softmax(self.alpha * losses, dim=0).data.cpu().numpy()
 
 			acm = 0.0
@@ -197,7 +190,7 @@ class TrainLoop(object):
 				loss = F.binary_cross_entropy(disc.forward(self.model.forward(z_)).squeeze(), y_real_)
 				grads_list.append(self.get_gen_grads_norm(loss))
 
-			grads = Variable(torch.FloatTensor(grads_list))
+			grads = torch.FloatTensor(grads_list)
 			self.proba = torch.nn.functional.softmax(self.alpha * grads, dim=0).data.cpu().numpy()
 
 			self.model.zero_grad()
@@ -243,8 +236,6 @@ class TrainLoop(object):
 			if self.cuda_mode:
 				z_probs = z_probs.cuda()
 
-			z_probs = Variable(z_probs)
-
 			out_probs = self.model.forward(z_probs)
 
 			outs_before = []
@@ -289,8 +280,6 @@ class TrainLoop(object):
 			z_ = self.fixed_noise.cuda()
 		else:
 			z_ = self.fixed_noise
-
-		z_ = Variable(z_)
 
 		x_gen = self.model.forward(z_)
 
@@ -373,8 +362,6 @@ class TrainLoop(object):
 			z_ = z_.cuda()
 			y_real_ = y_real_.cuda()
 
-		z_ = Variable(z_)
-		y_real_ = Variable(y_real_)
 		out = self.model.forward(z_)
 
 		for disc in self.disc_list:
@@ -393,7 +380,7 @@ class TrainLoop(object):
 		for i in range(len(self.Q)):
 			self.Q[i] = self.alpha * reward[i] + (1 - self.alpha) * self.Q[i]
 
-		self.proba = torch.nn.functional.softmax(15 * Variable(torch.FloatTensor(self.Q)), dim=0).data.cpu().numpy()
+		self.proba = torch.nn.functional.softmax(15 * torch.FloatTensor(self.Q), dim=0).data.cpu().numpy()
 
 	def compute_steepest_direction_norm(self):
 		self.model.train()
@@ -405,9 +392,6 @@ class TrainLoop(object):
 		if self.cuda_mode:
 			z_ = z_.cuda()
 			y_real_ = y_real_.cuda()
-
-		z_ = Variable(z_, requires_grad=False)
-		y_real_ = Variable(y_real_)
 
 		grads_list = []
 

@@ -55,7 +55,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
 	torch.cuda.manual_seed(args.seed)
 
-transform = transforms.Compose([transforms.Resize((28, 28), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+transform = transforms.Compose([transforms.Resize((28, 28), interpolation=Image.BICUBIC), transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 
 trainset = datasets.MNIST(root=args.data_path, train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, num_workers=args.workers)

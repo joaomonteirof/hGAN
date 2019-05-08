@@ -289,7 +289,7 @@ class TrainLoop(object):
 
 		is_, _ = inception_score(model=self.model, N=10000, splits=10, cuda=self.cuda_mode, resize=True, SNGAN=True)
 
-		with.torch.no_grad():
+		with torch.no_grad():
 
 			if self.cuda_mode:
 				z_ = self.fixed_noise.cuda()

@@ -23,7 +23,7 @@ def compute_freqs(model, classifier, batch_size, nsamples, cuda):
 		n_batches = nsamples//batch_size
 	else: n_batches = nsamples//batch_size + 1
 
-	with.torch.no_grad():
+	with torch.no_grad():
 
 		for i in range(n_batches):
 
@@ -50,7 +50,7 @@ def compute_freqs_real_data(data_loader, classifier, cuda):
 
 	counter = np.zeros(1000)
 
-	with.torch.no_grad():
+	with torch.no_grad():
 
 		for batch in data_loader:
 
@@ -102,7 +102,7 @@ def get_gen_samples(model, batch_size, nsamples, cuda, mnist=True):
 
 	out_samples = None
 
-	with.torch.no_grad():
+	with torch.no_grad():
 
 		for i in range(n_batches):
 
@@ -134,7 +134,7 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, i
 
 	logits = None
 
-	with.torch.no_grad():
+	with torch.no_grad():
 
 		for i in range(n_batches):
 
@@ -180,7 +180,7 @@ def compute_fid_real_data(data_loader, fid_model_, m_data, C_data, cuda, incepti
 
 	logits = None
 
-	with.torch.no_grad():
+	with torch.no_grad():
 
 		for batch in data_loader:
 
@@ -249,7 +249,7 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 		if cuda:
 			z_ = z_.cuda()
 
-		with.torch.no_grad():
+		with torch.no_grad():
 
 			x = model.forward(z_)
 

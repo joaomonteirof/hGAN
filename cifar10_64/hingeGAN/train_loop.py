@@ -135,7 +135,7 @@ class TrainLoop(object):
 		else:
 			z_ = self.fixed_noise
 
-		with.torch.no_grad():
+		with torch.no_grad():
 
 			x_gen = self.model.forward(z_)
 

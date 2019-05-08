@@ -105,7 +105,7 @@ class Discriminator_noproj(torch.nn.Module):
 		return out
 
 class Discriminator_SN_noproj(nn.Module):
-	def __init__(self, optimizer, optimizer_name, lr, betas):
+	def __init__(self, optimizer, lr, betas, optimizer_name='adam'):
 		super().__init__()
 
 		m_g = 4
@@ -143,7 +143,7 @@ class Discriminator_SN_noproj(nn.Module):
 		return torch.sigmoid(out.squeeze())
 
 class Discriminator_SN(nn.Module):
-	def __init__(self, optimizer, optimizer_name, lr, betas):
+	def __init__(self, optimizer, lr, betas, optimizer_name='adam'):
 		super().__init__()
 
 		m_g = 4

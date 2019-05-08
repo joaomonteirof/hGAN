@@ -161,6 +161,8 @@ class TrainLoop(object):
 
 		interpolates = alpha * real_data + ((1 - alpha) * fake_data)
 
+		interpolates.requires_grad_()
+
 		disc_interpolates = self.disc.forward(interpolates)
 
 		grad_outs = torch.ones(disc_interpolates.size())

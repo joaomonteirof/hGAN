@@ -126,7 +126,7 @@ class TrainLoop(object):
 			loss_disc.backward()
 			disc.optimizer.step()
 
-			loss_d += loss_disc.data[0]
+			loss_d += loss_disc.item()
 
 		loss_d /= len(self.disc_list)
 
@@ -151,7 +151,7 @@ class TrainLoop(object):
 
 			for disc in self.disc_list:
 				losses_list_var.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
-				losses_list_float.append(losses_list_var[-1].data[0])
+				losses_list_float.append(losses_list_var[-1].item())
 
 			self.update_nadir_point(losses_list_float)
 
@@ -171,7 +171,7 @@ class TrainLoop(object):
 
 			for disc in self.disc_list:
 				losses_list_var.append(F.binary_cross_entropy(disc.forward(out).squeeze(), y_real_))
-				losses_list_float.append(losses_list_var[-1].data[0])
+				losses_list_float.append(losses_list_var[-1].item())
 
 			losses = torch.FloatTensor(losses_list_float)
 			self.proba = torch.nn.functional.softmax(self.alpha * losses, dim=0).data.cpu().numpy()
@@ -270,7 +270,7 @@ class TrainLoop(object):
 
 			self.update_prob(outs_before, outs_after)
 
-		return loss_G.data[0], loss_d
+		return loss_G.item(), loss_d
 
 	def valid(self):
 
@@ -342,7 +342,7 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm += params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).item()
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):
@@ -366,7 +366,7 @@ class TrainLoop(object):
 
 		for disc in self.disc_list:
 			d_out = disc.forward(out).squeeze()
-			disc_outs.append(F.binary_cross_entropy(d_out, y_real_).data[0])
+			disc_outs.append(F.binary_cross_entropy(d_out, y_real_).item())
 
 		self.nadir = float(np.max(disc_outs) + self.nadir_slack)
 
@@ -409,7 +409,7 @@ class TrainLoop(object):
 			except TypeError:
 				grad_sum = float(weight_grad[0]) * weight_grad[1]
 
-		return float(grad_sum.norm(2).data[0])
+		return float(grad_sum.norm(2).item())
 
 	def get_gen_grads(self, loss_):
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
@@ -428,5 +428,5 @@ class TrainLoop(object):
 		self.model.zero_grad()
 		grads = torch.autograd.grad(outputs=loss_, inputs=self.model.parameters())
 		for params_grads in grads:
-			norm += params_grads.norm(2).data[0] ** 2
+			norm += params_grads.norm(2).item() ** 2
 		return np.sqrt(norm)

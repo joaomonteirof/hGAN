@@ -41,7 +41,7 @@ class TrainLoop(object):
 		self.alpha = alpha
 		self.nadir_slack = nadir_slack
 		self.train_mode = train_mode
-		self.constraints = make_constraints(len(disc_list))
+		self.constraints, self.bounds = make_constraints(len(disc_list))
 		self.proba = np.random.rand(len(disc_list))
 		self.proba /= np.sum(self.proba)
 		self.Q = np.zeros(len(self.disc_list))
@@ -215,7 +215,10 @@ class TrainLoop(object):
 			grads_list = np.asarray(grads_list).T
 
 			# Steepest descent direction calc
-			result = minimize(steep_direct_cost, self.proba, args=grads_list, jac=steep_direc_cost_deriv, constraints=self.constraints, method='SLSQP', options={'disp': False})
+			result = minimize(steep_direct_cost, self.proba, args=grads_list, jac=steep_direc_cost_deriv, bounds=self.bounds, constraints=self.constraints, method='SLSQP', options={'ftol': 1e-9, 'disp': False})
+			print(result.success)
+			print(result.x)
+			print(np.sum(result.x))
 
 			self.proba = result.x
 

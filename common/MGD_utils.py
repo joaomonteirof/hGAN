@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-def steep_direct_cost(alpha, grad_disc_matrix=[]):
+def steep_direct_cost(alpha, grad_disc_matrix):
 	"""
 	Calculates ||sum_i alpha_i grad_disc_i||^2
 	- alpha: k-dim array with alpha values
@@ -11,7 +11,6 @@ def steep_direct_cost(alpha, grad_disc_matrix=[]):
 	"""
 
 	n_disc = grad_disc_matrix.shape[1]
-	v = 0
 
 	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis=1)
 
@@ -20,7 +19,6 @@ def steep_direct_cost(alpha, grad_disc_matrix=[]):
 
 def steep_direc_cost_deriv(alpha, grad_disc_matrix=[]):
 	n_disc = grad_disc_matrix.shape[1]
-	v = 0
 
 	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis=1)
 
@@ -32,6 +30,7 @@ def steep_direc_cost_deriv(alpha, grad_disc_matrix=[]):
 def make_constraints(n_disc):
 	cons = [{'type': 'eq', 'fun': lambda alpha: np.array([np.sum(alpha) - 1]), 'jac': lambda alpha: np.ones([1, n_disc])}]
 
+	bounds = []
 	for k in range(n_disc):
 		jacobian = np.zeros([1, n_disc])
 		jacobian[0, k] = 1.
@@ -39,15 +38,20 @@ def make_constraints(n_disc):
 		ineq = {'type': 'ineq', 'fun': lambda alpha: np.array([alpha[k]]), 'jac': lambda alpha: jacobian}
 		cons.append(ineq)
 
-	return cons
+		bounds.append((0, 1.))
+	return cons, bounds
 
 
 if __name__ == '__main__':
-	alpha = np.array([1, 2])
-	grad_disc_matrix = np.ones([10, 2])
+	alpha = np.array([0.5, 0.25, 0.25, 0.25])
+	grad_disc_matrix = np.ones([10, 4])
 
-	const = make_constraints(2)
+	const, bounds = make_constraints(4)
 
-	res = minimize(steep_direct_cost, alpha, args=grad_disc_matrix, jac=steep_direc_cost_deriv, constraints=const, method='SLSQP', options={'disp': True})
+	print(const)
+
+	res = minimize(steep_direct_cost, alpha, args=grad_disc_matrix, jac=steep_direc_cost_deriv, bounds=bounds, constraints=const, method='SLSQP', options={'disp': True})
+
+	print(res.success)
 
 	print(res.x)

@@ -216,10 +216,6 @@ class TrainLoop(object):
 
 			# Steepest descent direction calc
 			result = minimize(steep_direct_cost, self.proba, args=grads_list, jac=steep_direc_cost_deriv, bounds=self.bounds, constraints=self.constraints, method='SLSQP', options={'ftol': 1e-9, 'disp': False})
-			print(result.success)
-			print(result.x)
-			print(np.sum(result.x))
-
 			self.proba = result.x
 
 			self.model.zero_grad()

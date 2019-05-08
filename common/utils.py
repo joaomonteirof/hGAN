@@ -11,7 +11,6 @@ import torch.nn.functional as F
 import torch.utils.data
 from scipy.stats import chi2
 import scipy.linalg as sla
-from torch.autograd import Variable
 from torchvision.transforms import transforms
 
 from PIL import ImageEnhance
@@ -27,12 +26,11 @@ def save_testdata_statistics(model, data_loader, cuda_mode, downsample_ = True):
 	for batch in data_loader:
 
 		x, y = batch
-		x = torch.autograd.Variable(x)
 
 		if cuda_mode:
 			x = x.cuda()
 
-		out = model.forward(x, downsample_).data.cpu().numpy()
+		out = model.forward(x, downsample_).detach().cpu().numpy()
 
 		try:
 			logits = np.concatenate([logits, out], 0)
@@ -66,7 +64,6 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 	if cuda_mode:
 		noise = noise.cuda()
 
-	noise = Variable(noise, volatile=True)
 	gen_image = generator(noise).view(-1, nc, im_size, im_size)
 	gen_image = denorm(gen_image)
 
@@ -86,7 +83,7 @@ def save_samples(generator: torch.nn.Module, cp_name: str, cuda_mode: bool, pref
 
 		# Scale to 0-255
 		img = (((img - img.min()) * 255) / (img.max() - img.min())).numpy().transpose(1, 2, 0).astype(np.uint8).squeeze()
-		# ax.imshow(img.cpu().data.view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
+		# ax.imshow(img.cpu().detach().view(image_size, image_size, 3).numpy(), cmap=None, aspect='equal')
 
 		if nc == 1:
 			ax.imshow(img, cmap="gray", aspect='equal')
@@ -169,7 +166,6 @@ def test_model(model, n_tests, cuda_mode, enhance=True, SNGAN=False):
 	if cuda_mode:
 		z_ = z_.cuda()
 
-	z_ = Variable(z_)
 	out = model.forward(z_)
 
 	for i in range(out.size(0)):
@@ -241,7 +237,6 @@ def save_samples_toy_data_gen(generator, cp_name, save_name, n_samples, toy_data
 
 	noise = torch.randn(n_samples, 2).view(-1, 2)
 
-	noise = Variable(noise, volatile=True)
 	samples = generator(noise)
 
 	if toy_dataset == '8gaussians':

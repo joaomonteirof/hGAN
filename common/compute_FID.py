@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision
-from torch.autograd import Variable
 import torch.utils.data
 from scipy.stats import sem
 import scipy.linalg as sla

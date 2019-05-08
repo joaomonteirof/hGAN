@@ -6,7 +6,6 @@ import torch.utils.data
 from numpy.lib.stride_tricks import as_strided
 from scipy.stats import entropy
 from torch import nn
-from torch.autograd import Variable
 from torch.nn import functional as F
 from torchvision.models.inception import inception_v3
 import scipy.linalg as sla
@@ -24,24 +23,24 @@ def compute_freqs(model, classifier, batch_size, nsamples, cuda):
 		n_batches = nsamples//batch_size
 	else: n_batches = nsamples//batch_size + 1
 
-	for i in range(n_batches):
+	with.torch.no_grad():
 
-		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
-		if cuda:
-			z_ = z_.cuda()
+		for i in range(n_batches):
 
-		z_ = Variable(z_)
+			z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+			if cuda:
+				z_ = z_.cuda()
 
-		x_gen = model.forward(z_)
+			x_gen = model.forward(z_)
 
-		x_gen_1, x_gen_2, x_gen_3 = x_gen[:, 0, :, :].unsqueeze(1), x_gen[:, 1, :, :].unsqueeze(1), x_gen[:, 2, :, :].unsqueeze(1)
+			x_gen_1, x_gen_2, x_gen_3 = x_gen[:, 0, :, :].unsqueeze(1), x_gen[:, 1, :, :].unsqueeze(1), x_gen[:, 2, :, :].unsqueeze(1)
 
-		logits_1, logits_2, logits_3 = classifier.forward(x_gen_1), classifier.forward(x_gen_2), classifier.forward(x_gen_3)
+			logits_1, logits_2, logits_3 = classifier.forward(x_gen_1), classifier.forward(x_gen_2), classifier.forward(x_gen_3)
 
-		pred_1, pred_2, pred_3 = logits_1.data.max(1)[1], logits_2.data.max(1)[1], logits_3.data.max(1)[1]
+			pred_1, pred_2, pred_3 = logits_1.detach().max(1)[1], logits_2.detach().max(1)[1], logits_3.detach().max(1)[1]
 
-		for j in range(z_.size(0)):
-			counter[100*pred_1[j]+10*pred_2[j]+pred_3[j]]+=1.
+			for j in range(z_.size(0)):
+				counter[100*pred_1[j]+10*pred_2[j]+pred_3[j]]+=1.
 
 	return np.count_nonzero(counter), counter
 
@@ -51,20 +50,21 @@ def compute_freqs_real_data(data_loader, classifier, cuda):
 
 	counter = np.zeros(1000)
 
-	for batch in data_loader:
+	with.torch.no_grad():
 
-		if cuda:
-			batch = batch.cuda()
-		batch = Variable(batch)
+		for batch in data_loader:
 
-		x_gen_1, x_gen_2, x_gen_3 = batch[:, 0, :, :].unsqueeze(1), batch[:, 1, :, :].unsqueeze(1), batch[:, 2, :, :].unsqueeze(1)
+			if cuda:
+				batch = batch.cuda()
 
-		logits_1, logits_2, logits_3 = classifier.forward(x_gen_1), classifier.forward(x_gen_2), classifier.forward(x_gen_3)
+			x_gen_1, x_gen_2, x_gen_3 = batch[:, 0, :, :].unsqueeze(1), batch[:, 1, :, :].unsqueeze(1), batch[:, 2, :, :].unsqueeze(1)
 
-		pred_1, pred_2, pred_3 = logits_1.data.max(1)[1], logits_2.data.max(1)[1], logits_3.data.max(1)[1]
+			logits_1, logits_2, logits_3 = classifier.forward(x_gen_1), classifier.forward(x_gen_2), classifier.forward(x_gen_3)
 
-		for j in range(batch.size(0)):
-			counter[100*pred_1[j]+10*pred_2[j]+pred_3[j]]+=1.
+			pred_1, pred_2, pred_3 = logits_1.detach().max(1)[1], logits_2.detach().max(1)[1], logits_3.detach().max(1)[1]
+
+			for j in range(batch.size(0)):
+				counter[100*pred_1[j]+10*pred_2[j]+pred_3[j]]+=1.
 	return counter
 
 def compute_diversity_mssim(samples, real = True, mnist=True):
@@ -102,24 +102,24 @@ def get_gen_samples(model, batch_size, nsamples, cuda, mnist=True):
 
 	out_samples = None
 
-	for i in range(n_batches):
+	with.torch.no_grad():
 
-		z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
-		if cuda:
-			z_ = z_.cuda()
-			model = model.cuda()
+		for i in range(n_batches):
 
-		z_ = Variable(z_)
+			z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+			if cuda:
+				z_ = z_.cuda()
+				model = model.cuda()
 
-		if mnist:
-			x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
-		else:
-			x_gen = model.forward(z_)
+			if mnist:
+				x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
+			else:
+				x_gen = model.forward(z_)
 
-		if out_samples is not None:
-			out_samples = np.concatenate( [out_samples, x_gen.cpu().data.numpy()], axis=0)
-		else:
-			out_samples = x_gen.cpu().data.numpy()
+			if out_samples is not None:
+				out_samples = np.concatenate( [out_samples, x_gen.cpu().detach().numpy()], axis=0)
+			else:
+				out_samples = x_gen.cpu().detach().numpy()
 
 	return out_samples
 
@@ -134,33 +134,33 @@ def compute_fid(model, fid_model_, batch_size, nsamples, m_data, C_data, cuda, i
 
 	logits = None
 
-	for i in range(n_batches):
+	with.torch.no_grad():
 
-		if SNGAN:
-			z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 128)
-			downsample_=False
-		else:
-			z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
-			downsample_=True
-		if cuda:
-			z_ = z_.cuda()
+		for i in range(n_batches):
 
-		z_ = Variable(z_)
+			if SNGAN:
+				z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 128)
+				downsample_=False
+			else:
+				z_ = torch.randn(min(batch_size, nsamples - batch_size*i), 100).view(-1, 100, 1, 1)
+				downsample_=True
+			if cuda:
+				z_ = z_.cuda()
 
-		if mnist:
-			x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
-		else:
-			x_gen = model.forward(z_)
+			if mnist:
+				x_gen = model.forward(z_).view(z_.size(0), 1, 28, 28)
+			else:
+				x_gen = model.forward(z_)
 
-		if inception:
-			new_logits = fid_model_(x_gen)[0].view(z_.size(0), -1).data.cpu().numpy()
-		else:
-			new_logits = fid_model_.forward(x_gen, downsample_).cpu().data.numpy()
+			if inception:
+				new_logits = fid_model_(x_gen)[0].view(z_.size(0), -1).detach().cpu().numpy()
+			else:
+				new_logits = fid_model_.forward(x_gen, downsample_).cpu().detach().numpy()
 
-		if logits is not None:
-			logits = np.concatenate( [logits, fid_model_.forward(x_gen, downsample_).cpu().data.numpy()], axis=0 )
-		else:
-			logits = fid_model_.forward(x_gen, downsample_).cpu().data.numpy()
+			if logits is not None:
+				logits = np.concatenate( [logits, fid_model_.forward(x_gen, downsample_).cpu().detach().numpy()], axis=0 )
+			else:
+				logits = fid_model_.forward(x_gen, downsample_).cpu().detach().numpy()
 
 	logits = np.asarray(logits)
 
@@ -180,28 +180,28 @@ def compute_fid_real_data(data_loader, fid_model_, m_data, C_data, cuda, incepti
 
 	logits = None
 
-	for batch in data_loader:
+	with.torch.no_grad():
 
-		x_gen, _ = batch
+		for batch in data_loader:
 
-		if cuda:
-			x_gen = x_gen.cuda()
+			x_gen, _ = batch
 
-		x_gen = Variable(x_gen)
+			if cuda:
+				x_gen = x_gen.cuda()
 
-		if mnist:
-			x_gen = x_gen.view(x_gen.size(0), 1, 28, 28)
+			if mnist:
+				x_gen = x_gen.view(x_gen.size(0), 1, 28, 28)
 
-		if inception:
-			x_gen = up(x_gen)
-			new_logits = F.softmax(fid_model_.forward(x_gen), dim=1).data.cpu().numpy()
-		else:
-			new_logits = fid_model_.forward(x_gen).cpu().data.numpy()
+			if inception:
+				x_gen = up(x_gen)
+				new_logits = F.softmax(fid_model_.forward(x_gen), dim=1).detach().cpu().numpy()
+			else:
+				new_logits = fid_model_.forward(x_gen).cpu().detach().numpy()
 
-		if logits is not None:
-			logits = np.concatenate( [logits, new_logits], axis=0 )
-		else:
-			logits = new_logits
+			if logits is not None:
+				logits = np.concatenate( [logits, new_logits], axis=0 )
+			else:
+				logits = new_logits
 
 	logits = np.asarray(logits)
 
@@ -249,14 +249,14 @@ def inception_score(model, N=1000, cuda=True, batch_size=32, resize=False, split
 		if cuda:
 			z_ = z_.cuda()
 
-		z_ = Variable(z_)
+		with.torch.no_grad():
 
-		x = model.forward(z_)
+			x = model.forward(z_)
 
-		if resize:
-			x = up(x, size=(299, 299), mode='bilinear', align_corners=True).type(dtype)
-		x = inception_model(x)
-		return F.softmax(x, dim=1).data.cpu().numpy()
+			if resize:
+				x = up(x, size=(299, 299), mode='bilinear', align_corners=True).type(dtype)
+			x = inception_model(x)
+			return F.softmax(x, dim=1).detach().cpu().numpy()
 
 	indexes = strided_app(np.arange(N), batch_size, batch_size)
 

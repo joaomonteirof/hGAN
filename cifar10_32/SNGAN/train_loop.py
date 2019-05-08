@@ -4,7 +4,6 @@ import pickle
 import numpy as np
 import scipy.linalg as sla
 import torch
-from torch.autograd import Variable
 import torch.nn.functional as F
 from tqdm import tqdm
 
@@ -98,18 +97,12 @@ class TrainLoop(object):
 			y_real_ = y_real_.cuda()
 			y_fake_ = y_fake_.cuda()
 
-		x = Variable(x)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
-
 		for i in range(self.its_disc):
 
 			z_ = torch.randn(x.size(0), 128)
 
 			if self.cuda_mode:
 				z_ = z_.cuda()
-
-			z_ = Variable(z_)
 
 			out_d = self.model.forward(z_).detach()
 
@@ -132,7 +125,6 @@ class TrainLoop(object):
 		if self.cuda_mode:
 			z_ = z_.cuda()
 
-		z_ = Variable(z_)
 		out = self.model.forward(z_)
 
 		loss_G = -self.disc.forward(out).mean()
@@ -152,11 +144,11 @@ class TrainLoop(object):
 		else:
 			z_ = self.fixed_noise
 
-		z_ = Variable(z_)
+		with.torch.no_grad():
 
-		x_gen = self.model.forward(z_)
+			x_gen = self.model.forward(z_)
 
-		logits = self.fid_model.forward(x_gen.cpu(), downsample_=False).data.numpy()
+			logits = self.fid_model.forward(x_gen.cpu(), downsample_=False).detach().numpy()
 
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)
@@ -212,7 +204,7 @@ class TrainLoop(object):
 
 	def check_nans(self):
 		for params in list(self.model.parameters()):
-			if np.any(np.isnan(params.data.cpu().numpy())):
+			if np.any(np.isnan(params.detach().cpu().numpy())):
 				print('params NANs!!!!!')
-			if np.any(np.isnan(params.grad.data.cpu().numpy())):
+			if np.any(np.isnan(params.grad.detach().cpu().numpy())):
 				print('grads NANs!!!!!!')

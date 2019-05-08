@@ -185,7 +185,7 @@ class TrainLoop(object):
 				losses_list_float.append(losses_list_var[-1].item())
 
 			losses = torch.FloatTensor(losses_list_float)
-			self.proba = torch.nn.functional.softmax(self.alpha * losses, dim=0).data.cpu().numpy()
+			self.proba = torch.nn.functional.softmax(self.alpha * losses, dim=0).detach().cpu().numpy()
 
 			acm = 0.0
 			for loss_weight in zip(losses_list_var, self.proba):
@@ -202,7 +202,7 @@ class TrainLoop(object):
 				grads_list.append(self.get_gen_grads_norm(loss))
 
 			grads = torch.FloatTensor(grads_list)
-			self.proba = torch.nn.functional.softmax(self.alpha * grads, dim=0).data.cpu().numpy()
+			self.proba = torch.nn.functional.softmax(self.alpha * grads, dim=0).detach().cpu().numpy()
 
 			self.model.zero_grad()
 
@@ -221,7 +221,7 @@ class TrainLoop(object):
 
 			for disc in self.disc_list:
 				loss = F.binary_cross_entropy(disc.forward(self.model.forward(z_)).squeeze(), y_real_)
-				grads_list.append(self.get_gen_grads(loss).cpu().data.numpy())
+				grads_list.append(self.get_gen_grads(loss).cpu().detach().numpy())
 
 			grads_list = np.asarray(grads_list).T
 
@@ -255,7 +255,7 @@ class TrainLoop(object):
 			for i, disc in enumerate(self.disc_list):
 				disc_out = disc.forward(out_probs).squeeze()
 				losses_list.append(float(self.proba[i]) * F.binary_cross_entropy(disc_out, y_real_))
-				outs_before.append(disc_out.data.mean())
+				outs_before.append(disc_out.detach().mean())
 
 			for loss_ in losses_list:
 				loss_G += loss_
@@ -289,14 +289,16 @@ class TrainLoop(object):
 
 		is_, _ = inception_score(model=self.model, N=10000, splits=10, cuda=self.cuda_mode, resize=True, SNGAN=True)
 
-		if self.cuda_mode:
-			z_ = self.fixed_noise.cuda()
-		else:
-			z_ = self.fixed_noise
+		with.torch.no_grad():
 
-		x_gen = self.model.forward(z_)
+			if self.cuda_mode:
+				z_ = self.fixed_noise.cuda()
+			else:
+				z_ = self.fixed_noise
 
-		logits = self.fid_model.forward(x_gen.cpu(), downsample_=False).data.numpy()
+			x_gen = self.model.forward(z_)
+
+			logits = self.fid_model.forward(x_gen.cpu(), downsample_=False).detach().numpy()
 
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)
@@ -359,9 +361,9 @@ class TrainLoop(object):
 
 	def check_nans(self):
 		for params in list(self.model.parameters()):
-			if np.any(np.isnan(params.data.cpu().numpy())):
+			if np.any(np.isnan(params.detach().cpu().numpy())):
 				print('params NANs!!!!!')
-			if np.any(np.isnan(params.grad.data.cpu().numpy())):
+			if np.any(np.isnan(params.grad.detach().cpu().numpy())):
 				print('grads NANs!!!!!!')
 
 	def define_nadir_point(self):
@@ -392,7 +394,7 @@ class TrainLoop(object):
 		for i in range(len(self.Q)):
 			self.Q[i] = self.alpha * reward[i] + (1 - self.alpha) * self.Q[i]
 
-		self.proba = torch.nn.functional.softmax(15 * torch.FloatTensor(self.Q), dim=0).data.cpu().numpy()
+		self.proba = torch.nn.functional.softmax(15 * torch.FloatTensor(self.Q), dim=0).detach().cpu().numpy()
 
 	def compute_steepest_direction_norm(self):
 		self.model.train()

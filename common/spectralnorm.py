@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 
 class SpectralNorm(nn.Module):
 	"""Spectral normalization of weight with power iteration
@@ -37,7 +36,7 @@ class SpectralNorm(nn.Module):
 			u = w.view(height, -1) @ v
 			u /= (u.norm(p=2) + 1e-12)
 
-		w.data /= (u.t() @ w.view(height, -1) @ v).data  # Spectral normalization
+		w /= (u.t() @ w.view(height, -1) @ v)  # Spectral normalization
 
 	def forward(self, x):
 		if self.sn:

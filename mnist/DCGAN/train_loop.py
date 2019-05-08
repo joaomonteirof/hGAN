@@ -5,7 +5,6 @@ import numpy as np
 import scipy.linalg as sla
 import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
 from tqdm import tqdm
 
 
@@ -99,11 +98,6 @@ class TrainLoop(object):
 			y_real_ = y_real_.cuda()
 			y_fake_ = y_fake_.cuda()
 
-		x = Variable(x)
-		z_ = Variable(z_)
-		y_real_ = Variable(y_real_)
-		y_fake_ = Variable(y_fake_)
-
 		out_d = self.model.forward(z_).detach()
 
 		loss_d = 0
@@ -124,7 +118,6 @@ class TrainLoop(object):
 		if self.cuda_mode:
 			z_ = z_.cuda()
 
-		z_ = Variable(z_)
 		out = self.model.forward(z_)
 
 		loss_G = F.binary_cross_entropy(self.disc.forward(out).squeeze(), y_real_)
@@ -133,7 +126,7 @@ class TrainLoop(object):
 		loss_G.backward()
 		self.optimizer.step()
 
-		return loss_G.data[0], loss_disc.data[0]
+		return loss_G.item(), loss_disc.item()
 
 	def valid(self):
 
@@ -144,11 +137,11 @@ class TrainLoop(object):
 		else:
 			z_ = self.fixed_noise
 
-		z_ = Variable(z_)
+		with.torch.no_grad():
 
-		x_gen = self.model.forward(z_)
+			x_gen = self.model.forward(z_)
 
-		logits = self.fid_model.forward(x_gen.cpu().view(x_gen.size(0), 1, 28, 28)).data.numpy()
+			logits = self.fid_model.forward(x_gen.cpu().view(x_gen.size(0), 1, 28, 28)).detach().numpy()
 
 		m = logits.mean(0)
 		C = np.cov(logits, rowvar=False)
@@ -199,12 +192,12 @@ class TrainLoop(object):
 	def print_grad_norms(self):
 		norm = 0.0
 		for params in list(self.model.parameters()):
-			norm += params.grad.norm(2).data[0]
+			norm += params.grad.norm(2).item()
 		print('Sum of grads norms: {}'.format(norm))
 
 	def check_nans(self):
 		for params in list(self.model.parameters()):
-			if np.any(np.isnan(params.data.cpu().numpy())):
+			if np.any(np.isnan(params.detach().cpu().numpy())):
 				print('params NANs!!!!!')
-			if np.any(np.isnan(params.grad.data.cpu().numpy())):
+			if np.any(np.isnan(params.grad.detach().cpu().numpy())):
 				print('grads NANs!!!!!!')

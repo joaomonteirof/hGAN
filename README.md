@@ -50,7 +50,7 @@ optional arguments:
   --workers WORKERS     Number of data loading workers
   --seed S              Random seed (default: 1)
   --save-every N        How many epochs to wait before logging training
-                        status. Default is 3
+                        status (default: 3)
   --train-mode {vanilla,hyper,gman,gman_grad,loss_delta,mgd}
                         Select train mode. Default is vanilla (simple average
                         of Ds losses)
@@ -113,3 +113,6 @@ FID: [https://github.com/bioinf-jku/TTUR](https://github.com/bioinf-jku/TTUR)
 
 - Python 3.6
 - Pytorch > 0.4.1
+
+## Pending:
+- Improve solver for inner optimization on MGD's update direction calculation

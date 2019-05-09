@@ -1,6 +1,6 @@
-# Hyper Volume Generative Adversarial Network - hGAN
+# Multi-objective training of Generative Adversarial Networks with multiple discriminators
 
-Training the Generator with multi-objective training via hyper volume maximization
+Code for reproducing the experiments reported on [our paper](https://arxiv.org/abs/1901.08680) that proposes a multi-objective optimization perspective on the training of GANs with multiple discriminators.
 
 ## To run
 
@@ -116,3 +116,13 @@ FID: [https://github.com/bioinf-jku/TTUR](https://github.com/bioinf-jku/TTUR)
 
 ## Pending:
 - Improve solver for inner optimization on MGD's update direction calculation
+
+## Citation
+```
+@article{albuquerque2019multi,
+  title={Multi-objective training of Generative Adversarial Networks with multiple discriminators},
+  author={Albuquerque, Isabela and Monteiro, Jo{\~a}o and Doan, Thang and Considine, Breandan and Falk, Tiago and Mitliagkas, Ioannis},
+  journal={arXiv preprint arXiv:1901.08680},
+  year={2019}
+}
+```

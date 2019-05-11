@@ -423,7 +423,7 @@ class TrainLoop(object):
 			except:
 				grads_ = params_grads.view(-1)
 
-		return grads_
+		return grads_/grads_.norm()
 
 	def get_gen_grads_norm(self, loss_):
 		norm = 0.0

@@ -10,15 +10,12 @@ def steep_direct_cost(alpha, grad_disc_matrix):
 					  grad_disc_matrix = NxK, where N = number of params
 	"""
 
-	n_disc = grad_disc_matrix.shape[1]
-
 	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis=1)
 
 	return np.inner(v, v)
 
 
 def steep_direc_cost_deriv(alpha, grad_disc_matrix=[]):
-	n_disc = grad_disc_matrix.shape[1]
 
 	v = np.sum(np.multiply(grad_disc_matrix, alpha), axis=1)
 
